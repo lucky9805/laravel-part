@@ -1,0 +1,70 @@
+<?php
+class Common_mod extends MY_Model
+{
+	function __construct()
+	{
+		parent::__construct();
+	}
+
+	/**
+	* 获取上一个guid
+	*/
+	function get_prev_guid($guid, $subtype_id)
+	{
+		$this->db->select('guid');
+		$this->db->where('subtype_id', $subtype_id);
+		$this->db->where('guid <', $guid, FALSE);
+		$this->db->order_by('guid', 'desc');
+		$this->db->limit(1);
+		$result = $this->db->get(TABLE_CORE_ENTITY);
+		return $result;
+	}
+
+	/**
+	* 获取下一个guid
+	*/
+	function get_next_guid($guid, $subtype_id)
+	{
+		$this->db->select('guid');
+		$this->db->where('subtype_id', $subtype_id);
+		$this->db->where('guid >', $guid, FALSE);
+		$this->db->order_by('guid', 'asc');
+		$this->db->limit(1);
+		$result = $this->db->get(TABLE_CORE_ENTITY);
+		return $result;
+	}
+
+	/**
+	* 获取上一个guid
+	*/
+	function update_prev_guid($guid, $prev_guid, $type)
+	{
+		$this->db->set('prev_guid', $prev_guid);
+		$this->db->where('guid', $guid);
+		$result = $this->db->update($type);
+		return $result;
+	}
+
+	/**
+	* 更新下一个guid
+	*/
+	function update_next_guid($guid, $next_guid, $type)
+	{
+		$this->db->set('next_guid', $next_guid);
+		$this->db->where('guid', $guid);
+		$result = $this->db->update($type);
+		return $result;
+	}
+
+	/**
+	* 获取title
+	*/
+	function get_title_by_guid($guid)
+	{
+		$this->db->select('title');
+		$this->db->from(TABLE_CORE_ENTITIES);
+		$this->db->where('guid', $guid);
+		$this->db->limit(1);
+		return $this->db->get();
+	}
+}

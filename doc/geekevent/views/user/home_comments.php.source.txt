@@ -1,0 +1,54 @@
+<?php 
+	$this->load->view($this->web_router_lib->Get_user_navigation_url(),array("current_on"=>"comments"));
+	$screen_name = $this->user_lib->get_screen_name($user_guid);
+?>
+<dl class='user-timeline'>
+<?php if($comments_num>0):?> 
+    <dt>
+		<?=$screen_name.lang('user_comment')?><span class='num'> (<?=$comments_num?>)</span> 
+	</dt>
+    <dd>
+    <?php 
+        foreach($comments as $row):
+            $comment_guid = $row->guid;
+            $entity_guid = $row->entity_guid;
+            $comment_main = $this->entity_engine_lib->obtain_main($comment_guid);
+            $comment_date = date("Y.m.d H:i",$this->entity_engine_lib->obtain_time_created($comment_guid));
+            $source_where = array('guid'=>$entity_guid);
+            $source = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_ENTITY,'title,subtype_id',$source_where);
+            if($source->subtype_id == MODULE_EVENTS)
+            {
+                $source_link = $this->web_router_lib->Get_event_details_url($entity_guid);
+            }
+            elseif($source->subtype_id == MODULE_CLIPS)
+            {
+                $source_link = $this->web_router_lib->Get_clip_url($entity_guid);
+            }
+        ?>
+        <article class='comment'>
+            <time pubtime="<?=$comment_date?>" datetime='<?=$comment_date?>'><?=$comment_date?></time>
+            <div class='entry'>
+                 <div class='toolbar'>                                    
+                    <span class='from'>
+                        <?=lang('user_source')?>:<a href='<?=$source_link?>'><?=$source->title?></a>
+                    </span>
+                </div>
+                <div class="content">
+                    <?=echo_cut_off_content($comment_main)?>
+                </div>
+               
+            </div>
+        </article>
+    <?php endforeach;?>
+
+        <div class="pagination">
+        <?=$this->pagination->create_links()?>
+		</div>
+    </dd>
+<?php else:?>
+    <dt></dt>
+	<div class="result-info result-alert">
+		    <div class="message"><?=lang('user_no_comment_msg')?></div>
+	</div>
+<?php endif;?>
+</dl>

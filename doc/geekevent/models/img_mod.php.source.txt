@@ -1,0 +1,17 @@
+<?php
+
+	/**
+	 * Model Name: Img_mod
+	 * Description: image model contains public methods used to reponse calls from img_lib
+	 * and conduct operations to intereact with databases mainly related to tables;
+	 * Author: LJC
+	 * Date: Sep 7, 2011
+	 */
+    class Img_mod extends MY_Model
+    {
+        function __construct()
+        {
+            parent::__construct();
+        }
+    }
+?>

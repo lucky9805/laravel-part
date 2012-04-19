@@ -1,0 +1,4 @@
+<div class="spacer">
+<a href="http://www.geekpark.net/event">
+<img src="http://www.geekpark.net/uploads/events/images/yN0SbjwM7cTzOHFJd1BU7d6sBSdFVeSC.png" width="300" height="250" title="周鸿祎的产品观，弹性社交" border="0"></img></a> 
+</div>

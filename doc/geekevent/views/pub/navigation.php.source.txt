@@ -1,0 +1,25 @@
+<nav class="menu">
+<?php
+$about="";
+$terms="";
+$privacy="";
+$job="";
+
+if($current_on=="about") $about="on";
+if($current_on=="terms") $terms="on";
+if($current_on=="privacy") $privacy="on";
+if($current_on=="job") $job="on";
+?>
+
+    <ul>
+    <li class='first <?php echo $about;?>'>
+        <a href="/pub/index/about"><?php echo site_lang('pub_about');?></a>
+    </li><li  class='<?php echo $terms;?>'>
+        <a href="/pub/index/terms"><?php echo site_lang('pub_terms');?></a>
+    </li><li class='<?php echo $privacy;?>'>
+        <a href="/pub/index/privacy"><?php echo site_lang('pub_privacy');?></a>
+    </li><li class='last <?php echo $job;?>'>
+        <a href="/pub/index/job"><?php echo site_lang('pub_job');?></a>
+    </li>
+    </ul>
+</nav>

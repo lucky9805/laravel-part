@@ -1,0 +1,47 @@
+<script>
+$(function(){
+    UI.tagDynamic($('#<?php echo $tagname;?>'), {
+        "container_class":"wrap-text-box tag_dynamic_box",
+        
+        //autocomplete_service: 'aaa',
+            <?php 
+       // if(1==2){
+       if($tagname!="app"){
+       ?>
+        autocomplete_service: '/ajax/auto_tag/user/',
+       <?php } ?>
+        /*
+          data_list: [
+            { value: 'aaa', label: 'aaa' },
+            { value: 'bbb', label: 'bbb' }
+        ]
+        */
+        <?php 
+       // if(1==2){
+       if($datalist){
+        	$count=count($datalist);
+       	?>
+        	
+	       	data_list: [
+	       	<?php  
+	       	$i=0;
+	       	foreach($datalist as $row){
+	       		$i++;
+	       		if($count==$i)
+	       		echo  "{ value:'{$row["value"]}',label:'{$row["label"]}' }";
+	       		else
+	       		echo  "{ value:'{$row["value"]}',label:'{$row["label"]}' },";
+	       	}
+	    	?>
+	    	
+	        ],
+        
+        <?php }
+        ?>
+  "button_str": "添加"       
+    });
+
+})
+</script>
+
+

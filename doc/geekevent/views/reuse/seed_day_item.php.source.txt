@@ -1,0 +1,20 @@
+ <dl>
+ 	<dt><span class="year"><?=$myear;?></span><span class="data"><?=$mtime;?></span></dt>
+ 	<dd>
+		<?php
+	 	$row_counts=count($results);
+
+			for($i=0;$i<$row_counts;$i++){
+				$row=$results[$i];
+			 	$guid=$row->guid;
+			 	$entity = $this->dbmanager_lib->obtain_a_row("core_entities","title,main,desc",array("guid"=>$guid));
+			 	$news = $this->dbmanager_lib->obtain_a_row("news","news_url",array("guid"=>$guid));
+			 	$first="";
+			 	if($i==0)$first="class='first'";
+		?>
+ 
+						<a <?=$first?> href="#"><?=$entity->title;?></a>
+	 	 
+		 <?php } ?>
+		 </dd>
+ </dl>

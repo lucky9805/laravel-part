@@ -1,0 +1,117 @@
+<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
+
+class Tag_Tag_module extends CI_Module {
+
+        /**
+        * 构造函数
+        *
+        * @return void
+        * @author
+        **/
+
+        function __construct()
+        {
+            parent::__construct();
+            $this->load->model("tag_mod");
+        }
+
+        function add_tag_relation($entity_guid,$tag_name,$relation_type,$user_guid)
+        {
+            $error = "";
+            $tag = $this->tag_mod->does_tag_exist($tag_name);
+            if($tag)
+            {
+                $tag_id = $tag->guid;
+                $relation = $this->tag_mod->does_relation_exist($tag_id,$entity_guid);
+                if(!$relation)
+                {
+                    $tr_data = array(
+                        'tag_id'        => $tag_id,
+                        'entity_guid'   => $entity_guid,
+                        'type'          => $relation_type,
+                        'time_created'  => time(),
+                        'user_guid'     => $user_guid
+                    );
+                    $this->tag_mod->insert_a_row(TABLE_TAG_RELATIONS,$tr_data);
+                }
+                else
+                {
+                    $error = "关系已存在";
+                }
+            }
+            else
+            {
+                //待添加的标签不存在,需创建标签
+                //插入tag的entity数据
+                $time	=time();	
+                $e_data = array(
+                    'type'              => 'object',
+                    'subtype_id'        => MODULE_TAG,
+                    'user_guid'         => $user_guid,
+                    'father_guid'       => 0,
+                    'time_created'      => $time,
+                    'time_updated'      => $time,
+                    'deadline'          => 0,
+                    'visibility'        => 'yes',
+                    'source'            => NULL,
+                    'second_type'       => 0,
+                    'ip_address'        => $this->input->ip_address()
+                );
+                $tag_id = $this->tag_mod->insert_a_row(TABLE_ENTITY,$e_data);
+                
+                //插入tag的core_entity数据
+                $ce_data = array(
+                    'guid'          => $tag_id,
+                    'subtype_id'    => MODULE_TAG,
+                    'title'         => $tag_name
+                );
+                $this->tag_mod->insert_a_row(TABLE_CORE_ENTITY,$ce_data);
+
+                if($tag_id)
+                {
+                    $tr_data = array(
+                        'tag_id'        => $tag_id,
+                        'entity_guid'   => $entity_guid,
+                        'type'          => $relation_type,
+                        'time_created'  => time(),
+                        'user_guid'     => $user_guid
+                    );
+                    $this->tag_mod->insert_a_row(TABLE_TAG_RELATIONS,$tr_data);
+                }
+                else
+                {
+                    $error = "创建标签失败";
+                }
+            }
+            return $error;
+        }
+
+        function delete_tag_relation($entity_guid,$tag_name)
+        {
+            $error = "";
+            $tag = $this->tag_mod->does_tag_exist($tag_name);
+            if($tag)
+            {
+                $tag_id = $tag->guid;
+                $relation = $this->tag_mod->does_relation_exist($tag_id,$entity_guid);
+                if($relation)
+                {
+                    $tr_data = array(
+                        'tag_id'        => $tag_id,
+                        'entity_guid'   => $entity_guid
+                    );
+                    $this->tag_mod->delete_rows(TABLE_TAG_RELATIONS,$tr_data);
+                }
+                else
+                {
+                    $error = "关系不存在";
+                }
+            }
+            else
+            {
+                $error = "标签不存在";
+            }
+            return $error;
+        }
+}
+?>

@@ -1,0 +1,13 @@
+<?php
+	class Rss extends My_Controller
+	{
+		function __construct()
+		{
+			parent::__construct(); 
+		}
+
+        function daily()
+        {
+            $this->load->view('rss/daily');
+        }
+    }

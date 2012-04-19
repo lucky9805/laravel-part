@@ -1,0 +1,65 @@
+<script>
+$(function(){
+    //var start_time="", start_time_check="";
+    //var start_time=""
+    $("#footer").css("display","none");
+    ListNewsLoad("","center","/ajax/get_one_day_seed/");
+    /*$(window).scroll(function(){
+            var s_h = $(document).scrollTop();
+            var w_h = $(window).height();
+            var d_h = $(document).height();
+            var limit = 10; 
+
+            if( w_h + $(document).scrollTop() + limit >=  d_h){            	
+               if(start_time_check==start_time){
+               }else{                    
+                    doLoad(start_time,"bottom");                    
+                    start_time_check=start_time;                    
+               }
+			}
+    });
+    function doLoad(start_time1,position){ 
+            se=null;
+        	if(start_time1===0){ 
+                $("#footer").css("display","block");
+                $("#data-list").css({"background":"none","padding-bottom":"0"})
+            }else{             
+              se =  {
+                 start_time: start_time1               
+              };
+              ajax_load_news(se,position);
+            }
+            
+
+
+    }
+    function ajax_load_news(my_get_data,position){
+         $.ajax({
+            url: "/ajax/get_one_day_seed/",
+            type: "get",
+            data: my_get_data,
+            beforeSend: function(){ 
+                if(start_time!=0){
+                    $("#footer").css("display","none");
+                    UI.foot_hide($("#data-list"),position);                    
+                } 
+            },
+            success: function(response){
+                    try{                        
+                        var data = eval('('+response+')');                        
+                        $("#data-list").append(data.data);                        
+                        start_time = data.next_time;                        
+                    }catch(error){
+                    }
+            },
+            complete: function(){
+                
+            },
+            error: function(){
+                
+            }
+        })
+    }*/
+   
+})
+</script>

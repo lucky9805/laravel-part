@@ -1,0 +1,40 @@
+<?php 
+	$this->load->view($this->web_router_lib->Get_user_navigation_url(),array('current_on'=>'seeds', 'user_guid'=>$user_guid));
+	$screen_name = $this->user_lib->get_screen_name($user_guid);
+?>
+<dl class='user-timeline'>
+	<?php if($seeds_num > 0):?>
+    <dt>
+		<?=$screen_name.lang('user_seed')?><span class='num'> (<?=$seeds_num?>)</span> 
+	</dt>
+    <dd>
+    <?php 
+        foreach($seeds as $row):
+            $guid = $row->guid;
+            $title = $this->entity_engine_lib->obtain_title($guid);
+            $url = $this->web_router_lib->Get_seed_url($guid);
+            $publish_time = date('Y.m.d H:i', $row->publish_time);
+        ?>
+        <article class='comment'>
+            <time pubtime="<?=$publish_time?>" datetime='<?=$publish_time?>'><?=$publish_time?></time>
+            <div class='entry join'>
+                <div class='toolbar'>                                    
+                    <span class='from'>
+                        <?=lang('user_publish')?>:<a href='<?=$url?>'><?=$title?></a>
+                    </span>
+                </div>
+            </div>
+        </article>
+    <?php endforeach;?>
+
+        <div class="pagination">
+        <?=$this->pagination->create_links()?>
+		</div>
+    </dd>
+	<?php else:?>
+	<dt></dt>
+    <div class="result-info result-alert">
+        <div class="message"><?=lang('user_no_seed_msg')?></div>
+    </div>
+	<?php endif;?>
+</dl>

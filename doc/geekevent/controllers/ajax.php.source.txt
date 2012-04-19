@@ -1,0 +1,1414 @@
+<?php
+class Ajax extends CI_Controller
+{
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('clicklog_lib');
+	}
+
+	function switchover()
+	{
+		$show_type = $this->input->get("show_type");
+		$cookie = array(
+			'name'		=> 'switchover',
+			'value'		=> $show_type,
+			'expire'	=> 60 * 60 * 24 * 31 * 2
+		);
+		return $this->input->set_cookie($cookie);
+	}
+
+	/**
+	 * function get_one_day_seed(){
+	 * $start_time=$this->input->get("start_time");
+	 * if($start_time=='')$start_time=time();
+	 *
+	 * if($start_time==0){
+	 * $data= array(
+	 * 'next_time' => 0
+	 * );
+	 * $json = json_encode($data);
+	 * echo $json;
+	 * exit;
+	 * }
+	 * $have_more=0;
+	 * $next_time=0;
+	 * $subtype_id=8;
+	 * $comments="";
+	 *
+	 * $where=array("subtype_id"=>$subtype_id,"time_created < "=>$start_time);
+	 * $first_rows = $this->dbmanager_lib->obtain_rows("entities","time_created",$where,NULL,"time_created desc",1);
+	 * if($first_rows){
+	 * $have_more = $first_rows[0]->time_created;
+	 *
+	 * if($have_more==$start_time){
+	 * $data= array(
+	 * 'next_time' => 0
+	 * );
+	 * $json = json_encode($data);
+	 * echo $json;
+	 * exit;
+	 *
+	 * }
+	 * $day= date('Y-m-d',$have_more);
+	 * $have_more = std_unix_time_conversion($day);
+	 *
+	 * }
+	 * if($have_more){
+	 * $end_time = $have_more+86400;
+	 * $where=array("subtype_id"=>$subtype_id,"time_created < "=>$end_time,"time_created > "=>$have_more);
+	 * $datalist["myear"] = date('Y',$have_more);
+	 * $datalist["mtime"] = date('m.d',$have_more);
+	 * $datalist["itemclass"] = "newsL";
+	 * $query = $this->dbmanager_lib->obtain_rows("entities","*",$where,NULL,"time_created desc");
+	 * $counts = count($query)-1;
+	 * $next_time=$query[$counts]->time_created;
+	 *
+	 *
+	 * $datalist["results"]=$query;
+	 *
+	 * $comments =$this->load->view("reuse/seed_day_item",$datalist,TRUE);
+	 *
+	 * }
+	 *
+	 * $data= array(
+	 * 'next_time' => $next_time,
+	 * 'data'=>$comments
+	 * );
+	 *
+	 * $json = json_encode($data);
+	 * echo $json;
+	 *
+	 * }
+	 */
+
+	/**
+	 * 获取每日快文的相应的每两天的数据
+	 * 如果开始时间为2011-11-1日需要转换为时间戳
+end_time=2011-1-1
+	 */
+	// function get_news($currenttime='',$do_end_time="1293840000"){
+	function get_news()
+	{
+		$currenttime = $this->input->get("start_time");
+		$do_end_time = $this->input->get("end_time");
+		if ( ! empty($do_end_time))
+		{
+			$user_guid = $this->global_lib->get_user_guid();
+			$this->clicklog_lib->insert_clicklog($user_guid, 'get_news_month', $do_end_time);
+		}
+		if ($currenttime == '')
+		{
+			$currenttime = time();
+		}
+		if ($do_end_time == '')
+		{
+			$do_end_time = 1293840000;
+		}
+		// $posOut = mb_strpos($currenttime, "-");
+		// if ($posOut !== FALSE) $currenttime=std_unix_time_conversion($currenttime);
+		if (mb_strpos($currenttime, "-") !== FALSE)
+		{
+			if (mb_strpos($currenttime, "12-31") !== FALSE)
+			{
+				$currenttime = std_unix_time_conversion($currenttime) + 86400;
+			}
+			else
+			{
+				$currenttime = std_unix_time_conversion($currenttime);
+			}
+		}
+
+		if (mb_strpos($do_end_time, "-") !== FALSE)
+		{
+			$do_end_time = std_unix_time_conversion($do_end_time);
+		}
+
+		if ($currenttime < $do_end_time)
+		{
+			$data = array('next_time' => 0);
+			exit(json_encode($data));
+		}
+
+		$have_more	= 0;
+		$next_time	= 0;
+		$subtype_id	= 7;
+		$comments	= '';
+		$comments1	= '';
+		$where		= array(
+			'subtype_id'		=> $subtype_id,
+			'time_created < '	=> $currenttime
+		);
+		$first_rows	= $this->dbmanager_lib->obtain_rows("entities", "time_created", $where, NULL, "time_created desc", 1);
+		if ($first_rows)
+		{
+			$have_more = $first_rows[0]->time_created;
+
+			if (($have_more == $currenttime) || ($have_more < $do_end_time))
+			{
+				$data = array('next_time' => 0);
+				exit(json_encode($data));
+			}
+			$day = date('Y-m-d', $have_more);
+			$have_more = std_unix_time_conversion($day);
+		}
+		if ($have_more)
+		{
+			$end_time				= $have_more + 86400;
+			$where					= array("subtype_id" => $subtype_id, "time_created < " => $end_time, "time_created > " => $have_more);
+			$datalist["myear"]		= date('Y', $have_more);
+			$datalist["mtime"]		= date('m.d', $have_more);
+			$datalist["itemclass"]	= "newsL";
+			$query					= $this->dbmanager_lib->obtain_rows("entities", "*", $where, NULL, "time_created desc");
+			$counts					= count($query)-1;
+			$next_time				= $query[$counts]->time_created;
+			$datalist["results"]	= $query;
+			$comments				= $this->load->view("reuse/news_item", $datalist, TRUE);
+		}
+		if ($next_time !== 0)
+		{
+			$where = array(
+				'subtype_id' => $subtype_id,
+				'time_created < ' => $next_time
+			);
+			$have_more	= 0;
+			$next_time	= 0;
+			$first_rows	= $this->dbmanager_lib->obtain_rows("entities", "time_created", $where, NULL, "time_created desc", 1);
+			if ($first_rows)
+			{
+				$have_more = $first_rows[0]->time_created;
+
+				if (($have_more == $currenttime) || ($have_more < $do_end_time))
+				{
+					/**
+					 * $data= array(
+					 * 'next_time' => 0
+					 * );
+					 * $json = json_encode($data);
+					 * echo $json;
+					 * exit;
+					 */
+					$have_more = FALSE;
+				}
+				else
+				{
+					// echo "aaa";
+					$day		= date('Y-m-d', $have_more);
+					$have_more	= std_unix_time_conversion($day);
+				}
+				if ($have_more)
+				{
+					$end_time				= $have_more + 86400;
+					$where					= array(
+						"subtype_id"		=> $subtype_id,
+						"time_created < "	=> $end_time,
+						"time_created > "	=> $have_more
+					);
+					$datalist["myear"]		= date('Y', $have_more);
+					$datalist["mtime"]		= date('m.d', $have_more);
+					$datalist["itemclass"]	= "newsR";
+					$query					= $this->dbmanager_lib->obtain_rows("entities", "*", $where, NULL, "time_created desc");
+					if ($query)
+					{
+						$counts					= count($query) - 1;
+						$next_time				= $query[$counts]->time_created;
+						$datalist["results"]	= $query;
+						if ($next_time == $currenttime)
+						{
+							$data = array('next_time' => 0);
+							exit(json_encode($data));
+						}
+
+						$comments1 = $this->load->view("reuse/news_item", $datalist, TRUE);
+					}
+				}
+			}
+		}
+
+		$data = array(
+			'next_time'	=> $next_time,
+			'Ldata'		=> $comments,
+			'Rdata'		=> $comments1
+		);
+
+		exit(json_encode($data));
+	}
+
+	function get_news_month()
+	{
+		$c_year	= $this->input->get("cyear");
+		$where	= array("news_year" => $c_year);
+		$query	= $this->dbmanager_lib->obtain_rows("news_archive", "news_month", $where, NULL, "news_month desc");
+		$d		= array();
+		foreach ($query as $row)
+		{
+			$d[] = $row->news_month;
+		}
+		$data = array('data' => $d);
+
+		exit(json_encode($data));
+	}
+	// 获取某个问题的所有评论
+	function comments()
+	{
+		$entity_guid	= $this->input->get("id");
+		$start			= $this->input->get("start");
+		$offset			= $this->input->get("offset");
+		$com_where		= array("entity_guid" => $entity_guid);
+		$total			= $result = $this->dbmanager_lib->obtain_rows("comments", '*', $com_where, NULL, "guid desc", NULL, NULL, TRUE);
+		$is_end			= FALSE;
+		if (($start + $offset) >= $total)
+		{
+			$is_end = TRUE;
+		}
+
+		$result		= $this->dbmanager_lib->obtain_rows("comments", '*', $com_where, NULL, "guid desc", $offset, $start, FALSE);
+
+		$comments	= NULL;
+		foreach ($result as $row)
+		{
+			$child_id		= $row->guid;
+			$parent_id		= $row->fid;
+			$where['guid']	= $child_id;
+			$content		= $this->dbmanager_lib->obtain_a_row('core_entities', 'main', $where, '', 'object');
+			$entities		= $this->dbmanager_lib->obtain_a_row('entities', 'user_guid,time_created', $where, '', 'object');
+			$user_guid		= $entities->user_guid;
+			$pub_time		= $entities->time_created;
+			$where['guid']	= $user_guid;
+			$users			= $this->dbmanager_lib->obtain_a_row('users', 'screen_name', $where, '', 'object');
+			$user_name		= $users->screen_name;
+			$content_show	= $content->main;
+			$content_show1	= "";
+			$length			= mb_strlen($content_show);
+			$len			= WORD_CONTENT_LIMIT;
+			if ($length < $len)
+			{
+				$content_show1 = "<div class ='comment_short'>
+							" . geek_content($content_show) . "
+						    </div>";
+			}
+			else
+			{
+				$sub_comment = cn_substr($content_show, 0, $len-1);
+				$content_show1 = "<div class='comment_short'>
+							" . geek_content($sub_comment) . "
+							<a href='javascript:void(0)' onclick=\"UI.trigger(this, 'comment_short', 'comment_full')\">查看更多</a>
+						</div>
+						<div class=\"comment_full\" style='display: none'>
+							" . geek_content($content_show) . "
+							<a href='javascript:void(0)' onclick=\"UI.trigger(this, 'comment_full', 'comment_short')\">收起</a>
+						</div>";
+			}
+			$comments[] = array(
+				"id"			=> $child_id,
+				"parent_id"		=> $parent_id,
+				"content"		=> $content_show1,
+				"pub_date"		=> geekTime($pub_time),
+				"user_guid"		=> $user_guid,
+				"screen_name"	=> $user_name,
+				"avatar"		=> $this->img_lib->get_avatar($user_guid),
+			);
+			/**
+			 * $comments[]["id"]=$child_id;
+			 * $comments[]["parent_id"]=0;
+			 * $comments[]["user_id"]=$user_guid;
+			 * $comments[]["user_name"]=$user_name;
+			 * $comments[]["user_avatar"]='/public/img/tmp/avatar_30_30.jpg';
+			 * $comments[]["pub_time"]=wmTime($pub_time);
+			 * $comments[]["content"]=$content->main;
+			 */
+		}
+		// echo "<br>";
+		// echo print_r($comments);
+		if ($comments == NULL)
+		{
+			$comments = '';
+		}
+		$data = array(
+			'total'		=> $total,
+			'is_end'	=> $is_end,
+			'data'		=> $comments
+		);
+
+		exit(json_encode($data));
+	}
+	// 发布评论
+	function comment_submit()
+	{
+		$this->load->library('sys_lib');
+		$this->load->library('river_lib');
+		$entity_guid	= $this->input->post('entity_id');
+		$fid			= $this->input->post('parent_id');
+		$value			= strip_tags($this->input->post('content'));
+		$user_guid		= $this->global_lib->get_user_guid();
+		$source			= "web";
+		$is_login		= $this->global_lib->is_login();
+		if ($is_login)
+		{
+			$this->load->add_package_path(APPPATH . 'third_party/comment/');
+			$this->load->library('tp_comment');
+			$result = $this->tp_comment->add_comment($entity_guid, $fid, $value, $user_guid, $source);
+			if ($result)
+			{
+				$sys_data['object_id'] = $result;
+				if ($fid == NULL || $fid == 0)
+				{
+					$sys_data['entity_guid']	= $entity_guid;
+					$sys_data['operate']		= "comment";
+				}
+				else
+				{
+					$sys_data['entity_guid']	= $fid;
+					$sys_data['operate']		= "comment_c";
+				}
+				$this->sys_lib->create_system_logs($sys_data);
+				$this->river_lib->comment($user_guid, $entity_guid, $result);
+				$where			= array('guid' => $entity_guid);
+				$comment_num	= $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_EXTRA_ENTITY, 'comment', $where);
+				$data			= array('comment' => $comment_num + 1);
+				$this->dbmanager_lib->update_rows(TABLE_CORE_EXTRA_ENTITY, $where, $data);
+				if ($fid != NULL && $fid != 0)
+				{
+					$f_uid = $this->dbmanager_lib->obtain_a_row_field(TABLE_ENTITY, 'user_guid', array('guid' => $fid));
+					if ($f_uid != $user_guid)
+					{
+						$notification = array(
+							'uid'			=> $user_guid,
+							'object_id'		=> $fid,
+							'user_guid'		=> $f_uid,
+							'operate'		=> 'comment',
+							'time_created'	=> time(),
+							'anchor_id'		=> $result
+						);
+						$this->dbmanager_lib->create_a_row(TABLE_NOTIFICATIONS, $notification);
+					}
+				}
+				$screen_name = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'screen_name', array('guid' => $user_guid));
+				$info = array(
+					'error'		=> FALSE,
+					'message'	=> '',
+					'data'		=> array(
+						'id'			=> $result,
+						'parent_id'		=> $fid,
+						'content'		=> geek_content($value),
+						'pub_date'		=> geekTime(time()),
+						'user_guid'		=> $user_guid,
+						'screen_name'	=> $screen_name,
+						'avatar'		=> $this->img_lib->get_avatar($user_guid)
+					)
+				);
+			}
+			else
+			{
+				$info = array(
+					'error'		=> TRUE,
+					'message'	=> '发表评论失败',
+					'data'		=> ''
+				);
+			}
+		}
+		else
+		{
+			$login_url = $this->web_router_lib->Get_user_login_url();
+			$register_url = $this->web_router_lib->Get_user_register_url();
+			$info = array(
+				'error' => TRUE,
+				'message' => '没有登陆，不能发表评论。可<a href="' . $login_url . '">登陆</a>或<a href="' . $register_url . '">注册</a>，然后发表评论。',
+				'data' => ''
+			);
+		}
+		exit(json_encode($info));
+	}
+	// 加载评论
+	function load_comment_by_id($id)
+	{
+		$where = array('guid' => $id);
+		$parent_id	= $this->dbmanager_lib->obtain_a_row_field(TABLE_COMMENT, 'fid', $where);
+		$content	= $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_ENTITY, 'main', $where);
+		$entity		= $this->dbmanager_lib->obtain_a_row(TABLE_ENTITY, 'user_guid,time_created', $where);
+		$user_guid	= $entity->user_guid;
+		$user		= $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'username,screen_name', array('guid' => $user_guid));
+		$info		= array(
+			'id'			=> $id,
+			'parent_id'		=> $parent_id,
+			'content'		=> $content,
+			'pub_date'		=> geekTime($entity->time_created),
+			'user_guid'		=> $user_guid,
+			'screen_name'	=> $user->screen_name,
+			'avatar'		=> $this->img_lib->get_avatar($user_guid)
+		);
+		exit(json_encode($info));
+	}
+
+	/**
+	 * 接收参数：
+- GET方式
+	 * - order, 排序方式，默认是一种排序normal 对应页面上的 "最新发布的视频(the_latested)/评论最多的视频(the_most_commented)", option的value值请告诉我后台是如何定义的。the_most_viewed  查看最多的。 the_most_rated被评星最多的
+	 * 最新发布的视频:the_latested
+	 * 评论最多的视频:the_most_commented
+	 * 查看最多的:the_most_viewed
+	 * 被评星最多的:the_most_rated
+	 * - start,  从第几条记录开始获取, 默认或不传值即为0
+	 * - offset, 返回记录条数，默认值后台自行定义。 这个值备用， 可能不会更改
+	 * - tags[] , 选择的标签, 如 tags[]='IBM'&tags[]='SNS'
+	 * 不知道PHP是否支持这样接收参数，如果不可以，请告诉我多个标签的组织形式
+	 */
+	function get_cast_list()
+	{
+		$this->load->library('clip_lib');
+		$tags		= $this->input->get("tags");
+		$user_guid	= $this->global_lib->get_user_guid();
+		$this->clicklog_lib->insert_clicklog($user_guid, 'get_cast_list', $tags[0]);
+		if (!$tags)
+		{
+			$tag_id = NULL;
+		}
+		else
+		{
+			$tag = $tags[0];
+			$where = array(
+				'title'			=> $tag,
+				'subtype_id'	=> MODULE_TAG
+			);
+			$tag_id = $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_ENTITY, 'guid', $where);
+			unset($where);
+		}
+		$start	= $this->input->get("start");
+		$offset	= $this->input->get("offset");
+		$order	= $this->input->get("order");
+
+		if (isset($tags[0]) && $tags[0] == '推荐演讲')
+		{
+			$result		= array();
+			$clips		= $this->clip_lib->obtain_recommended_clips();
+			$clips_arr	= explode(',', $clips);
+			$clips_arr	= array_slice($clips_arr, $start, $offset);
+			foreach ($clips_arr as $row)
+			{
+				$result[] = $this->clip_lib->obtain_a_clip($row);
+			}
+		}
+		else
+		{
+			$clips = $this->clip_lib->obtain_clips_by_ajax($tag_id, $order, $offset, $start);
+			$result = $clips['result'];
+		}
+		/**
+		 * $clips = $this->clip_lib->obtain_clips_by_ajax($tag_id,$order,$offset,$start);
+		 * $result = $clips['result'];
+		 */
+
+		if ( ! $result)
+		{
+			exit('[]');
+		}
+
+		$create_type = array(
+			'clips_big'		=> array(390, 320),
+			'clips_medium'	=> array(190, 210),
+			// 'clips_standard' => array(190, 130)
+		);
+		$colors = array(
+			"clip_color_1",
+			"clip_color_2",
+			"clip_color_3",
+			"clip_color_4"
+		);
+		$create_type_count = 0;
+		foreach ($result as $row)
+		{
+			$create_type_count++;
+			if ($create_type_count == 1)
+			{
+				$key = "clips_big";
+			}
+			else
+			{
+				$key = array_rand($create_type);
+			}
+			$color			= array_rand($colors);
+			$clips_guid		= $row->guid;
+
+			$show_content	= $row->highlight;
+			$extra_content	= $show_content;
+			$length			= mb_strlen($show_content);
+			$len			= 78;
+			if ($length > $len)
+			{
+				$extra_content = cn_substr($show_content, 0, $len-1, FALSE) . "<a class=\"more\" href=\"/cast/view/{$clips_guid}\">...</a>";
+			}
+			if ($key == 'clips_medium')
+			{
+				$show_content = $extra_content;
+			}
+
+			$where['guid'] = $clips_guid;
+			$detail = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_ENTITY, 'title,desc', $where);
+			$extra_counts = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_EXTRA_ENTITY, 'comment,view', $where);
+			if ( ! $extra_counts)
+			{
+				$extra_counts->comment = 0;
+				$extra_counts->view = 0;
+			}
+
+			$img_where = array(
+				'entity_guid' => $clips_guid,
+				'create_type' => 'clips_standard'
+			);
+			$image_server = IMG_SERVER;
+			$standard_pic = $image_server . $this->dbmanager_lib->obtain_a_row_field(TABLE_IMAGES, 'relative_path', $img_where);
+
+			$img_where = array(
+				'entity_guid' => $clips_guid,
+				'create_type' => $key
+			);
+			$random_pic		= $image_server . $this->dbmanager_lib->obtain_a_row_field(TABLE_IMAGES, 'relative_path', $img_where);
+
+			$where['guid']	= $clips_guid;
+
+			$entities		= $this->dbmanager_lib->obtain_a_row('entities', 'user_guid,time_created', $where, '', 'object');
+			$speaker_id		= $entities->user_guid;
+
+			$where['guid']	= $speaker_id;
+			$users			= $this->dbmanager_lib->obtain_a_row('users', 'screen_name', $where, '', 'object');
+
+			$speaker		= $users->screen_name;
+
+			$data[]			= array(
+				'id'			=> $clips_guid,
+				'title'			=> $detail->title,
+				'speaker'		=> $speaker,
+				'speaker_id'	=> $speaker_id,
+				'pub_time'		=> date("Y.n.d", $row->publish_time),
+				'intro'			=> $detail->desc,
+				'content'		=> $show_content,
+				'standard'		=> $standard_pic,
+				'photo'			=> $random_pic,
+				'photo_width'	=> $create_type[$key][0],
+				'photo_hight'	=> $create_type[$key][1],
+				'color'			=> $color,
+				'extra_content'	=> $extra_content,
+				'comment_num'	=> $extra_counts->comment,
+				'view_num'		=> $extra_counts->view
+			);
+		}
+		exit(json_encode($data));
+	}
+
+	function get_collection_by_event_id()
+	{
+		$event_id				= $this->input->get('event_id');
+		$where['event_guid']	= $event_id;
+		$collections			= $this->dbmanager_lib->obtain_rows(TABLE_CLIPS_COLLECTION, 'id, collection_name', $where);
+		$data					= NULL;
+		$total_count			= count($collections);
+
+		$i = 0;
+		if ($collections)
+		{
+			foreach ($collections as $collection)
+			{
+				$i++;
+				if ($i == $total_count)
+				{
+					$data = $data . "{label: '{$collection->collection_name}', value:'{$collection->id}'}";
+				}
+				else
+				{
+					$data = $data . "{label: '{$collection->collection_name}', value:'{$collection->id}'},";
+				}
+			}
+		}
+		echo "[";
+		echo $data;
+		echo "]";
+	}
+	// 自动完成接口
+	// $type=user
+	// $type=tag
+	function auto_tag($type = "user")
+	{
+		if ($type == "user")
+		{
+			$subtype_id = MODULE_USER;
+		}
+		elseif ($type == "tag")
+		{
+			$subtype_id = MODULE_TAG;
+		}
+
+		$q				= $this->input->get("q");
+		$limit			= $this->input->get("limit");
+		$where			= array("subtype_id" => $subtype_id);
+		$like			= array("title" => $q);
+		$data			= "";
+		$collections	= $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITY, 'guid,title', $where, $like, NULL, $limit, 0);
+		$total_count	= count($collections);
+
+		$i = 0;
+		foreach($collections as $collection)
+		{
+			// print_r($collection);
+			$i++;
+			if ($i == $total_count)
+				$data = $data . "{label: '{$collection->title}', value:'{$collection->title}'}";
+			else
+				$data = $data . "{label: '{$collection->title}', value:'{$collection->title}'},";
+		}
+		echo "[";
+		echo $data;
+		echo "]";
+		// $json = "";
+		// echo $json;
+	}
+
+	function get_notification($id)
+	{
+		$where					= array('id' => $id);
+		$data['notification']	= $this->dbmanager_lib->obtain_a_row(TABLE_NOTIFICATIONS, '*', $where);
+		$this->dbmanager_lib->update_rows(TABLE_NOTIFICATIONS, $where, array('is_read' => 1));
+		if ($data['notification']->operate === 'comment')
+		{
+			$result = $this->load->view('notification/notify_right', $data, TRUE);
+		}
+		else
+		{
+			$result = $this->load->view('notification/notify_confirm', $data, TRUE);
+		}
+		exit($result);
+	}
+
+	function get_notification_num()
+	{
+		$where = array(
+			'user_guid'	=> $this->global_lib->get_user_guid(),
+			'is_read'	=> 0
+		);
+		$num = $this->msg_lib->obtain_notifications('id', $where, NULL, NULL, NULL, TRUE);
+		exit($num);
+	}
+
+	function get_user_avatar($user_guid = "")
+	{
+		if ($user_guid == "")
+		{
+			echo "{}";
+		}
+		else
+		{
+			$where['guid'] = $user_guid;
+			$users = $this->dbmanager_lib->obtain_a_row('users', 'screen_name,real_name,position,company', $where, '', 'object');
+			if ($users)
+			{
+				$avatar		= $this->img_lib->get_avatar($user_guid);
+				$real_name	= $users->real_name;
+				if ($real_name == "")
+				{
+					$real_name = $users->screen_name;
+				}
+				echo "{
+						user_name: '{$real_name}',
+						screen_name: '{$users->screen_name}',
+						avatar: '{$avatar}',
+						company: '{$users->company}',
+						job_title: '{$users->position}'
+					   }";
+			}
+			else
+			{
+				echo "{}";
+			}
+		}
+	}
+
+	function load_user_timeline($user_guid = 0, $page = 0)
+	{
+		$this->lang->load('user');
+		$this->load->library('river_lib');
+		$limit				= 10;
+		$offset				= ($page) ? ($page-1) * $limit : 0;
+		$river				= $this->river_lib->obtain_user_river($user_guid, $limit, $offset);
+		$river_num			= $this->river_lib->obtain_user_river($user_guid, NULL, NULL, TRUE);
+		$is_end				= ($limit * $page >= $river_num) ? TRUE : FALSE;
+		$result['data']		= array();
+		$result['is_end']	= $is_end;
+		if (count($river) > 0)
+		{
+			foreach ($river as $row)
+			{
+				$view_type		= $row->view_type;
+				$r_date			= date("Y.m.d H:i", $row->time_created);
+				$r_entity_guid	= $row->entity_guid;
+				$r_object_guid	= $row->object_guid;
+				$e_subtype_id	= $this->entity_engine_lib->obtain_subtype_id($r_entity_guid);
+				$e_title		= $this->entity_engine_lib->obtain_title($r_entity_guid);
+				if ($view_type == 'comment')
+				{
+					if ($e_subtype_id == MODULE_EVENTS)
+					{
+						$e_link = $this->web_router_lib->Get_event_details_url($r_entity_guid);
+					}
+					elseif ($e_subtype_id == MODULE_CLIPS)
+					{
+						$e_link = $this->web_router_lib->Get_clip_url($r_entity_guid);
+					}
+					elseif ($e_subtype_id == MODULE_SEED)
+					{
+						$e_link = $this->web_router_lib->Get_seed_url($r_entity_guid);
+					}
+					$comment = $this->entity_engine_lib->obtain_main($r_object_guid);
+					$data = array(
+						'r_date'	=> $r_date,
+						'e_link'	=> $e_link,
+						'e_title'	=> $e_title,
+						'comment'	=> $comment
+					);
+					$result['data'][]['html'] = $this->load->view('reuse/user_comment', $data, TRUE);
+				}
+				elseif ($view_type == 'enroll' || $view_type == 'check_in')
+				{
+					if ($view_type == 'enroll')
+					{
+						$action = lang('u:enroll');
+					}
+					elseif ($view_type == 'check_in')
+					{
+						$action = lang('u:check_in');
+					}
+					$e_link = $this->web_router_lib->Get_event_details_url($r_entity_guid);
+					$data = array(
+						'r_date'	=> $r_date,
+						'action'	=> $action,
+						'e_link'	=> $e_link,
+						'e_title'	=> $e_title
+					);
+					$result['data'][]['html'] = $this->load->view('reuse/user_event', $data, TRUE);
+				}
+				elseif ($view_type == 'create_seed')
+				{
+					$e_link = $this->web_router_lib->Get_seed_url($r_entity_guid);
+					$data = array(
+						'r_date' => $r_date,
+						'e_title' => $e_title,
+						'e_link' => $e_link
+					);
+					$result['data'][]['html'] = $this->load->view('reuse/user_seed', $data, TRUE);
+				}
+				unset($data);
+			}
+			$result['error'] = '';
+		}
+		else
+		{
+			$result['error'] = "未取到数据";
+		}
+		exit(json_encode($result));
+	}
+
+	function load_seeds()
+	{
+		$tag_id = $this->input->get('tag_id');
+
+		if (!empty($tag_id))
+		{
+			$user_guid = $this->global_lib->get_user_guid();
+			$this->clicklog_lib->insert_clicklog($user_guid, 'load_seeds', $tag_id);
+		}
+		$type = $this->input->get('type');
+		$type = (!$type) ? 'img' : $type;
+		if ($type == 'img')
+		{
+			$this->_load_tag_seeds();
+		}
+		elseif ($type == 'list')
+		{
+			// $tag_id = $this->input->get('tag_id');
+			if ($tag_id)
+			{
+				$this->_load_tag_seeds();
+			}
+			else
+			{
+				$this->_load_one_day_seeds();
+			}
+		}
+	}
+
+	/**
+	 * 通过标签加载极客阅读的文章
+	 * 通过Get方式接收的数据有:
+	 * t - 最后一篇文章的时间戳，用于加载更多，没有传则为初始化加载
+	 * num - 文章数
+	.* tag_id 标签id，没有传则为加载全部
+	 */
+	function _load_tag_seeds()
+	{
+		$this->load->library('seed_lib');
+		$seeds		= array();
+		$start_time	= $this->input->get('t');
+		$num		= $this->input->get('num');
+		$tag_id		= $this->input->get('tag_id');
+
+		if ($num == 0)
+		{
+			exit;
+		}
+
+		$load_ad = (!$start_time AND !$tag_id) ? TRUE : FALSE;
+
+		if (!$start_time)
+		{
+			$start_time = time();
+		}
+
+		if (!$tag_id)
+		{
+			$result	= $this->seed_lib->obtain_seeds_by_time($num, $start_time);
+			$tag	= '';
+		}
+		else
+		{
+			$result	= $this->seed_lib->obtain_seeds_by_tag($tag_id, $num, $start_time);
+			$tag	= $this->entity_engine_lib->obtain_title($tag_id);
+		}
+
+		if (count($result) > 0)
+		{
+			foreach($result as $row)
+			{
+				$guid			= $row->guid;
+				$title			= $this->entity_engine_lib->obtain_title($guid);
+				$url			= $this->web_router_lib->Get_seed_url($guid);
+				$author			= $this->user_lib->get_screen_name($row->author);
+				$author_url		= $this->web_router_lib->Get_home_url($row->author, 'index');
+				$thumb_img		= $this->img_lib->seed($guid, 'seed_cover');
+				$where			= array(
+					'entity_guid' => $guid,
+					'create_type' => 'seed_cover'
+				);
+				$photo_height	= $this->dbmanager_lib->obtain_a_row_field(TABLE_IMAGES, 'height', $where);
+				$seeds[] = array(
+					'title'			=> $title,
+					'url'			=> $url,
+					'author'		=> $author,
+					'author_url'	=> $author_url,
+					'from'			=> $row->source_site,
+					'pub_time'		=> date('Y.m.d', $row->publish_time),
+					'content'		=> $row->abstract,
+					'thumb_img'		=> $thumb_img,
+					'photo_height'	=> $photo_height,
+					't'				=> $row->publish_time,
+					'type'			=> $row->seed_type,
+					'tag'			=> $tag
+				);
+			}
+			// 加载广告
+			if ($load_ad)
+			{
+				$ad_where = array(
+					'type' => 'read_index',
+					'visibility' => 'yes'
+				);
+				$row = $this->dbmanager_lib->obtain_a_row(TABLE_ADS, '*', $ad_where);
+				if (count($row) > 0 AND $row->visibility == 'yes')
+				{
+					$img_where = array('id' => $row->img1);
+					$img = $this->dbmanager_lib->obtain_a_row(TABLE_IMAGES, '*', $img_where);
+					$ad = array(
+						'title'			=> $row->title,
+						'url'			=> $row->ad_url,
+						'author'		=> '',
+						'author_url'	=> '',
+						'from'			=> '',
+						'pub_time'		=> '',
+						'content'		=> '',
+						'thumb_img'		=> IMG_SERVER . $img->relative_path,
+						'photo_height'	=> $img->height,
+						't'				=> '',
+						'type'			=> 4,
+						'tag'			=> ''
+					);
+					array_splice($seeds, 3, 0, array($ad));
+				}
+			}
+
+			$last_seed	= array_pop($result);
+			$start_time	= $last_seed->publish_time;
+			if (count($seeds) < $num)
+			{
+				$have_more = FALSE;
+			}
+			else
+			{
+				if (!$tag_id)
+				{
+					$more_num = $this->seed_lib->obtain_seeds_by_time($num, $start_time, TRUE);
+				}
+				else
+				{
+					$more_num = $this->seed_lib->obtain_seeds_by_tag($tag_id, $num, $start_time, TRUE);
+				}
+				$have_more = ($more_num > 0) ? TRUE : FALSE;
+			}
+			$data = array(
+				'seeds'		=> $seeds,
+				'have_more'	=> $have_more,
+				't'			=> $start_time
+			);
+		}
+		else
+		{
+			$data = array(
+				'seeds'		=> array(),
+				'have_more'	=> FALSE,
+				't'			=> NULL
+			);
+		}
+		$info = array(
+			'success'	=> TRUE,
+			'message'	=> '',
+			'data'		=> $data
+		);
+		exit(json_encode($info));
+	}
+
+	/**
+	 * 加载极客阅读某一天的文章
+	 * 通过Get方式接收的数据有:
+	 * t - 1天起始时间时间戳，用于加载更多，没有传则为初始化加载
+	 */
+	function _load_one_day_seeds()
+	{
+		$start_time = $this->input->get('t');
+		if (!$start_time)
+		{
+			$start_time = time();
+		}
+		$where	= array('subtype_id' => MODULE_SEED, 'visibility' => 'yes', 'time_created < ' => $start_time);
+		$rows	= $this->dbmanager_lib->obtain_rows(TABLE_ENTITY, 'time_created', $where, NULL, 'time_updated DESC', 1, 0);
+		$row	= $rows[0];
+		$s_date	= date('Y-m-d', $row->time_created);
+		$s_time	= std_unix_time_conversion($s_date);
+		$e_time	= $s_time + 86400;
+		$where	= array(
+			'subtype_id'		=> MODULE_SEED,
+			'visibility'		=> 'yes',
+			'time_created < '	=> $e_time,
+			'time_created >='	=> $s_time
+		);
+		$rows	= $this->dbmanager_lib->obtain_rows(TABLE_ENTITY, 'guid', $where, NULL, 'time_created DESC', 1, 0);
+		if (count($rows) > 0)
+		{
+			foreach($rows as $row)
+			{
+				$guid		= $row->guid;
+				$seed		= $this->dbmanager_lib->obtain_a_row(TABLE_SEED, '*', array('guid' => $guid));
+				$title		= $this->entity_engine_lib->obtain_title($guid);
+				$url		= $this->web_router_lib->Get_seed_url($guid);
+				$author		= $this->user_lib->get_screen_name($seed->author);
+				$author_url	= $this->web_router_lib->Get_home_url($seed->author, 'index');
+				$seeds[]	= array(
+					'title'			=> $title,
+					'url'			=> $url,
+					'author'		=> $author,
+					'author_url'	=> $author_url,
+					'from'			=> $seed->source_site,
+					'pub_time'		=> date('Y.m.d', $seed->publish_time),
+					'content'		=> $seed->abstract,
+					't'				=> $seed->publish_time,
+					'type'			=> $seed->seed_type,
+					'tag'			=> ''
+				);
+			}
+			$where = array(
+				'subtype_id' => MODULE_SEED,
+				'visibility' => 'yes',
+				'time_created < ' => $s_time
+			);
+			$more_num = $this->dbmanager_lib->obtain_rows(TABLE_ENTITY, 'guid', $where);
+			$have_more = ($more_num > 0) ? TRUE : FALSE;
+			$info = array(
+				'success'	=> TRUE,
+				'message'	=> '',
+				'data'		=> array(
+					'seeds'		=> $seeds,
+					'have_more'	=> $have_more,
+					't'			=> $s_time
+				)
+			);
+		}
+		else
+		{
+			$info = array(
+				'success'	=> TRUE,
+				'message'	=> '',
+				'data' => array(
+					'seeds'		=> array(),
+					'have_more'	=> FALSE,
+					't'			=> NULL
+				)
+			);
+		}
+		exit(json_encode($info));
+	}
+
+	function share_entity()
+	{
+		$this->load->library('curl');
+		$this->load->library('clip_lib');
+		$user_guid = $this->global_lib->get_user_guid();
+
+		if ($user_guid)
+		{
+			$guid		= $this->input->post('guid');
+			$sync_items	= $this->input->post('sync_items');
+			$subtype_id	= $this->entity_engine_lib->obtain_subtype_id($guid);
+			$title		= $this->entity_engine_lib->obtain_title($guid);
+
+			if ($subtype_id == MODULE_CLIPS)
+			{
+				$content		= $this->clip_lib->obtain_clip_highlight($guid);
+				$content		= "#极客活动# 分享视频 - 《{$title}》:{$content}";
+				$share_content	= $this->_cut_share_content($content);
+				$share_url		= substr($this->config->item('base_url'), 0, -1) . $this->web_router_lib->Get_clip_url($guid);
+				$pic_url		= $this->img_lib->clip($guid, 'clips_big');
+			}
+			elseif ($subtype_id == MODULE_SEED)
+			{
+				$content		= $this->dbmanager_lib->obtain_a_row_field(TABLE_SEED, 'abstract', array('guid' => $guid));
+				$content		= "#极客阅读# 《{$title}》-{$content}";
+				$share_content	= $this->_cut_share_content($content);
+				$share_url		= substr($this->config->item('base_url'), 0, -1) . $this->web_router_lib->Get_seed_url($guid);
+				$pic_url		= $this->img_lib->seed($guid, 'seed_share');
+			}
+
+			$share_data = array(
+				'guid'			=> $guid,
+				'share_content'	=> $share_content,
+				'share_url'		=> $share_url,
+				'user_guid'		=> $user_guid,
+				'pic_url'		=> $pic_url
+			);
+
+			$items = array();
+			$info = array(
+				'error' => FALSE,
+				'message' => '您的分享操作成功'
+			);
+
+			foreach ($sync_items as $key => $value)
+			{
+				if ($key == 'twitter' AND $value == 1)
+				{
+					$items[] = 'twitter';
+				}
+				elseif ($key == 'sina' AND $value == 1)
+				{
+					$this->curl->create('/ajax/send_to_sina');
+					$this->curl->post($share_data);
+					$result = $this->curl->execute();
+					$items[] = 'sina';
+					if ($result['error_code'] > 0)
+					{
+						$info = array(
+							'error'		=> TRUE,
+							'message'	=> $result['error']
+						);
+						break;
+					}
+					else
+					{
+						$info = array(
+							'error'		=> FALSE,
+							'message'	=> '您的分享操作成功'
+						);
+					}
+				}
+				elseif ($key == 'tencent' AND $value == 1)
+				{
+					$this->curl->create('/ajax/send_to_tencent');
+					$this->curl->post($share_data);
+					$result = $this->curl->execute();
+					$items[] = 'tencent';
+					if ($result['error_code'] > 0)
+					{
+						$info = array(
+							'error'		=> TRUE,
+							'message'	=> $result['error']
+						);
+						break;
+					}
+					else
+					{
+						$info = array(
+							'error'		=> FALSE,
+							'message'	=> '您的分享操作成功'
+						);
+					}
+				}
+			}
+
+			if (!empty($items))
+			{
+				$this->entity_engine_lib->share_plus($guid, $items);
+			}
+		}
+		else
+		{
+			$info = array(
+				'error' => TRUE,
+				'message' => '您已经退出系统，请重新登录后再次分享'
+			);
+		}
+
+		exit(json_encode($info));
+	}
+
+	function _cut_share_content($content)
+	{
+		$length = mb_strlen($content);
+		$len = 115;
+		if ($length > $len)
+		{
+			$content = cn_substr($content, 0, $len-1, FALSE) . "...";
+		}
+		return $content;
+	}
+
+	function send_to_sina()
+	{
+		$this->load->add_package_path(APPPATH . 'third_party/sina_weibo/');
+		$this->load->library('tp_sina');
+
+		$guid			= $this->input->post('guid');
+		$share_content	= $this->input->post('share_content');
+		$share_url		= $this->input->post('share_url');
+		$user_guid		= $this->input->post('user_guid');
+		$pic_url		= $this->input->post('pic_url');
+
+		$sync_setting	= $this->user_lib->get_user_field($user_guid, 'sync_setting');
+		$sync_arr		= wm_unserialize($sync_setting);
+		$token			= $sync_arr['sina'];
+		$share_url		= $share_url . "?u=$user_guid%26t=sina";
+		$short_url		= valid_url($share_url);
+		$content		= $share_content . ' ' . $short_url;
+
+		$result			= $this->tp_sina->update($content, $token['oauth_token'], $token['oauth_token_secret'], $pic_url);
+
+		if ($result['error_code'] == '401')
+		{
+			// the error is "40072:Error: accessor was revoked!"
+			$sync_setting	= $this->user_lib->get_user_field($user_guid, 'sync_setting');
+			$sync_arr		= wm_unserialize($sync_setting);
+			unset($sync_arr['sina']);
+			$sync_setting	= wm_serialize($sync_arr);
+			$where			= array('guid' => $user_guid);
+			$data			= array('sync_setting' => $sync_setting);
+			$this->dbmanager_lib->update_rows(TABLE_USER, $where, $data);
+		}
+
+		$this->load->remove_package_path();
+		echo $result;
+	}
+
+	function send_to_tencent()
+	{
+		$this->load->add_package_path(APPPATH . 'third_party/tencent_weibo/');
+		$this->load->library('tp_tencent');
+
+		$guid			= $this->input->post('guid');
+		$share_content	= $this->input->post('share_content');
+		$share_url		= $this->input->post('share_url');
+		$user_guid		= $this->input->post('user_guid');
+		$pic_url		= $this->input->post('pic_url');
+
+		$sync_setting	= $this->user_lib->get_user_field($user_guid, 'sync_setting');
+		$sync_arr		= wm_unserialize($sync_setting);
+		$token			= $sync_arr['tencent'];
+		$share_url		= $share_url . "?u=$user_guid%26t=tencent";
+		$short_url		= valid_url($share_url);
+		$content		= $share_content . ' ' . $short_url;
+
+		$result			= $this->tp_tencent->update($content, $token['oauth_token'], $token['oauth_token_secret'], $pic_url);
+
+		if ($result['error_code'] == '1')
+		{
+			// the error is "鉴权失败!"
+			$sync_setting	= $this->user_lib->get_user_field($user_guid, 'sync_setting');
+			$sync_arr		= wm_unserialize($sync_setting);
+			unset($sync_arr['tencent']);
+			$sync_setting	= wm_serialize($sync_arr);
+			$where			= array('guid' => $user_guid);
+			$data			= array('sync_setting' => $sync_setting);
+			$this->dbmanager_lib->update_rows(TABLE_USER, $where, $data);
+		}
+
+		$this->load->remove_package_path();
+		echo $result;
+	}
+
+	function like_entity()
+	{
+		$this->load->library('clip_lib');
+		$info		= array();
+		$guid		= $this->input->post('guid');
+		$user_guid	= $this->global_lib->get_user_guid();
+
+		if ($user_guid == 0)
+		{
+			$guids	= $this->input->cookie('l_guids');
+			$guids	= $guids . " " . $guid;
+			$cookie	= array(
+				'name'		=> 'l_guids',
+				'value'		=> $guids,
+				'expire'	=> 60 * 60 * 24 * 365
+			);
+			$this->input->set_cookie($cookie);
+			$info = array(
+				'error'		=> FALSE,
+				'message'	=> '操作成功'
+			);
+			$this->entity_engine_lib->like($user_guid, $guid);
+		}
+		else
+		{
+			$like_flag = $this->entity_engine_lib->does_user_like($user_guid, $guid);
+			if ($like_flag)
+			{
+				$info = array(
+					'error'		=> TRUE,
+					'message'	=> '已标注过喜欢'
+				);
+			}
+			else
+			{
+				$info = array(
+					'error' => FALSE,
+					'message' => '操作成功'
+				);
+				$this->entity_engine_lib->like($user_guid, $guid);
+			}
+		}
+
+		exit(json_encode($info));
+	}
+
+	function share_plus()
+	{
+		$guid	= $this->input->post('guid');
+		$item	= $this->input->post('item');
+		$result	= $this->entity_engine_lib->share_plus($guid, array($item));
+		if ($result)
+		{
+			$info = array(
+				'error'		=> FALSE,
+				'message'	=> '操作成功'
+			);
+		}
+		else
+		{
+			$info = array(
+				'error'		=> TRUE,
+				'message'	=> 'invalid item or guid'
+			);
+		}
+		exit(json_encode($info));
+	}
+
+	function update_weibo()
+	{
+		$id			= $this->input->post('id');
+		$content	= $this->input->post('content');
+		$where		= array('id' => $id);
+		$data		= array('content' => $content);
+		$this->dbmanager_lib->update_rows(TABLE_EVENTS_WEIBO, $where, $data);
+		$info = array(
+			'error' => FALSE,
+			'message' => '修改成功'
+		);
+
+		exit(json_encode($info));
+	}
+
+	function update_qiandao()
+	{
+		$id		= $this->input->post('id');
+		$status	= $this->input->post('status');
+		$where	= array('id' => $id);
+		$data	= array('is_came' => $status);
+		$this->dbmanager_lib->update_rows("events_member", $where, $data);
+		$info = array(
+			'error' => FALSE,
+			'message' => '修改成功'
+		);
+
+		exit(json_encode($info));
+	}
+
+	function update_baoming()
+	{
+		$id		= $this->input->post('id');
+		$status	= $this->input->post('status');
+		$where	= array('id' => $id);
+		$data	= array('status' => $status);
+		$this->dbmanager_lib->update_rows("events_member", $where, $data);
+		$info = array(
+			'error' => FALSE,
+			'message' => '修改成功'
+		);
+
+		exit(json_encode($info));
+	}
+
+	function add_tag()
+	{
+		$this->load->add_package_path(APPPATH . 'third_party/tag/');
+		$this->load->library('tp_tag');
+		$error = 3;
+		$guid		= $this->input->post('guid', TRUE);
+		$tag_name	= $this->input->post('tag_name', TRUE);
+		$type		= $this->input->post('type', TRUE);
+		$user_guid	= $this->input->post('user_guid', TRUE);
+		if ( ! empty($guid) && ! empty($tag_name) && ! empty($type) && ! empty($user_guid))
+		{
+			$result = $this->tp_tag->add_tag_relation($guid, $tag_name, $type, $user_guid);
+			switch($result)
+			{
+				case '关系已存在':
+					$error = 1;
+					break;
+				case '创建标签失败':
+					$error = 2;
+					break;
+				default:
+					$error = 0;
+			}
+		}
+		exit(json_encode(array('error' => $error)));
+	}
+
+	function delete_tag()
+	{
+		$this->load->add_package_path(APPPATH . 'third_party/tag/');
+		$this->load->library('tp_tag');
+		$error = 3;
+		$guid		= $this->input->post('guid', TRUE);
+		$tag_name	= $this->input->post('tag_name', TRUE);
+		if ( ! empty($guid) && ! empty($tag_name))
+		{
+			$result = $this->tp_tag->delete_tag_relation($guid,$tag_name);
+			switch($result)
+			{
+				case '标签不存在':
+					$error = 1;
+					break;
+				case '关系不存在':
+					$error = 2;
+					break;
+				default:
+					$error = 0;
+			}
+		}
+		exit(json_encode(array('error' => $error)));
+	}
+}

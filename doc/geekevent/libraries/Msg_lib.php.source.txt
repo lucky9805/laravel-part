@@ -1,0 +1,31 @@
+<?php
+if (! defined ( 'BASEPATH' )) exit ( 'No direct script access allowed' );
+
+    class Msg_lib extends Dbmanager_lib
+    {
+        function __construct()
+        {
+            $this->ci = & get_instance();
+        }
+        
+        function showmsg()
+        {
+            if ($this->ci->session_lib->userdata ( "_msg" ) != null) { 
+                $this->ci->load->view("reuse/error_info"); 
+            }
+        }
+        
+        function setmsg($content, $msg_type='')
+        {
+            $msg ['_msg'] = $content;
+            $msg ['_msg_type'] = $msg_type;
+            $this->ci->session_lib->set_userdata ( $msg );
+        }
+
+        function obtain_notifications($field,$where,$order_by=NULL,$limit=NULL,$offset=NULL,$forcount=FALSE)
+        {
+			return $this->obtain_rows(TABLE_NOTIFICATIONS,$field,$where,NULL,$order_by,$limit,$offset,$forcount);
+        }
+
+    }
+?>

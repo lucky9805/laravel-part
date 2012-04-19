@@ -1,0 +1,23 @@
+<nav class='menu'>
+<?php
+    $index      = ($current_on == 'index') ? 'on' : '';
+    $videos     = ($current_on == 'videos') ? 'on' : '';
+    $comments   = ($current_on == 'comments') ? 'on' : '';
+    $events     = ($current_on == 'events') ? 'on' : '';
+    $seeds      = ($current_on == 'seeds') ? 'on' : '';
+?>
+    <ul>
+    <li class='first <?=$index?>'>
+        <a href="<?=$this->web_router_lib->Get_home_url($user_guid,"index")?>"><?=lang('u_n_index')?></a>
+    </li><li class='<?=$videos?>'>
+        <a href="<?=$this->web_router_lib->Get_home_url($user_guid,"videos")?>"><?=lang('u_n_video');?></a>
+    </li><li class='<?=$events?>'>
+        <a href="<?=$this->web_router_lib->Get_home_url($user_guid,"events")?>"><?=lang('u_n_event');?></a>
+    </li><li class='<?=$seeds?>'>
+        <a href="<?=$this->web_router_lib->Get_home_url($user_guid,"seeds")?>"><?=lang('u_n_seed');?></a>
+    </li><li class='last <?=$comments?>'>
+        <a href="<?=$this->web_router_lib->Get_home_url($user_guid,"comments")?>"><?=lang('u_n_comment')?></a>
+    </li>
+    </ul>
+</nav>
+  

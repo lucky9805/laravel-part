@@ -1,0 +1,121 @@
+<?php 
+	$this->load->view($this->web_router_lib->Get_user_navigation_url(), array("current_on" => "index"));
+	$screen_name = $this->user_lib->get_screen_name($user_guid);
+    $comments_url = $this->web_router_lib->Get_home_url($user_guid,"comments");
+	$offset = '0';
+	$limit = 10;
+    $clips = $this->clip_lib->obtain_user_clips($user_guid, NULL, NULL);
+    $clips_num = $this->clip_lib->obtain_user_clips($user_guid, $limit, $offset, TRUE);
+	
+    $river = $this->river_lib->obtain_user_river($user_guid, $limit, $offset);
+    $river_num = $this->river_lib->obtain_user_river($user_guid, NULL, NULL, TRUE);
+?>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+<script src="/public/js/script.js"></script>
+<dl class='user-timeline'>
+<?php
+    if($clips_num == 0 AND $river_num == 0)
+    {
+        echo "<dt></dt>";
+        $msg = lang('user_home_msg');
+        $this->msg_lib->setmsg($msg,ALERT);
+        $this->msg_lib->showmsg();
+    }
+?>
+    <?php if($clips_num >0):?>
+    <dt><?=$screen_name.lang('user_video')?><span class='num'>(<?=$clips_num?>)</span></dt>
+    <dd>
+        <ul class="items">
+        <?php 
+            foreach($clips as $row):
+                $c_guid     = $row->father_id;
+                $c_title    = $this->entity_engine_lib->obtain_title($c_guid);
+                $c_time     = $this->entity_engine_lib->obtain_time_created($c_guid);
+                $c_img      = $this->img_lib->clip($c_guid);
+                $c_link     = $this->web_router_lib->Get_clip_url($c_guid);
+        ?>
+            <li>
+                <a class="img-wrap" alt="<?=$c_time?>" title="<?=$c_title?>" href="<?=$c_link?>">
+                    <img src="<?=$c_img?>">
+                </a>
+                <a class="title" href="<?=$c_link?>"><?=$c_title?></a>
+            </li>
+        <?php endforeach;?>
+        </ul>
+        <div class="clear"></div>
+    </dd>                   
+    <?php endif;?>
+
+    <?php if($river_num>0):?>
+    <dt><?=$screen_name.lang('user_timeline')?></dt>
+    <dd id="dynamic">
+    <?php
+        foreach($river as $row)
+        {
+            $view_type = $row->view_type;
+            $r_date = date("Y.m.d H:i",$row->time_created);
+            $r_entity_guid = $row->entity_guid;
+            $r_object_guid = $row->object_guid;
+            $e_subtype_id = $this->entity_engine_lib->obtain_subtype_id($r_entity_guid);
+            $e_title = $this->entity_engine_lib->obtain_title($r_entity_guid);
+            if($view_type == 'comment')
+            {
+                if($e_subtype_id == MODULE_EVENTS)
+                {
+                    $e_link = $this->web_router_lib->Get_event_details_url($r_entity_guid);
+                }
+                elseif($e_subtype_id == MODULE_CLIPS)
+                {
+                    $e_link = $this->web_router_lib->Get_clip_url($r_entity_guid);
+                }
+                elseif($e_subtype_id == MODULE_SEED)
+                {
+                    $e_link = $this->web_router_lib->Get_seed_url($r_entity_guid);
+                }
+                $comment = $this->entity_engine_lib->obtain_main($r_object_guid);
+                $data = array(
+                    'r_date'    => $r_date,
+                    'e_link'    => $e_link,
+                    'e_title'   => $e_title,
+                    'comment'   => $comment
+                );
+                $this->load->view('reuse/user_comment', $data);
+            }
+            elseif($view_type == 'enroll' || $view_type == 'check_in')
+            {
+                if($view_type == 'enroll')
+                {
+                    $action = lang('u:enroll');
+                }
+                elseif($view_type == 'check_in')
+                {
+                    $action = lang('u:check_in');
+                }
+                $e_link = $this->web_router_lib->Get_event_details_url($r_entity_guid);
+                $data = array(
+                    'r_date'    => $r_date,
+                    'action'    => $action,
+                    'e_link'    => $e_link,
+                    'e_title'   => $e_title
+                );
+                $this->load->view('reuse/user_event', $data);
+            }
+            elseif($view_type == 'create_seed')
+            {
+                $e_link = $this->web_router_lib->Get_seed_url($r_entity_guid);
+                $data = array(
+                    'r_date'    => $r_date,
+                    'e_title'   => $e_title,
+                    'e_link'    => $e_link
+                );
+                $this->load->view('reuse/user_seed', $data);
+            }
+            unset($data);
+        }
+    ?>
+    </dd>
+    <?php endif;?>
+    <?php if($river_num > $limit):?>
+    <a href="javascript:void(0);" onclick="Timeline.load_data(this)" rel="<?=$user_guid?>" class="cast-list-more">更多</a>
+    <?php endif;?>
+</dl>

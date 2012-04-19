@@ -1,0 +1,21 @@
+<?php
+    $seed = $this->seed_lib->obtain_seed_by_guid($cid);
+    $seed_url = $this->web_router_lib->Get_seed_url($cid);
+    $screen_name = $this->user_lib->get_screen_name($seed->author);
+    $home_url = $this->web_router_lib->Get_home_url($seed->author, 'index');
+?>
+<div class="search-seed-item">
+	
+    <div class="title">
+        <a href="<?=$seed_url?>"><?=$title?></a>
+    </div> 
+    <div class="meta">
+        <a href='<?=$home_url?>'><?=$screen_name?></a> <i>/</i> <?=date('Y.m.d H:i', $seed->publish_time)?>
+	</div>
+	
+    <div class="entry">
+        <?=$seed->abstract?>
+    </div>
+
+</div>
+

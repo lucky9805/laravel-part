@@ -1,0 +1,240 @@
+<script type="text/javascript">
+    var start_time="";
+    var start_time_check="";
+    var end_time="";
+    var load_scoll_data=false;
+
+    $(function(){       
+
+     
+        se= {
+             start_time:start_time
+        };
+          
+       // ajax_load_news(se,"center");
+        $(window).scroll(function(){
+            var s_h = $(document).scrollTop();
+            var w_h = $(window).height();
+            var d_h = $(document).height();            
+          /*  if((s_h+w_h)>=d_h){         
+                doLoad(start_time,end_time);
+            }*/
+           
+            var limit = 10; 
+
+            if( w_h + $(document).scrollTop() + limit >=  d_h){            	
+               if(start_time_check==start_time){
+               }else{
+                    doLoad(start_time,end_time,"bottom");
+                    start_time_check=start_time;
+               }
+			}
+        });
+        
+        $("#view-year a").live('click',function(){
+			time_count = 0;
+			$('.cast-list-more').detach();
+			
+           	//$("#view-year a").click(function(){
+            var year = $(this).text();         
+           
+			$("#view-year li").removeClass("on");      
+			var preYear = $("#view-year li").has("span").text();
+            $("#view-year  li").has("span").html("<a href='javascript:void(0);'>"+preYear+"</a>");
+                  
+            $(this).parent().addClass("on");
+            var current_year=$.trim($(this).text()).substr(0,4);    
+            $(this).parent().html("<span>"+year+"</span>")
+            //  $(this).addClass("disable"); 
+            var start_time=current_year+"-12-31";
+            /*
+			d = new Date();
+			md = (d.getMonth() + 1)+"-"+d.getDate();
+   			if(md=="12-31"){
+   				start_time=(d.getFullYear()+1)+"-1-1";
+   			}
+   			*/
+   			
+			var end_time=current_year+"-1-1"; 
+            $("#newsL,#newsR").empty();
+			if(start_time_check==start_time){
+            }else{
+                   doLoad(start_time,end_time,"center");
+                   $(document).scrollTop(0);
+                   start_time_check=start_time;
+            }	       
+            $.ajax({                
+                url: "/ajax/get_news_month/",
+                data:{cyear:current_year},
+                type: "get",                 
+                success: function(response){
+                    try{                        
+                        var data=eval('('+response+')');
+                        $("#view-month").empty();
+                        for(var j=12; j>=1; j--){
+                            have=false;
+                            for(var i=0;i<=data.data.length-1;i++){
+                                if(j==data.data[i]){
+                                   have=true;
+                                }
+                            }
+                            if(have){
+                                $("#view-month").append("<li class='data_on'><a href='javascript:void(0);'>"+j+"月</a></li>");
+                            }else{
+                                $("#view-month").append("<li><span >"+j+"月</span></li>");
+                            }
+                        }
+
+                    }catch(error){
+                    }
+                },
+                error: function(){
+                }
+
+            })
+            
+			
+		});
+		/*$("#view-month a").click(function(){
+		    var current_year=$.trim( $("#view-year li[class='on']").find("a").text() );
+			$("#view-month li").removeClass("on");
+			$(this).parent().addClass("on");
+			var current_month=$.trim($(this).text());
+			if(typeof current_month=="string" && current_month=="12"){
+			    var start_time=current_year+"-"+current_month+"-31";
+			    var end_time=current_year+"-"+current_month+"-1";
+                 $("#newsL,#newsR").empty();
+				doLoad(start_time,end_time);
+			}else{	
+                current_month=parseInt(current_month);
+                var end_time=current_year+"-"+current_month+"-1";
+			    current_month=current_month+1;			   
+			    var start_time=current_year+"-"+current_month+"-1";
+                 $("#newsL,#newsR").empty();
+				doLoad(start_time,end_time);
+						    
+			}
+					
+		});  */
+
+        $("#view-month a").live('click',function(){
+			time_count = 0;
+			$('.cast-list-more').detach();
+			
+		    var current_year=$.trim( $("#view-year li[class='on']").find("span").text().substr(0,4) );
+            var month = $(this).text(); 
+			$("#view-month li").removeClass("on");
+            var preMonth = $("#view-month li[class='data_on']").has("span").text();
+            var current_month=$.trim($(this).text());            
+            $("#view-month li[class='data_on']").has("span").html("<a href='javascript:void(0);'>"+preMonth+"</a>");            
+			$(this).parent().addClass("on");
+            $(this).parent().html("<span>"+month+"</span>");			
+            current_month=parseInt(current_month);           
+			if(current_month=="12"){ 
+                temp_current_year= parseInt(current_year)+1;
+			    var start_time=temp_current_year+"-1-1";
+			    var end_time=current_year+"-"+current_month+"-1";   
+			}else{	   
+               // current_month=parseInt(current_month);
+                var end_time=current_year+"-"+current_month+"-1";
+			    current_month=current_month+1;			   
+			    var start_time=current_year+"-"+current_month+"-1";
+                
+			}
+			$("#newsL,#newsR").empty();            
+		 	if(start_time_check==start_time){
+            }else{
+                   doLoad(start_time,end_time,"center");
+                   $(document).scrollTop(0);
+                   start_time_check=start_time;
+            }		
+		});
+		var time_count= 0;
+        function doLoad(start_time1,end_time1,position){
+			//console.log(time_count)
+         	time_count++;
+			
+        	start_time=start_time1;
+            end_time=end_time1;
+            se=null;
+        	if(end_time==""){             
+	       
+                 se =  {
+                 start_time:start_time 
+                 };
+               
+            }else{
+             
+              se =  {
+                 start_time:start_time,
+                 end_time:end_time
+              };
+        
+         
+
+
+            }
+			// 无限加载的次数
+			if( time_count <= 3 ){
+            	ajax_load_news(se,position);
+			}
+			else{
+				$('.cast-list-more').detach();
+				$('.main_content').after('<a class="cast-list-more" href="javascript:;">查看更多</a>')
+				$("#footer").show();
+				$('.cast-list-more').click(
+					function(){
+						ajax_load_news(se,position);
+				})			
+			}
+			if(end_time = 0)
+			$('.cast-list-more').detach();
+        }
+        
+       // $("#view-year a[text="2011年"]").
+       $("#view-year a[rel='current']").click();
+       
+       
+    }) 
+
+
+    function ajax_load_news(my_get_data,position){
+            $.ajax({
+            url: "/ajax/get_news/",
+            type: "get",
+            data: my_get_data,
+            beforeSend: function(){                
+                if(start_time!=0){
+                    $("#footer").css("display","none");
+					$('.cast-list-more').detach();
+                    UI.foot_hide($("#newslist-box"),position);
+                }
+            },
+            success: function(response){
+                    try{                        
+                        var data = eval('('+response+')');                        
+                        $("#newsL").append(data.Ldata);
+                        $("#newsR").append(data.Rdata); 
+                        $("#newslist-box").css({"background":"none","padding-bottom": "0"});
+                        start_time=data.next_time;
+                    }catch(error){
+                    }
+            },
+            complete: function(){
+                    if(start_time==0){
+                        $("#footer").css("display","block");
+                    }                
+            },
+
+            
+            error: function(){
+                
+            }
+        })
+
+    }
+    
+</script>
+
+
+   

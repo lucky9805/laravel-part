@@ -1,0 +1,92 @@
+<?php
+class Db_tool extends My_Controller
+{
+	function __construct()
+	{
+		parent::__construct();
+	}
+
+	function index()
+	{
+		$this->load->database();
+		$comments = $this->get_comments();
+		$tmp = array();
+		echo 'count_comments = '.count($comments)."\r\n";
+
+		// 根据guid生成唯一数组
+		foreach ($comments as $k => $v)
+		{
+			$tmp[$v['guid']] = $v;
+			if ($v['fid'] == 0)
+			{
+				$tmp[$v['guid']]['comment_id'] = $v['guid'];
+			}
+		}
+
+		// 上一级是第一级的话，此排序的comment_id更新为上一级的comment_id
+		foreach ($tmp as $k => $v)
+		{
+			if ($v['comment_id'] == 0)
+			{
+				if ($tmp[$v['fid']]['fid'] == 0)
+				{
+					$tmp[$k]['comment_id'] = $tmp[$v['fid']]['comment_id'];
+				}
+			}
+		}
+
+		$i = 0;
+		// 上一级带comment_id的话，此排序的comment_id更新为上一级的comment_id
+		foreach ($tmp as $k => $v)
+		{
+			if ($v['comment_id'] == 0)
+			{
+				if ($tmp[$v['fid']]['comment_id'] != 0)
+				{
+					$tmp[$k]['comment_id'] = $tmp[$v['fid']]['comment_id'];
+				}
+			}
+			if ($tmp[$k]['comment_id'] == 0)
+			{
+				$i++;
+			}
+		}
+
+		// fid = 0的数组中，comment_id值改为0
+		foreach ($tmp as $k => $v)
+		{
+			if ($v['fid'] == 0)
+			{
+				$tmp[$k]['comment_id'] = 0;
+			}
+		}
+
+		echo 'count_tmp = '.count($tmp)."\r\n";
+		echo $i;
+		print_r($tmp);
+		if ($i == 0)
+		{
+			foreach ($tmp as $k => $v)
+			{
+				$set = array('comment_id' => $v['comment_id']);
+				$id = $v['id'];
+				//$this->update_comment($set, $id);
+			}
+		}
+	}
+
+	function get_comments()
+	{
+		$this->db->select('id, guid, fid, comment_id');
+		$this->db->from('comments');
+		$query = $this->db->get();
+		return $query->result_array();
+	}
+
+	function update_comment($set, $id)
+	{
+		$this->db->where('id', $id);
+		$this->db->update('comments', $set);
+	}
+
+}

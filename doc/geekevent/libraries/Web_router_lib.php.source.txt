@@ -1,0 +1,124 @@
+<?php if(!defined('BASEPATH')) exit('No direct script access allowed');
+
+    class Web_router_lib 
+    {
+        function __construct()
+        {
+			$this->ci =& get_instance();
+        }
+
+        function Get_404_url()
+		{
+			return "/pg/show_404";
+		}
+		
+		function Get_event_details_url($id)
+        {
+            return "/event/view/details/{$id}";
+        }
+		
+		function Get_event_sign_up_url($id)
+		{
+			return "/event/view/sign_up/{$id}";
+		}
+		
+		function Get_event_weibo_url($id)
+		{
+			return "/event/view/weibo/{$id}";
+		}
+		
+		function Get_event_review_url($id)
+		{
+			return "/event/view/review/{$id}";
+		}
+
+        function Get_event_collection_url($id)
+        {
+            return "/event/collection/{$id}";
+        }
+		
+		function Get_clip_url($id)
+        {
+            return "/cast/view/{$id}";
+        }
+		
+		function Get_event_navigation_url()
+		{
+			return "/event/navigation";
+		}
+		
+		function Get_user_setting_url()
+		{
+			return "/user/setting/profile";
+		}
+		
+		function Get_user_setting_password_url()
+		{
+			return "/user/setting/password";
+		}
+		
+		function Get_user_setting_avatar_url()
+		{
+			return "/user/setting/avatar";
+		}
+
+        function Get_user_setting_sync_url()
+        {
+            return "/user/setting/sync";
+        }
+
+        function Get_sync_callback_url($party)
+        {
+            return "/user/callback/{$party}";
+        }
+		
+		function Get_user_navigation_url()
+		{
+			return "/user/home_navigation";
+		}
+		
+		function Get_home_url($id,$page)
+		{
+			return "/user/home/{$page}/{$id}";
+		}
+		
+		function Get_user_home_index_url($id)
+		{
+			return "/user/home/index/{$id}";
+		}
+		
+		function Get_user_home_videos_url($id)
+		{
+			return "/user/home/videos/{$id}";
+		}
+		
+		function Get_user_home_events_url($id)
+		{
+			return "/user/home/events/{$id}";
+		}
+		
+		function Get_user_home_comments_url($id)
+		{
+			return "/user/home/comments/{$id}";
+		}
+
+        function Get_user_home_seeds_url($id)
+        {
+            return "/user/home/seeds/{$id}";
+        }
+
+        function Get_user_login_url()
+        {
+            return "/user/login";
+        }
+
+        function Get_user_register_url()
+        {
+            return "/user/register";
+        }
+
+        function Get_seed_url($id)
+        {
+            return "/read/view/{$id}";
+        }
+    }

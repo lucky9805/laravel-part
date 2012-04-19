@@ -1,0 +1,83 @@
+<?php //$this->load->view("scripts/include_auto_commplete");?>
+
+<?php
+	 $this->load->view("user/navigation",array("current_on"=>"setting"));
+?>
+<form id='profile-setting-form' class='format account' action='/user/update_user_do' method='post'>
+<?php
+	$user_guid = $this->global_lib->get_user_guid();
+	$where = array('guid' => $user_guid);
+	$user_info = $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'real_name, screen_name, company, position, tel, bio, is_recommend', $where);
+?>
+
+	<?php $this->msg_lib->showmsg();?>
+    <div>
+        <label for="screen_name"><?php echo site_lang('user_setting_screen_name');?></label>
+        <input id="screen_name" name="screen_name" disabled="disabled" class="text" value="<?php echo $user_info->screen_name;?>">
+        <label for="screen_name" class="msg info">
+            <?php echo site_lang('user_setting_screen_name_info');?>
+        </label>
+    </div>
+    <div>
+        <label for='real_name'><?php echo site_lang('user_setting_real_name');?></label>
+		<?php
+			$data = array('name' => 'real_name', 'id' => 'real_name', 'class' => 'text', 'value' => $user_info->real_name);
+			echo form_input($data);
+		?>
+		<label for="real_name" class="msg info">
+            <?php echo site_lang('user_setting_real_name_info');?>
+        </label>
+    </div>
+    <div>
+        <label for='company'><?php echo site_lang('user_setting_company');?></label>
+		<?php
+			$data = array('name' => 'company', 'id' => 'company', 'class' => 'text', 'value' => set_value('company', $user_info->company));
+			echo form_input($data);
+		?>
+    </div>
+    <div>
+        <label for='position'><?php echo site_lang('user_setting_position');?></label>
+		<?php
+			$data = array('name' => 'position', 'id' => 'position', 'class' => 'text', 'value' => set_value('position', $user_info->position));
+			echo form_input($data);
+		?>
+    </div>
+    <div>
+        <label for='tel'><?php echo site_lang('user_setting_phone');?></label>
+		<?php
+			$data = array('name' => 'tel', 'id' => 'tel', 'class' => 'text', 'value' => set_value('tel', $user_info->tel));
+			echo form_input($data);
+		?>
+		<label for="tel" class="msg info">
+
+        </label>
+	</div>
+    <div style="position:relative;">
+        <label for='app' style="float:left;position:relative;top:4px"><?php echo site_lang('user_setting_product');?></label>
+		<?php
+			$data = array('name' => 'project', 'id' => 'app', 'class' => 'text', "style"=>'width: 202px');
+			echo form_input($data);
+		?>
+		<label for="app" class="msg info" style="position:absolute;left:352px;top:5px;width:300px">
+            <?php echo site_lang('user_setting_product_info');?>
+        </label>
+    </div>
+    <div>
+        <label for='bio'><?php echo site_lang('user_setting_bio');?></label>
+		<?php
+			$data = array('name' => 'bio', 'id' => 'bio', 'class' => 'text', 'value' => set_value('bio', $user_info->bio));
+			echo form_textarea($data);
+		?>
+    </div>
+    <!-- checkbox -->
+    <div class="checkbox">
+        <input type="checkbox" name="is_recommend" id="is_recommend" class="test" value="1"<?php if ($user_info->is_recommend == 1) { echo ' checked="checked"'; }?> /><label for="is_recommend"><?php echo site_lang('user_setting_is_recommend');?></label><span title="<?php echo site_lang('user_setting_is_recommend_desc');?>"></span>
+    </div>
+    <div class="act">
+		<?php
+			$data = array('class' => 'submit update', 'name' => 'submit', 'value' => site_lang('user_setting_submit'));
+			echo form_submit($data);
+		?>
+    </div>
+</form>
+<div style="padding-bottom:100px"></div>

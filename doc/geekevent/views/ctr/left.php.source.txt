@@ -1,0 +1,95 @@
+<div class="user">
+    <p>登陆身份 : <span class='username'><?=$this->global_lib->get_user_screen_name()?></span></p>
+    <p class="userbtn"><a href="/user/logout" title="">退出</a></p>
+</div>
+<ul id="nav">
+
+    <li>
+        <a class="expanded  heading">评论管理</a>
+         <ul class="navigation">
+            <li><a href="/ctr/comments" title="">评论列表</a></li>
+        </ul>
+    </li>
+ 	<li>
+        <a class="expanded  heading">极客快闻</a>
+         <ul class="navigation">
+          	<li><a href="http://admin.geekpark.net/admin/module_data_add/6" title="">极客观察</a></li>
+            <li><a href="http://admin.geekpark.net/admin/module_data_add/1" title="">极客快闻</a></li>
+            <li><a href="http://admin.geekpark.net/cast/edit_top_clips" title="">极客广播推荐</a></li>
+        </ul>
+    </li>
+    <li>
+        <a class="expanded  heading">视频管理</a>
+         <ul class="navigation">
+            <li><a href="/ctr/clips_do/add/" title="">添加视频</a></li>
+            <li><a href="/ctr/clips_list/" title="">视频列表</a></li>
+        </ul>
+    </li>
+
+    <li>
+        <a class="expanded  heading">视频合集管理</a>
+         <ul class="navigation">
+            <li><a href="/ctr/clips_collection_do/add/" title="">添加视频合集</a></li>
+            <li><a href="/ctr/clips_collection_list/" title="">查找视频合集</a></li>
+        </ul>
+    </li>
+
+    <li>
+        <a class="expanded  heading">活动管理</a>
+         <ul class="navigation">
+            <li><a href="/ctr/events_do/add/" title="">添加活动</a></li>
+            <li><a href="/ctr/events_list/" title="">活动列表</a></li>
+        </ul>
+    </li>
+    <li>
+        <a class="expanded  heading">用户管理</a>
+        <ul class="navigation">
+            <li><a href="/ctr/user_list" title="">用户列表</a></li>
+            <li><a href="/ctr/user_do/add" title="">添加新用户</a></li>
+            <!--<li><a href="/ctr/edit_user" title="">修改用户</a></li>-->
+        </ul>
+    </li>
+  <li>
+        <a class="expanded  heading">地点管理</a>
+         <ul class="navigation">
+            <li><a href="/ctr/venue_do/add" title="">添加地点</a></li>
+            <li><a href="/ctr/venue_list" title="">地点列表</a></li>
+        </ul>
+    </li>
+
+    <li>
+        <a class="expanded  heading">赞助商管理</a>
+         <ul class="navigation">
+            <li><a href="/ctr/sponsors_do/add/" title="">添加赞助商</a></li>
+            <li><a href="/ctr/sponsor_list/" title="">赞助商列表</a></li>
+        </ul>
+    </li>
+    <li>
+        <a class="expanded  heading">标签管理</a>
+         <ul class="navigation">
+            <li><a href="/ctr/tags_list" title="">标签列表</a></li>
+        </ul>
+    </li>
+
+    <li>
+        <a class="expanded  heading">标签点击统计</a>
+         <ul class="navigation">
+            <li><a href="/ctr/stat_seed_list" title="">极客观察</a></li>
+            <li><a href="/ctr/stat_cast_list" title="">极客广播</a></li>
+            <li><a href="/ctr/stat_news_list" title="">极客快闻</a></li>
+        </ul>
+    </li>
+
+    <li><a class="collapsed heading">系统日志</a>
+        <ul class="navigation">
+            <li><a href="/ctr/logs" title="" class="likelogin">所有日志</a></li>
+        </ul>
+    </li>
+
+    <li><a class="collapsed heading">权限管理</a>
+        <ul class="navigation">
+            <li><a href="/ctr/add_privilege" title="" class="likelogin">添加权限</a></li>
+            <li><a href="/ctr/settting_privilege" title="">设置权限</a></li>
+        </ul>
+    </li>
+</ul>

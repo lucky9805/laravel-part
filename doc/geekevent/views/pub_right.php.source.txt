@@ -1,0 +1,16 @@
+<div class='notify'>
+		<div class="info"> 
+		<h2>联系我们</h2>
+        <div class='info_content'>
+		
+		市场合作：<a href='mailto:market@geekpark.net'>market@geekpark.net</a><br>
+		
+		一般联系：<a href='mailto:contact@geekpark.net'>contact@geekpark.net</a><br>
+
+		联系电话：010-85711956<br>
+
+		公司地址：北京市朝阳区东四环中路41号，嘉泰<br><span style="margin-left: 61px;">国际大厦1328室（</span>地图</a>）
+        </div>
+
+		</div>
+</div>

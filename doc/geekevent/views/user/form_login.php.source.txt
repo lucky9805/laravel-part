@@ -1,0 +1,21 @@
+<h1><?php echo site_lang('user_login_title');?></h1>
+<form id="login-form" method="post" action="/user/logon" class="format account">
+<?php $this->msg_lib->showmsg();?> 
+     <div>
+         <label for="username"><?php echo site_lang('user_login_email');?></label>
+         <input type="text" class="text" name="username" id="username" autofocus>
+     </div>
+     <div>
+         <label for="password"><?php echo site_lang('user_login_password');?></label>
+         <input type="password" class="text" name="password" id="password">
+     </div>
+     <div class="aside">
+         <input type="checkbox" id="remember" name="remember">
+         <label for="remember"><?php echo site_lang('user_login_remember');?></label> |
+         &nbsp;&nbsp;<a href="/user/forgot_password"><?php echo site_lang('user_login_forget_password');?></a>
+     </div>
+     <div class="act">
+         <input type="submit" value="<?php echo site_lang('user_login_submit');?>" name="submit" class="submit login png_bg">
+     </div>
+</form>
+<div style="height:300px">&nbsp;</div>

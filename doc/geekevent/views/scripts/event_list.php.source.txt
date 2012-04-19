@@ -1,0 +1,6 @@
+<script>
+$(function(){
+     UI.event_history();
+     //$("#footer").css("display","block");
+})
+</script>

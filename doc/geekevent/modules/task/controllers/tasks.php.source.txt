@@ -1,0 +1,100 @@
+<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
+
+class Task_Tasks_module extends CI_Module
+{
+ 
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->helper('form_helper');
+		$this->load->library('session');
+		$this->load->helper('url');
+		$this->load->model('db_operate_mod');
+		$this->load->library('form_validation');
+	}
+	
+	function index()
+	{
+		if($this->input->post('submit'))
+		{
+			$data['title'] = $this->input->post('title');
+			$data['main'] = $this->input->post('main');
+			$data['request_user'] = $this->input->post('request_user');
+			$data['receive_user'] = $this->input->post('receive_user');
+			$data['type'] = $this->input->post('type');
+			$data['status'] = $this->input->post('status');
+			$data['create_time'] = $this->input->post('create_time');
+			$data['operation_time'] = $this->input->post('operation_time');
+			$data['id'] = NULL;
+
+			$this->db_operate_mod->insert_a_row('tasks', $data);
+			
+			redirect('/module/task/tasks');
+		}
+		else
+			$this->load->view('task_view');
+	}
+	
+	function task_list($page='0')
+	{
+		// $ci =& get_instance();
+ 
+		//$ci->load->library('pagination');
+		 $this->load->library('pagination');
+		$config['base_url'] = '/module/task/tasks/task_list/';
+		$config['uri_segment'] = 5;
+		$config['total_rows'] = $this->db_operate_mod->get_rows('tasks', 'id', NULL, NULL, NULL, NULL, TRUE);
+		$config['per_page'] = '10'; 
+		// $ci->pagination->initialize($config);
+		 $this->pagination->initialize($config);
+		$query = $this->db_operate_mod->get_rows('tasks', 'id, title, receive_user, status, type',NULL, NULL, $config['per_page'], $page, FALSE);
+		$data['result'] = $query->result_array();
+		$this->load->view('task_list', $data);
+	}
+	
+	function task_do($action, $key=NULL)
+	{
+		switch($action)
+		{
+			case 'update':
+				$this->__task_update($key);
+				break;
+		}
+	}
+	
+	private function __task_update($key)
+	{
+		$where['id'] = $key;
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('title','标题','trim|xss_clean'.$required);
+		$var->set_rules('main','内容','trim|xss_clean'.$required);
+		$var->set_rules('receive_user','收信人','trim|xss_clean'.$required);
+		if($var->run())
+		{
+			$data['title'] = $this->input->post('title');
+			$data['main'] = $this->input->post('main');
+			$data['request_user'] = $this->input->post('request_user');
+			$data['receive_user'] = $this->input->post('receive_user');
+			$data['type'] = $this->input->post('type');
+			$data['status'] = $this->input->post('status');
+			$data['create_time'] = $this->input->post('create_time');
+			$data['operation_time'] = $this->input->post('operation_time');
+			//$data['id'] = NULL;
+
+			$this->db_operate_mod->update_rows('tasks', $where, $data);
+			
+			redirect('/module/task/tasks/task_list');
+		}
+		
+		else
+		{
+			$query = $this->db_operate_mod->get_a_row('tasks', '*', $where);
+			$data['row'] = $query->row();
+			$this->load->view('task_update', $data);
+		}
+	}
+	
+}
+
+?>

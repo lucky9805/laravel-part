@@ -1,0 +1,140 @@
+<?php 
+	//list($key, $latest_event) = each($latest_events);
+	$banner_path = $this->dbmanager_lib->obtain_a_row_field(TABLE_IMAGES, 'relative_path', array('entity_guid'=>$latest_event->guid, 'create_type'=>'event_banner'));
+	?>
+<dt>
+    <?php echo site_lang('latest_event');?>
+    <a class='email_subscribe' target=_blank href='http://eepurl.com/fzlSk'>邮件订阅活动通知</a>
+</dt>             
+<?php if($banner_path):?>
+<dd class='latest' style="background:url(<?php echo $banner_path;?>) no-repeat">
+<?php else:?>
+<dd class='latest'> 
+<?php endif;?>
+<?php
+	$where['guid'] = $latest_event->guid;
+	$detail = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_ENTITIES, '*', $where);
+	unset($where);
+	
+	$venue_where['id'] = $latest_event->venue_Id;
+	$venue = $this->dbmanager_lib->obtain_a_row(TABLE_VENUE, 'venue', $venue_where);
+?>
+    <article> 
+        <header> 
+            <a href="/event/view/details/<?php echo $latest_event->guid;?>"><?php echo $detail->title;?></a>
+        </header> 
+        <div class='meta'> 
+            <time pubtime datetime=''><?php echo date('Y.m.d H:i', $latest_event->start_time);?></time> 
+            <span class='address'><small class='dot'>•</small> <?php echo $venue->venue;?></span> 
+        </div> 
+        <div class="main"> 
+            <?php echo $detail->desc;?>
+            <div style="margin-top:30px">
+		        <?php if($latest_event->status <= 2):?>
+        		<?php if($latest_event->enroll_end_time > time()){?><a class='apply png_bg' href='/event/view/sign_up/<?php echo $latest_event->guid;?>'><?php echo site_lang('latest_event_sign_up');?></a><?php }?>
+        			<a class='png_bg' href='/event/view/details/<?php echo $latest_event->guid;?>'><span class = 'detail'><?php echo site_lang('latest_event_details');?></span></a>
+        		<?php elseif($latest_event->status < 4):?>
+        			<a class='png_bg' href='/event/view/weibo/<?php echo $latest_event->guid;?>' >
+        			    <span class='detail' style="margin:0"><?php echo site_lang('latest_event_details');?></span></a>
+        		<?php else:?>
+        			<a class='png_bg' href='/event/view/review/<?php echo $latest_event->guid;?>'>
+        			    <span class='detail png_bg' style="margin:0"><?php echo site_lang('latest_event_details');?></span></a> 
+        		<?php endif;?>
+        	</div>
+        </div>
+        <a class="cover" href="/event/view/details/<?php echo $latest_event->guid;?>"></a> 
+    </article>
+</dd> 
+<dt><?php echo site_lang('former_event');?></dt> 
+<dd> 				
+	<?php //foreach($events as $event):?>
+	<?php
+		// $event_id = $event->guid;
+		
+		// $where['guid'] = $event_id;
+		// $detail = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_ENTITIES, '*', $where);
+		// $content = $detail->main;
+		// $show_content = strip_tags($content,'');
+		// $show_content = mb_substr($show_content, 0, 26, 'UTF-8');
+		
+		// $img_where['entity_guid'] = $event_id;
+		// $img_where['create_type'] = 'event_standard';
+		// $img = $this->dbmanager_lib->obtain_a_row(TABLE_IMAGES, 'relative_path', $img_where);
+	?>
+	<?php //if($img):?>
+	<!--<article class='event-card'>
+		<div class="photo"> 
+			<img src="<?php echo $img?$img->relative_path:''; ?>" alt="" /> 
+		</div>
+		<div class="entry"> 
+            <header> 
+                <span class='issue'><?php echo $event->term;?></span> 
+                <h1><a href="/event/view/review/<?php echo $event_id;?>"><?php echo $detail->title;?></a></h1> 
+            </header> 
+            <div class='main'><?php echo $show_content;?></div> 
+        </div> 
+	</article> -->
+	<?php //endif;?>
+	<?php //endforeach;?>
+	
+	
+    <ul id="event-history">
+         
+    
+        <?php foreach($events as $event):?>
+		<?php
+			$event_id = $event->guid;
+
+			$where['guid'] = $event_id;
+			$detail = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_ENTITIES, '*', $where);
+			$content = $detail->desc;
+			$show_content = strip_tags($content,'');
+			//$show_content = mb_substr($show_content, 0, 26, 'UTF-8');
+
+			$venue = $this->dbmanager_lib->obtain_a_row_field(TABLE_VENUE,'venue',array('id'=>$event->venue_Id));
+			
+			$img_where['entity_guid'] = $event_id;
+			$img_where['create_type'] = 'event_standard';
+			$img = $this->dbmanager_lib->obtain_a_row(TABLE_IMAGES, 'relative_path', $img_where);
+			$colors =array("0","1","2","3");
+			$color=array_rand($colors);
+			$status=$event->status;
+			 
+			if($status=="4")
+				$event_url="/event/view/review/{$event_id}";
+			elseif($status=="3")
+				$event_url="/event/view/weibo/{$event_id}";
+			else
+				$event_url="/event/view/details/{$event_id}";
+				
+			if(	$event_id==150077)
+			$event_url="/event/view/weibo/150077";	
+		?>
+        <li class='event-type-<?php echo $color;?>'>
+            <div class="pre">
+                <a href="<?=$event_url?>"><?php echo $detail->title;?></a>
+                <a class="plus png_bg">+</a>
+            </div>
+            <div class="detail">
+                <a href="javascript:void(0)" class="close">x</a>
+                <a href="<?=$event_url?>" class="thumbs_link">
+                    <img src="<?php echo $img?$img->relative_path:''; ?>" alt="" class="thumbs">
+                </a>
+                <div class="content">
+                    <div class="header">
+                        <a href="<?=$event_url?>">
+                        <?php echo $detail->title;?></a>
+                    </div>
+                    <div class="meta"><?php echo date('Y.m.d H:i', $event->start_time);?></div>
+                    <div class="main"><?php echo $show_content;?></div>
+                    <div class="extra">
+                        <span class="issue"><a href="<?=$event_url?>">
+                        <?php echo site_lang('event_term_1');?><?php echo $event->term;?><?php echo site_lang('event_term_2');?></a></span>
+                        <a href="<?=$event_url?>" class="more"><?php echo site_lang('event_detail');?></a>
+                    </div>
+                </div>
+            </div>
+        </li>
+        <?php endforeach;?>
+    </ul>
+</dd> 

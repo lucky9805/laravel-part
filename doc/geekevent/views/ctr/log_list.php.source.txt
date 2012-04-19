@@ -1,0 +1,109 @@
+<div class="contentcontainer">
+            <div class="headings">
+                <h2 class="left">所有日志</h2>
+            </div>
+               <div class="contentbox">
+				   <div class = 'search'>
+						<form action='/ctr/logs' method='get'>
+						</form>
+				   </div>
+			   
+				 <table width="100%">
+							<thead>
+								<tr>
+									<th>用户名</th>
+									<th>操作</th>
+									<th>时间</th>									
+								</tr>
+							</thead>
+							<tbody>
+<?php
+    foreach($logs as $row)
+    {
+        $uid            = $row->uid;
+        $operate        = $row->operate;
+        $object_id      = $row->object_id;
+        $entity_guid    = $row->entity_guid;
+        $time           = date("Y-m-d H:i",$row->time_created);
+        $screen_name = $this->user_lib->get_screen_name($uid);
+        $screen_name = "<a href='".$this->web_router_lib->Get_home_url($uid,"index")."'>$screen_name</a>";
+        if($entity_guid != NULL)
+        {
+            $title = $this->entity_engine_lib->obtain_title($entity_guid);
+        }
+        switch($operate)
+        {
+        case "login":
+            $desc = "登陆";
+            break;
+        case "logout":
+            $desc = "登出";
+            break;
+        case "v_clip":
+            $url = $this->web_router_lib->Get_clip_url($entity_guid);
+            $desc = "浏览视频 <a href='{$url}'>{$title}</a>";
+            break;
+        case "v_e_details":
+            $url = $this->web_router_lib->Get_event_details_url($entity_guid);
+            $desc = "浏览活动 <a href='{$url}'>{$title}</a> 的详情";
+            break;
+        case "v_e_sign_up":
+            $url = $this->web_router_lib->Get_event_sign_up_url($entity_guid);
+            $desc = "浏览活动 <a href='{$url}'>{$title}</a> 的报名参与";
+            break;
+        case "v_e_weibo":
+            $url = $this->web_router_lib->Get_event_weibo_url($entity_guid);
+            $desc = "浏览活动 <a href='{$url}'>{$title}</a> 的报道";
+            break;
+        case "v_e_review":
+            $url = $this->web_router_lib->Get_event_review_url($entity_guid);
+            $desc = "浏览活动 <a href='{$url}'>{$title}</a> 的回顾";
+            break;
+        case "v_u_index":
+            $url = $this->web_router_lib->Get_home_url($entity_guid,"index");
+            $desc = "浏览用户 <a href='{$url}'>{$title}</a> 的主页";
+            break;
+        case "v_u_videos":
+            $url = $this->web_router_lib->Get_home_url($entity_guid,"videos");
+            $desc = "浏览用户 <a href='{$url}'>{$title}</a> 的演讲视频";
+            break;
+        case "v_u_events":
+            $url = $this->web_router_lib->Get_home_url($entity_guid,"events");
+            $desc = "浏览用户 <a href='{$url}'>{$title}</a> 参与的活动";
+            break;
+        case "v_u_comments":
+            $url = $this->web_router_lib->Get_home_url($entity_guid,"comments");
+            $desc = "浏览用户 <a href='{$url}'>{$title}</a> 参与的讨论";
+            break;
+        case "comment":
+            $desc = "评论了 {$title}";
+            break;
+        case "comment_c":
+            $main = $this->entity_engine_lib->obtain_main($entity_guid);
+            $main = substr($main,0,100);
+            $desc = "评论了 \"{$main}...\"";
+            break;
+        }
+    ?>
+    <tr>
+        <td><?=$screen_name?></td>
+        <td><?=$desc?></td>
+        <td><?=$time?></td>
+    </tr>
+    <?php
+    }
+?>
+							</tbody>
+						</table>
+						<div style="float:left">
+							<ul class="pagination">
+								<?php
+									echo $this->pagination->create_links(); 
+								?>
+							</ul>
+						</div>
+						<div style="clear: both;"></div>
+					
+		           </div> 
+
+        </div>

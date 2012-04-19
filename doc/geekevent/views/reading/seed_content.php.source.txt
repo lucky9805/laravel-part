@@ -1,0 +1,68 @@
+<?php
+$author_id	= $seed->author;
+$author		= $this->user_lib->get_screen_name($author_id);
+$a_link		= $this->web_router_lib->Get_home_url($author_id, 'index');
+$time		= date('Y.m.d H:i', $seed->publish_time);
+$title		= $this->entity_engine_lib->obtain_title($guid);
+$main		= $this->entity_engine_lib->obtain_main($guid);
+$tags		= $this->tag_lib->obtain_seed_tags($guid);
+?>
+<article class="view geek_observe">
+    <header>
+        <h1><?php echo $title; ?></h1>
+    </header>
+    <div class="meta">
+        <a href='<?php echo $a_link; ?>'><?php echo $author; ?></a> <i>/</i> <?php echo $time; ?>
+<?php if ($seed->source_site != NULL):?>
+        <i>/</i> 来源: <a href='<?php echo $seed->source_url; ?>'><?php echo $seed->source_site; ?></a>
+<?php endif?>
+    </div>
+    <div class="tips">
+        <strong>[核心提示] </strong>
+<?php echo $seed->abstract; ?>
+    </div>
+    <?php echo $main; ?>
+    <div class="tags">
+<?php if (count($tags) > 0):?>
+<?php if ($user_group == 1): ?>
+        <span class="tags_left">标签:</span>
+        <ul>
+<?php foreach($tags as $row): ?>
+            <li><span><?php echo $row->title; ?></span><a href="" class="del fn-none"></a></li>
+<?php endforeach; ?>
+		</ul>
+        <span class="tags_modify">修改</span>
+        <div class='tags_add fn-none'>
+            <input type="text" placeholder="请输入标签" id="tagsAddTxt" class="tags_txt" />
+            <input type="button" value="添加" id="tagsAddBtn" class="tags_btn"/>
+            <input type="button" value="完成" id="tagsAddCancel" class="tags_finish"/>
+            <input type="hidden" value="<?php echo $guid; ?>" id="tags_guid" />
+            <input type="hidden" value="<?php echo $user_guid; ?>" id="user_guid" />
+            <input type="hidden" value="<?php echo $type; ?>" id="relation_type" />
+            <span class="error_msg fn-none"></span>
+        </div>
+<?php else: ?>
+		<span class="tags_left">标签:</span>
+        <ul>
+<?php foreach($tags as $row): ?>
+            <li><?php echo $row->title; ?></li>
+<?php endforeach; ?>
+		</ul>
+<?php endif; ?>
+<?php endif; ?>
+    </div>
+    <div class='info'>
+        <div class="wb-share">
+<?php
+$share_data = array(
+	'entity_guid'   => $guid,
+	'share_content' => $seed->abstract,
+	'subtype_id'    => MODULE_SEED
+);
+$this->load->view('reuse/share', $share_data);
+?>
+        </div>
+    </div>
+<?php $this->load->view('frame/reciprocal_list', $reciprocal); ?><!-- 相关内容 -->
+<?php $this->load->view('frame/recom_list', $recom_list_title); ?><!-- 推荐文章、推荐视频 -->
+</article>

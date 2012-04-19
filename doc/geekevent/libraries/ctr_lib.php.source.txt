@@ -1,0 +1,33 @@
+<?php 
+    class ctr_lib
+    {
+        var $ci;
+        function __construct()
+        {
+            $this->ci = &get_instance();
+            $this->ci->load->model('ctr_mod');
+        }
+		
+		function obtain_rows($query_string, $for_count=false, $type='object')
+		{
+			$query = $this->ci->ctr_mod->get_results($query_string);
+			if($for_count)
+				return $query->num_rows();
+			if($type === 'object')
+				return $query->result();
+			else
+				return $query->result_array();
+		}
+		
+		function obtain_rows_by_where_in($table, $field, $where_in_field = NULL, $where_in_array = NULL, $for_count = false,$where=null, $type = 'object')
+		{
+			$query = $this->ci->ctr_mod->get_results_by_where_in($table, $field, $where_in_field, $where_in_array,$where);
+			if($for_count)
+				return $query->num_rows();
+			if($type === 'object')
+				return $query->result();
+			else
+				return $query->result_array();
+		}
+	}
+?>

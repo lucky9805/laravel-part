@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>用户登陆</title>
+<link href="/public/admin/styles/layout.css" rel="stylesheet" type="text/css" />
+<link href="/public/admin/styles/login.css" rel="stylesheet" type="text/css" />
+<!-- Theme Start -->
+<link href="/public/admin/themes/blue/styles.css" rel="stylesheet" type="text/css" />
+<!-- Theme End -->
+
+</head>
+<body>
+	<div id="logincontainer">
+    	<div id="loginbox">
+        	<div id="loginheader">
+            	<img src="/public/admin/themes/blue/img/cp_logo_login.png" alt="Control Panel Login" />
+            </div>
+            <div id="innerlogin">
+            	<form method="POST"  action="/ctr/logon">
+                	<p>用户名或邮箱:</p>
+                	<input type="text" class="logininput" name="username" />
+                    <p>密&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;码:</p>
+                	<input type="password" class="logininput" name="password"/>
+                   
+                   	<input type="submit" name="submit" id="submit" class="loginbtn" value="submit" /><br />
+                   
+                </form>
+            </div>
+        </div>
+     
+        <img src="/public/admin/img/login_fade.png" alt="Fade" />
+    </div>
+ 
+        
+        <div id="tabs" class="contentcontainer ui-tabs  ui-widget-content ui-corner-all">
+            <div class="headings">
+                <h2 class="left">进度</h2>
+                <ul class="smltabs ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all">
+                	<li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#tabs-1">后台</a></li>
+                    <li class="ui-state-default ui-corner-top"><a href="#tabs-2">接口</a></li>
+                     <li class="ui-state-default ui-corner-top"><a href="#tabs-3">前台</a></li>
+                </ul>
+            </div>
+            <div id="tabs-1" class="contentbox ui-tabs-panel ui-widget-content ui-corner-bottom">
+            	  <div class="contentbox">
+	 				 <table>
+   				        <tr>
+				        <td>后台：添加地点</td>
+				        </tr><tr>
+				        <td>后台：添加赞助商</td>
+				         </tr><tr>
+						<td>后台：添加活动</td>
+						 </tr><tr>
+						<td>后台：添加视频</td>
+				        </tr>
+       				 </table>  
+		           </div>
+		     </div>
+             <div id="tabs-2" class="contentbox nopad ui-tabs-panel ui-widget-content ui-corner-bottom ui-tabs-hide">
+                 <div class="contentbox">
+				<table>
+			        <tr>
+			        <td>1.添加接口：/ajax/get_cast_list/</td>
+			         </tr><tr>
+			        <td>2.添加接口：</td>
+			         </tr><tr>
+			        <td>3.添加接口：</td>
+			         </tr><tr>
+			        <td>4.添加接口：</td>
+			        </tr>
+		        </table> 
+		           </div> 
+              </div>
+              <div id="tabs-3" class="contentbox nopad ui-tabs-panel ui-widget-content ui-corner-bottom ui-tabs-hide">
+            	<div class="contentbox">
+                   
+                </div>
+            </div>
+        </div>
+</body>
+ 
+</html>

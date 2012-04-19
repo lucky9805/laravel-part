@@ -1,0 +1,17 @@
+<?php
+if($this->session_lib->userdata( "_msg" ) != null) { 
+$info_data=$this->session_lib->userdata ( "_msg" );
+$info_type=$this->session_lib->userdata ( "_msg_type" );
+if($info_type=="") $info_type="alert";
+?>
+<div class="result-info result-<?php echo $info_type;?>">
+        <div class="message">
+		<?php echo $info_data;?>
+        </div>
+</div>
+<?php
+ 	$data["_msg"] = null;
+	$data["_msg_type"] = null;
+	$this->session_lib->set_userdata ( $data );
+}
+?>

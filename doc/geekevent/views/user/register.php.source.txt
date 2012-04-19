@@ -1,0 +1,75 @@
+<h1><?php echo site_lang('user_register_title');?></h1>
+<small class='aside'>
+	<?php //echo site_lang('user_register_msg');?>
+</small>
+<form id='register-form' class='format account' action='' method='post'>
+    <?php $this->msg_lib->showmsg();?>
+      <div>
+          <label for='username'><?php echo site_lang('user_register_nick_name');?></label>
+          <input id='username' name='username' type='text' value="<?php echo set_value("username");?>" class='text'>
+            <?php
+          if(form_error("username")){
+          ?>
+          <label for="username" class="msg error"><em>•</em><?php  form_error_show("username");?></label>
+          <?php }?>
+      </div>
+      <div>
+          <label for='email'><?php echo site_lang('user_register_email');?></label>
+          <input id='email' name='email' type='text' class='text' value="<?php echo set_value("email");?>">
+          <?php
+          if(form_error("email")){
+          ?>
+          <label for="email" class="msg error"><em>•</em><?php form_error_show("email")?></label>
+          <?php }?>
+      </div>
+      <div>
+          <label for='password'><?php echo site_lang('user_register_password');?></label>
+          <input id='password' name='password' type='password' class='text'>   <?php
+          if(form_error("password")){
+          ?>
+          <label for="email" class="msg error"><em>•</em><?php form_error_show("password");?></label>
+          <?php }?>
+      </div>
+      <div>
+          <label for='confirm'><?php echo site_lang('user_register_password_confirm');?></label>
+          <input id='passwordconfirm' name='passwordconfirm' type='password' class='text'>
+          <?php
+          if(form_error("passwordconfirm")){
+          ?>
+          <label for="passwordconfirm" class="msg error"><em>•</em><?php form_error_show("passwordconfirm");?></label>
+          <?php }?>
+      </div>
+ 
+      <!--<div>
+          <label for=''>城市</label>
+          公园猜您在北京，没猜对？自己来<a href='javascript:;'>指定</a>吧。
+      </div>-->
+      <div>
+          <label for='verification'><?php echo site_lang('user_register_captcha');?></label>
+          <input id='verification' name='verification' type='text' class='text'>
+           <?php
+          if(form_error("verification")){
+          ?>
+          <label for="verification" class="msg error"><em>•</em><?php  form_error_show("verification");?></label>
+          <?php }?>
+      </div>
+      <div class="aside">
+          <div id="cap" style="float: left;margin: 0px 10px 10px 0">
+            <?php  echo  $this->captcha_engine_lib->get_captcha_image();?></div>
+            <span class="cap" style="padding-top:10px"><?php echo site_lang('user_register_captcha_error');?><a href='javascript:gen();'><?php echo site_lang('user_register_captcha_change');?></a></span>
+      </div>
+      <div class="aside" style="clear:both">
+          <input id="agree" name="agree" value="checked" type="checkbox" <?php echo set_value("agree");?>>
+          <?php echo site_lang('user_register_protocol_msg');?><a href='/pub/index/terms' target=_blank><?php echo site_lang('user_register_protocol');?></a>。
+      </div>
+      <div class="act">
+          <input type="submit"  name="submit" class='submit register png_bg' value='<?php echo site_lang('user_register_submit');?>'>
+      </div>
+  </form>
+
+
+<script>
+    function gen(){
+        $("#cap").load("/user/generate_captcha");
+    }
+</script>

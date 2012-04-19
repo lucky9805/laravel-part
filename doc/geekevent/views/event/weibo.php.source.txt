@@ -1,0 +1,120 @@
+<article class='view' style="min-height:550px">
+    <?php $this->load->view('event/header');?>
+    <div class=''>
+      	<?php 
+			$this->load->view($this->web_router_lib->Get_event_navigation_url(), array('current_on' => 'weibo', 'entity_guid' => $entity_guid, 'event_status' => $event->status));
+    	?>
+	</div>
+	
+	<div>
+		<?php if($event->status <2):?>
+			<?php $this->msg_lib->setmsg(lang('weibo_status1'), ALERT);?>
+			<?php $this->msg_lib->showmsg();?>
+	</div>
+ 
+    <div>
+		<?php else:?>
+			<?php
+				$weibo_where['event_guid'] = $entity_guid;
+				$rows = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_WEIBO, 'id,content,time_created,thumb_id,orig_id', $weibo_where, NULL, 'id DESC');
+				$rows_num = count($rows);
+				$check_last = 1;
+				$last_style = '';
+			?>
+			
+		<?php if($rows_num > 0):?>
+			<p><?=sprintf(lang('weibo_status2'), date('Y.m.d', $event->start_time))?></p>
+		<?php endif;?>
+ 
+		<?php if($this->tp_privilege->check_group_privilege("admin")){ ?>
+		
+		<script>
+	$(function(){
+	eventWeibo.upload($('#eventWeibo-uploader'), 0)
+	})
+	</script> 
+		<form name="tweet" class="format tweet" action ="<?=$this->uri->uri_string()?>" method="post">
+			<textarea class="text" name="tweet"></textarea>
+			<input type="submit" class="submit png_bg" name="submit" value="<?=lang('weibo_submit')?>">
+    <div class="eventWeibo-upload-box">
+        <?php
+            $this->msg_lib->showMsg();
+        ?>
+        <div id="eventWeibo-uploader">
+            <noscript><p><?=lang('user_avatar_no_script')?></p></noscript>
+        </div>
+        <span class="msg"></span>
+    </div>
+		</form>
+		<?php } ?>
+		<?php
+			if($rows_num === 0):
+				$this->msg_lib->setmsg(lang('weibo_no_tweet'),ALERT);
+				$this->msg_lib->showmsg();
+		?>
+		<?php else:?>
+			<div>
+				&nbsp;
+				<?php foreach($rows as $row):?>
+					<?php
+                        $weibo_id = $row->id;
+                        $thumb_id = $row->thumb_id;
+                        $orig_id = $row->orig_id;
+                        if( !empty($thumb_id) && !empty($orig_id))
+                        {
+                            $img_flag = TRUE;
+                            $thumb_img = $this->img_lib->obtain_img_by_id($thumb_id);
+                            $orig_img = $this->img_lib->obtain_img_by_id($orig_id);
+                        }
+                        else
+                        {
+                            $img_flag = FALSE;
+                        }
+						if($check_last === $rows_num)
+							$last_style = 'clear-border';
+					?>
+					<article class='weibo-item <?=$last_style?>'>
+						<div class='main'><?=$row->content?></div>
+						
+						<footer>
+							<div class="wb-share" style="margin-top:-5px">
+							</div>
+							<time pubtime datetime=''><?=date('Y.m.d', $row->time_created)?></time>
+                        <?php
+                            $group_id = $this->global_lib->get_usergroup_id();
+                            if($group_id == 1)
+                            {
+                            ?>
+                                <span><a href='javascript:if(confirm("确定要删除这条微博?")) location="/event/delete_event_weibo/<?=$entity_guid."/".$weibo_id?>"'>删除</a></span> | <a class="weibo_update <?=$weibo_id?> weibo_update_yes">修改</a>
+                            <?php
+                            }
+                        ?>
+						</footer>
+                            <?php
+                                if($img_flag)
+                                {
+                                    $imgs = $thumb_id.','.$orig_id;
+                                ?>
+                                <div class="weibo-img-thumb">
+                                    <img src="<?=$thumb_img?>" alt="" height="95px"/>
+                                <?php if($group_id == 1):?>
+                                    <span class="del-btn <?=$imgs?> weibo_img_del">X</span>
+                                <?php endif;?>
+                                    <span class="weibo-img-orig-url"><?=$orig_img?></span>
+                                </div>
+                                <div class="weibo-img-orig">
+                                	<div class="img-orig-top"><span class="weibo-img-toggle"> - 收起</span><a class="weibo-img-zoom" target="_blank" href="<?=$orig_img?>"> + 查看原图</a></div>
+                                	<div class="img-orig"></div>
+                                </div>
+                                <?php
+                                }
+                            ?>
+					</article>
+					<?php $check_last++;?>
+				<?php endforeach;?>
+			</div>
+			<?php endif;?>
+		<?php endif;?>
+	</div>
+</article>
+

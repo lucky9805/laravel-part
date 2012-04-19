@@ -1,0 +1,101 @@
+<?php
+	$notification_uid = $notification->uid;
+	$notification_object_id = $notification->object_id;
+	$notification_anchor_id = $notification->anchor_id;
+?>
+<header class="action_bar">
+    <a class="close" href="javascript:;"><?=lang('notify_confirm_close')?></a>
+</header>
+<section class="main">
+    <article class="notice-item">
+        <div class="avatar">
+            <a href="<?=$this->web_router_lib->Get_home_url($notification_uid, 'index')?>">
+                <img src="<?=$this->img_lib->get_avatar($notification_uid,'small')?>" alt="">
+            </a>
+        </div>
+        <div class="main">
+			<?php
+				$entity_guid = $this->dbmanager_lib->obtain_a_row_field(TABLE_COMMENT, 'entity_guid', array('guid'=>$notification_anchor_id));
+				$remarker = $this->user_lib->get_screen_name($notification_uid);
+			 	$comment_info = $this->dbmanager_lib->obtain_a_row(TABLE_ENTITIES, 'guid, time_created', array('guid'=>$notification_anchor_id));
+				$comment = $this->entity_engine_lib->obtain_main($notification_anchor_id);
+			?>
+            <a href="<?=$this->web_router_lib->Get_home_url($notification_uid,"index")?>"><?=$remarker?></a>
+            <time datatime=""><?=geekTime($comment_info->time_created)?></time>&nbsp;<?=lang('notify_list_comment')?>
+            <div class="content"><?=echo_cut_off_content($comment)?></div>
+
+            <blockquote>
+                <article class="comment">
+				<?php
+					$father_comment_info = $this->dbmanager_lib->obtain_a_row(TABLE_ENTITIES, 'guid, time_created', array('guid'=>$notification_object_id));
+					$father_comment = $this->entity_engine_lib->obtain_main($notification_object_id);
+				?>
+                    <div class="meta">
+						<?=sprintf(lang('notify_right_father_comment'), wmTime($father_comment_info->time_created))?>
+                    </div>
+                    <div class="content"><?=echo_cut_off_content($father_comment)?></div>
+                    <div class="toolbar">
+                        <span class="from">
+						<?php
+							$entity = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_ENTITIES, 'title,subtype_id', array('guid'=>$entity_guid));
+						
+							$link='';
+							 
+							if($entity->subtype_id == MODULE_EVENTS)
+								$link = $this->web_router_lib->Get_event_details_url($entity_guid);
+							elseif($entity->subtype_id == MODULE_SEED)
+                                $link = $this->web_router_lib->Get_seed_url($entity_guid);
+                            else
+								$link = $this->web_router_lib->Get_clip_url($entity_guid);
+						?>
+                            <?=lang('notify_right_source')?><a href="<?=$link?>"><?=$entity->title?></a>
+                        </span>
+                    </div>
+                </article>
+            </blockquote>
+        </div>
+    </article>
+    <section>
+        <h1 class="notice-reply"><?=lang('notify_right_reply')?><a href="<?=$this->web_router_lib->Get_home_url($notification_uid, 'index')?>"><?=$remarker?></a></h1>
+
+        <form id="notice-reply" name="notice-reply" action="" method="post" class="format comment-form">
+            <input type="hidden" name="entity_id" value="<?=$entity_guid?>">
+			<input type="hidden" value="<?=$notification_anchor_id?>" name="parent_id" id="parent_id">
+            
+            <textarea id="" name="content" class="text"></textarea>
+			<p class="act">
+                <input type="submit" value="<?=lang('notify_right_reply')?>" class="submit">
+            </p>
+        </form>
+		<?php
+			$relative_comments_where = array('fid'=>$notification_anchor_id, 'user_guid' => $this->global_lib->get_user_guid());
+			
+			$relative_comments_info = $this->dbmanager_lib->obtain_rows(TABLE_COMMENT, 'guid, time_created', $relative_comments_where,NULL,"time_created desc");
+	 
+			$relative_comments_num = count($relative_comments_info);
+			$check_last = 1;
+		?>
+        
+		<div class="notice-replys">
+		    <?php foreach($relative_comments_info as $relative_comment_info):?>
+			<?php
+                $last_style = ($check_last === $relative_comments_num) ? 'clear-border' : '';
+			?>
+    		<div class="notice-reply <?=$last_style?>">
+    		<?php 
+    			$relative_comment = $this->entity_engine_lib->obtain_main($relative_comment_info->guid);
+    		?>
+		
+                <div class="header">
+					<?=sprintf(lang('notify_right_related_reply'), geekTime($relative_comment_info->time_created))?>
+                </div>
+                <div class="content">
+                    <?=echo_cut_off_content($relative_comment)?>
+                </div>
+    		</div>
+			<?php $check_last++;?>
+    		<?php endforeach;?>
+    	</div>
+        
+    </section>
+</section>

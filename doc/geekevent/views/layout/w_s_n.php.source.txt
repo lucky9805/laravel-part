@@ -1,0 +1,8 @@
+<div class='clearfix w-s'>
+     <div class='wide'>
+     <?php echo $main;?>
+     </div>
+	<div class='side notice-extra'>
+	<?php echo $sidebar;?>
+	</div>
+</div>

@@ -1,0 +1,8 @@
+<div id='filter-box'> 
+    <div class="container" id="newsNav">
+ 	<?=$sidebar?>
+    </div> 
+</div>
+<div  class="main_content"> 
+	<?=$main?>
+</div> 

@@ -1,0 +1,151 @@
+<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
+
+class User_Privilege_module extends CI_Module {
+
+        /**
+        * 构造函数
+        *
+        * @return void
+        * @author
+        **/
+        function __construct()
+        {
+            parent::__construct();
+            $this->load->model("privilege_mod");
+            $this->load->helper('array');
+        }
+        
+             
+        //列出目前的所有的用户组
+        function obtain_privileges_groups(){
+          
+        }
+        
+         //添加权限
+        function do_privilege($action="",$data=""){
+        	 if($action=="insert"){
+                $this->privilege_mod->create_privilege($data);
+        	 }
+             if($action=="edit"){
+
+        	 }
+             if($action=="delete"){
+				$this->privilege_mod->delete_privilege($data);
+        	 }
+        }
+		
+		
+		 //设置权限
+        function setting_privilege($action=""){
+         
+        	 $data["groups"] = $this->privilege_mod->get_privilege_groups();
+        	 $data["privileges"] = $this->privilege_mod->get_privileges();
+        	 $this->load->view("setting_privilege",$data);
+        }
+        
+        //根据每个组更新权限
+        function update_privilege(){
+        	$posts = $this->input->post();
+        	$groups = $this->privilege_mod->get_privilege_groups();
+         	foreach($groups->result_array() as $group){
+         		$group_id 		= $group["group_id"];
+         		$privilege_data = $group["privilege_data"];
+         		$checks=null;
+         	
+         		foreach($posts as $key=>$val){
+        			$pp=explode("_",$key);
+        			if(!empty($pp[1])){
+           				$p_code = $pp[0]; //权限的code
+        				$p_group = $pp[1];//权限的所属足
+        				if($p_group==$group_id){
+        					$checks[]=$p_code;
+        				}
+        				 
+        			}
+ 
+        		}
+        			if(!empty($privilege_data)) $privilege_data=wm_unserialize($privilege_data);
+        			echo "<br>checks<br>";
+        		 
+        			if(is_array($checks)) 
+           				$privilege_data= $this->set_current_privileges($checks,$privilege_data);
+          		 	else 
+        				$privilege_data= $this->set_current_privileges(null,$privilege_data);	
+        		
+        		//更新数据库中的权限
+        			echo "<br>{$group_id}<br>";
+        		print_r(wm_serialize($privilege_data));
+        	
+        		$this->privilege_mod->update_privilege_data_by_group_id($group_id,wm_serialize($privilege_data));
+         		 
+         	}
+         	redirect("ctr/settting_privilege");
+        	//print_r($da);
+        	//print_r($this->input->post());
+        }
+        
+        
+        //设置当前选择的权限，并更新权限数组
+        function set_current_privileges($codes,$privilege_data,$is_checked=true){
+				$groups = $this->privilege_mod->get_privilege_groups();
+				$privileges = $this->exchange_privilege_to_array();
+ 
+				$temp=Array();
+				//if(empty($privilege_data))
+				//$update_p = elements($privileges,$temp,"0");
+				//else
+				//$update_p = elements($privileges,$privilege_data,"0");
+				
+				$update_p = elements($privileges,$temp,"0");
+ 				if(!is_array($codes)){
+ 					$update_p = elements($privileges,$temp,"0");
+ 				}else{
+					   foreach($codes as $code){
+					   		if($is_checked)
+							$update_p[$code]=1;
+							else
+							$update_p[$code]=0;
+						}
+				}
+   				return $update_p;
+         
+        }
+        
+        function check_group_privilege($privilege_code=''){
+            if($privilege_code=='')return false;
+            $group_id=$this->global_lib->get_usergroup_id();
+        	if($group_id==0)return false;
+        	$result=false;
+        	$privilege_data = $this->privilege_mod->get_group_privilege($group_id);
+        	if(is_null($privilege_data)) return false;
+        	$privilege_data = wm_unserialize($privilege_data);
+        	 
+        	if(element($privilege_code,$privilege_data)=="1")
+            $result=true;
+           
+            return $result;
+        }
+            
+        //把权限转化为数组
+        function exchange_privilege_to_array(){
+        	$data=null;
+       		$privileges = $this->privilege_mod->get_privileges();
+       		foreach($privileges->result_array()  as $privilege) 
+       		$data[]="{$privilege['code']}";
+       	return $data;
+        }
+        
+        function obtain_all_privilege(){
+        	$privileges = $this->privilege_mod->get_privileges();
+			return $privileges->result_array();
+        }
+        
+        function obtain_all_groups(){
+        	$groups = $this->privilege_mod->get_privilege_groups();
+			return $groups->result_array();
+        }
+       
+
+
+}
+?>

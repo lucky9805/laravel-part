@@ -1,0 +1,123 @@
+<?php
+class Tag_lib extends Dbmanager_lib
+{
+	var $ci;
+	function __construct()
+	{
+		$this->ci = &get_instance();
+		$this->ci->load->model('tag_mod');
+	}
+
+	function obtain_clips_tags($limit = 10,$offset = 0)
+	{
+		$query = $this->ci->tag_mod->get_clips_tags($limit, $offset);
+		if ($query->num_rows() > 0)
+		{
+			$result = $query->result();
+		}
+		else
+		{
+			$result = array();
+		}
+		return $result;
+	}
+
+	function obtain_seeds_tags($limit = 10, $offset = 0)
+	{
+		$query = $this->ci->tag_mod->get_seeds_tags($limit, $offset);
+		if($query->num_rows() > 0)
+		{
+			$result = $query->result();
+		}
+		else
+		{
+			$result = array();
+		}
+		return $result;
+	}
+
+	function obtain_seed_tags($guid)
+	{
+		return $this->obtain_entity_tags($guid, 'seed');
+	}
+
+	function obtain_clip_tags($guid)
+	{
+		return $this->obtain_entity_tags($guid, 'clip');
+	}
+
+	function obtain_entity_tags($guid, $type)
+	{
+		$result = array();
+		$query = $this->ci->tag_mod->get_entity_tags($guid, $type);
+		if($query->num_rows() > 0)
+		{
+			$result = $query->result();
+		}
+		return $result;
+	}
+
+	/**
+	* 获取相关文章、视频
+	*/
+	function obtain_interrelated_content($guid, $tags = array())
+	{
+		$result = array();
+		if ( ! empty($tags))
+		{
+			$query = $this->ci->tag_mod->get_interrelated_content($guid, $tags);
+			if($query->num_rows() > 0)
+			{
+				$result = $query->result_array();
+			}
+		}
+		return $result;
+	}
+
+	/**
+	* 获取推荐视频、文章
+	*/
+	function obtain_recommended_list($guid = NULL, $type = 'cast')
+	{
+		$result = array();
+		$query = $this->ci->tag_mod->get_recommended_list($type);
+		if($query->num_rows() == 1)
+		{
+			$result = $query->row_array();
+			if ( ! empty($result))
+			{
+				$result = explode(',', $result['data']);
+
+				foreach ($result as $k => $v)
+				{
+					$tmp		= explode('|', $v);
+					$tmp_guid[$k]	= $tmp[0];
+					$tmp_title[$k]	= ( ! empty($tmp[1])) ? $tmp[1] : '';
+				}
+				$result = array_combine($tmp_guid, $tmp_title);
+				if ( ! empty($result))
+				{
+					if (array_key_exists($guid, $result))
+					{
+						unset($result[$guid]);
+					}
+				}
+			}
+		}
+		return $result;
+	}
+
+	function obtain_recommended_list_title($arr = array())
+	{
+		$result = array();
+		if ( ! empty($arr))
+		{
+			$query = $this->ci->tag_mod->get_recommended_list_title($arr);
+			if ($query->num_rows() > 0)
+			{
+				$result = $query->result_array();
+			}
+		}
+		return $result;
+	}
+}

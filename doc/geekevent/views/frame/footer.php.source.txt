@@ -1,0 +1,16 @@
+<footer>
+	<div class="container">
+		<div class="icp"><?php echo geek_lang('beian'); ?></div>
+		<address><?php echo geek_lang('copycompany'); ?></address>
+		<span class="links">
+			<a href="/pub/index/about"><?php echo geek_lang('about_us'); ?></a>  
+			<a href="/pub/index/terms"><?php echo geek_lang('agreement'); ?></a>
+			<a href="/pub/index/privacy"><?php echo geek_lang('privacy'); ?></a> 
+			<a href="/pub/index/job"><?php echo geek_lang('job'); ?></a> 
+		</span>
+	</div>
+</footer>
+<!--[if lt IE 7 ]>
+    <script src="/public/js/libs/dd_belatedpng.js"></script>
+    <script>DD_belatedPNG.fix(".png_bg"); // Fix any <img> or .png_bg bg-images. Also, please read goo.gl/mZiyb </script>
+  <![endif]-->

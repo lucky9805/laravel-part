@@ -1,0 +1,13 @@
+<?php 
+	 $this->load->view("pub/navigation",array("current_on"=>$current_on));
+?>
+
+<?php
+		if($current_on == 'about') $file = "public/data/about.txt";
+		elseif($current_on == 'terms') $file = "public/data/terms.txt";
+		elseif($current_on == 'contact') $file = "public/data/contact.txt";
+		elseif($current_on == 'privacy') $file = "public/data/privacy.txt"; 
+		elseif($current_on == 'job') $file = "public/data/job.txt"; 
+		elseif($current_on == 'diary') $file = "public/data/diary.txt"; 
+		readfile($file);
+?>

@@ -1,0 +1,30 @@
+<?php
+    $clip_pic = $this->img_lib->clip($cid, 'clips_standard');
+    $content = $this->clip_lib->obtain_clip_highlight($cid);
+    $clip_url = $this->web_router_lib->Get_clip_url($cid);
+    $time_created = $this->entity_engine_lib->obtain_time_created($cid);
+?>
+<div class="search-cast-item">
+    <div class="photo">
+        <img alt="<?=$title?>" src="<?=$clip_pic?>">
+        <a href="<?=$clip_url?>" class="play png_bg">播放</a>
+	</div>
+    <div class="title">
+        <a href="<?=$clip_url?>"><?=$title?></a>
+    </div> 
+    <div class="meta">
+        <?=date('Y.m.d H:i', $time_created)?>
+	</div>
+	
+    <div class="entry">
+    <?php
+        $length = mb_strlen($content);
+        $limit = 60;
+        if($length > $limit)
+        {
+            $content = cn_substr($content, 0, $limit-1, FALSE)."...";
+        }
+        echo $content
+    ?>
+    </div>
+</div>

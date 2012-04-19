@@ -1,0 +1,4 @@
+<link rel="stylesheet" href="/public/js/libs/tagDynamic/jquery.tagDynamic.css" />
+<script src="/public/js/libs/tagDynamic/jquery.tagDynamic.js"></script>
+<link rel="stylesheet" href="/public/js/libs/autocomplete/jquery.autocomplete.css" />
+<script src="/public/js/libs/autocomplete/jquery.autocomplete.js"></script>

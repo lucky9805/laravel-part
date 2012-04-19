@@ -1,0 +1,40 @@
+<?php
+if (! defined ('BASEPATH')) exit ('No direct script access allowed');
+
+class Sitemap_lib extends Dbmanager_lib
+{
+	function __construct()
+	{
+		$this->ci = &get_instance();
+		$this->ci->load->model('sitemap_mod');
+	}
+
+	function get_sitemap_by_subtype_id($operate = '')
+	{
+		$query = $this->ci->sitemap_mod->get_sitemap_by_subtype_id($operate);
+		if ($query->num_rows() > 0)
+		{
+			$result = $query->result();
+		}
+		else
+		{
+			$result = array();
+		}
+		return $result;
+	}
+
+	function get_last_event_updated_time()
+	{
+		$query = $this->ci->sitemap_mod->get_last_event_updated_time();
+		if ($query->num_rows() > 0)
+		{
+			$result = $query->row();
+			$result = $result->time_updated;
+		}
+		else
+		{
+			$result = '';
+		}
+		return $result;
+	}
+}

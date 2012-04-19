@@ -1,0 +1,94 @@
+<?php
+/**
+ * Model Name: Tag_mod
+ * Description: tag model contains public methods used to reponse calls from tag_lib
+ * and conduct operations to intereact with databases mainly related to tables;
+ * Author: LJC
+ * Date: Sep 6, 2011
+ */
+class Tag_mod extends MY_Model
+{
+	function __construct()
+	{
+		parent::__construct();
+	}
+
+	function get_clips_tags($limit, $offset)
+	{
+		$sql = "SELECT tag_id,COUNT(*) AS num FROM tag_relations WHERE type='clip' GROUP BY tag_id ORDER BY num DESC limit {$offset},{$limit}";
+		$result = $this->db->query($sql);
+		return $result;
+	}
+
+	function get_seeds_tags($limit, $offset)
+	{
+		$sql = "SELECT tag_id,COUNT(*) AS num FROM tag_relations WHERE type='seed' GROUP BY tag_id ORDER BY num DESC limit {$offset},{$limit}";
+		$result = $this->db->query($sql);
+		return $result;
+	}
+
+	function get_entity_tags($guid, $type)
+	{
+		$this->db->select("ce.title,ce.guid");
+		$this->db->from(TABLE_TAG_RELATIONS.' t');
+		$this->db->join(TABLE_CORE_ENTITIES.' ce', 't.tag_id=ce.guid');
+		$this->db->where('t.entity_guid', $guid);
+		$this->db->where('t.type', $type);
+		$result = $this->db->get();
+		return $result;
+	}
+
+	/**
+	* 获取相关文章、视频
+	*/
+	function get_interrelated_content($guid, $tags = array())
+	{
+		/*
+		SELECT tag_relations.entity_guid, count( tag_relations.entity_guid ) AS counts, core_entities.title, core_entities.subtype_id
+		TYPE FROM tag_relations
+		INNER JOIN core_entities ON core_entities.guid = tag_relations.entity_guid
+		WHERE tag_relations.tag_id
+		IN ( 150021, 150020, 150016, 150017 )
+		AND tag_relations.entity_guid <>150019
+		GROUP BY tag_relations.entity_guid
+		ORDER BY counts DESC , tag_relations.entity_guid DESC
+		LIMIT 8
+		*/
+		$result = array();
+		if ( ! empty($tags))
+		{
+			$this->db->select('t.entity_guid, count( t.entity_guid ) AS counts, ce.title, t.type');
+			$this->db->from(TABLE_TAG_RELATIONS.' t');
+			$this->db->join(TABLE_CORE_ENTITIES.' ce', 't.entity_guid=ce.guid', 'inner');
+			$this->db->where_in('t.tag_id', $tags);
+			$this->db->where('t.entity_guid!=', $guid, FALSE);
+			$this->db->group_by('t.entity_guid');
+			$this->db->order_by('counts', 'desc');
+			$this->db->order_by('entity_guid', 'desc');
+			$this->db->limit(4);
+			$result = $this->db->get();
+		}
+		return $result;
+	}
+
+	/**
+	* 获取推荐视频、文章
+	*/
+	function get_recommended_list($type = 'cast')
+	{
+		$this->db->select('data');
+		$this->db->from(TABLE_RECOMMENDATION);
+		$this->db->where('type', $type);
+		$this->db->limit(1);
+		return $this->db->get();
+	}
+
+	function get_recommended_list_title($arr)
+	{
+		$this->db->select('guid, title');
+		$this->db->from(TABLE_CORE_ENTITIES);
+		$this->db->where_in('guid', $arr);
+		$this->db->order_by('guid', 'desc');
+		return $this->db->get();
+	}
+}

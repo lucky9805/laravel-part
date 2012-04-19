@@ -1,0 +1,54 @@
+ 
+<div class="news-item">
+	<div class="itemL">
+		<div class="header">
+			 <h1><?=$myear;?></h1>
+			 <h2><?=$mtime;?></h2>
+		</div>
+		<div class="item-list">
+		<?php
+	 	$row_counts=count($results);
+
+			for($i=0;$i<$row_counts;$i++){
+				if($i % 2 !=0){
+				$row=$results[$i];
+			 	$guid=$row->guid;
+			 	$entity = $this->dbmanager_lib->obtain_a_row("core_entities","title,main,desc",array("guid"=>$guid));
+			 	$news = $this->dbmanager_lib->obtain_a_row("news","news_url",array("guid"=>$guid));
+		?>
+			<dl>
+				<dt><a href="<?=$news->news_url;?>" target=_blank><?=$entity->title;?></a><dt>
+				<dd>
+					<p>	<?=$entity->main;?><a href="<?=$news->news_url;?>" target=_blank>outLink</a><p>
+				</dd>
+			</dl>
+		 
+		 <?php }} ?>
+		</div>
+		
+	</div>
+ 	<div class="itemR">
+		<div class="item-list">
+		<?php
+
+			for($i=0;$i<$row_counts;$i++){
+				if($i % 2 ==0){
+				$row=$results[$i];
+			 	$guid=$row->guid;
+			 	$entity = $this->dbmanager_lib->obtain_a_row("core_entities","title,main,desc",array("guid"=>$guid));
+			 	$news = $this->dbmanager_lib->obtain_a_row("news","news_url",array("guid"=>$guid));
+		?>
+			<dl>
+				<dt><a href="<?=$news->news_url;?>" target=_blank><?=$entity->title;?></a><dt>
+				<dd>
+					<p>	<?=$entity->main;?><a href="<?=$news->news_url;?>" target=_blank>outLink</a><p>
+				</dd>
+			</dl>
+		 
+		 <?php }} ?>
+		</div>
+		
+	</div>
+<div class="clear"></div>
+</div>
+ 

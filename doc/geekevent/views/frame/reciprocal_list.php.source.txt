@@ -1,0 +1,19 @@
+<?php if ( ! empty($reciprocal)): ?>
+    <!-- 相关内容 -->
+    <div class="fn-clips-about">
+        <dl class="format">
+        <dt>相关内容</dt>
+            <dd>
+                <ul class="ui-about-list">
+<?php foreach ($reciprocal as $r_k => $r_v): ?>
+<?php if ($r_v['type'] == 'clip'): ?>
+                    <li><a href="<?php echo base_url().'cast/view/'.$r_v['entity_guid'] ?>" title="<?php echo $r_v['title']; ?>"><?php echo $r_v['title']; ?></a><span title="极客广播"></span></li>
+<?php elseif ($r_v['type'] == 'seed'): ?>
+                    <li><a href="<?php echo base_url().'read/view/'.$r_v['entity_guid'] ?>" title="<?php echo $r_v['title']; ?>"><?php echo $r_v['title']; ?></a></li>
+<?php endif; ?>
+<?php endforeach; ?>
+                </ul>
+            </dd>
+        </dl>
+    </div>
+<?php endif; ?>

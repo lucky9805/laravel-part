@@ -1,0 +1,172 @@
+<link rel="stylesheet" href="/public/js/libs/timepicker/jquery-ui-1.8.16.custom.css">
+<script src="/public/js/libs/timepicker/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="/public/js/libs/timepicker/jquery-ui-timepicker-addon.js"></script>
+
+
+
+<div class="contentcontainer">
+    <div class="headings alt">
+        <h2><?php echo site_lang('event_title');?></h2>
+    </div>
+    <div class="contentbox">
+    	<?php echo form_open($this->uri->uri_string());?>
+    		<p>
+                <?php 
+					$flag = style_choose('event_topic');
+					echo form_label(site_lang('event_topic'), 'event_topic');
+					$data = array('name' => 'event_topic', 'id' => 'event_topic', 'class' => 'inputbox'.$flag, 'value' => set_value('event_topic'));
+					echo form_input($data);
+					if($flag)
+						echo form_error('event_topic');
+				?> 
+ 
+            </p>			
+ 
+			<p>
+                <?php
+					$flag = style_choose('event_date');
+					echo form_label(lang('event_time'));
+					$data = array('name' => 'event_date', 'id' => 'event_date1', 'class' => 'inputbox'.$flag, 'value' => set_value('event_date', ''), 'style' => 'width:150px');
+					echo form_input($data);
+					if($flag)
+						echo form_error('event_date');
+						
+					//$flag = style_choose('event_time');
+					//$data = array('name' => 'event_time', 'id' => 'event_time1', 'class' => 'inputbox'.$flag, 'value' => set_value('event_time', ''), 'style' => 'width:60px');
+					//echo form_input($data);
+					//if($flag)
+					//	echo form_error('event_time');
+				?>
+            </p>
+
+			<p>
+                <?php
+					$flag = style_choose('event_date');
+					echo form_label(lang('e:enroll_deadline'));
+					$data = array('name' => 'enroll_deadline_date', 'id' => 'event_date2', 'class' => 'inputbox'.$flag, 'value' => set_value('event_date', ''), 'style' => 'width:150px');
+					echo form_input($data);
+					if($flag)
+						echo form_error('event_date');
+						
+					//$flag = style_choose('event_time');
+					//$data = array('name' => 'enroll_deadline_time', 'id' => 'event_time2', 'class' => 'inputbox'.$flag, 'value' => set_value('event_time', ''), 'style' => 'width:60px');
+					//echo form_input($data);
+					//if($flag)
+					//	echo form_error('event_time');
+				?>
+            </p>
+
+			<p>
+                <?php
+					$flag = style_choose('event_term');
+					echo form_label(site_lang('event_term'), 'event_term');
+					$data = array('name' => 'event_term', 'id' => 'event_term', 'class' => 'inputbox'.$flag, 'value' => set_value('event_term', ''));
+					echo form_input($data);
+					if($flag)
+						echo form_error('event_term');
+				?>
+            </p>
+			
+			<p>
+                <?php
+					$flag = style_choose('event_people_count');
+					echo form_label(site_lang('event_people_count'), 'event_people_count');
+					$data = array('name' => 'event_people_count', 'id' => 'event_people_count', 'class' => 'inputbox'.$flag, 'value' => set_value('event_people_count', ''));
+					echo form_input($data);
+					if($flag)
+						echo form_error('event_people_count');
+				?>
+            </p>
+			<p>
+                <?php 
+					echo form_label(site_lang('event_location'), 'event_location');
+					$option = array('0'=>'选择活动地点');
+					if($venues)
+					{
+						foreach($venues as $venue)
+						{
+							$option[$venue['id']] = $venue['venue'];
+						}
+					}
+					echo form_dropdown('event_location', $option, '0');
+				?>
+				<a href='/ctr/venue_do/add'><?php echo site_lang('event_add_location');?></a>
+            </p>
+			<p>
+                <?php 
+					$flag = style_choose('event_outline');
+					echo form_label(site_lang('event_outline'), 'event_outline');
+					$data = array('name' => 'event_outline', 'id' => 'event_outline', 'class' => 'inputbox'.$flag, 'value' => set_value('event_outline'), 'style' => 'width:600px');
+					echo form_textarea($data);
+					if($flag)
+						echo form_error('event_outline');
+				?> 
+            </p>
+			<p>
+                <?php 
+					$flag = style_choose('event_abstract');
+					echo form_label(site_lang('event_abstract'), 'event_abstract');
+					$data = array('name' => 'event_abstract', 'id' => 'event_abstract', 'class' => 'inputbox'.$flag, 'value' => set_value('event_abstract'), 'style' => 'width:600px');
+					echo form_textarea($data);
+					if($flag)
+						echo form_error('event_abstract');
+				?> 
+            </p>
+			<p>
+                <?php 
+					$flag = style_choose('event_detail');
+					echo form_label(site_lang('event_detail'), 'event_detail');
+					$data = array('name' => 'event_detail', 'id' => 'event_detail', 'class' => 'inputbox'.$flag, 'value' => set_value('event_detail'), 'style' => 'width:600px');
+					echo form_textarea($data);
+					if($flag)
+						echo form_error('event_detail');
+				?> 
+            </p>
+			<p>
+                <?php 
+					// $flag = style_choose('event_sponsor');
+					// echo form_label(site_lang('event_sponsor'), 'event_sponsor');
+					// $data = array('name' => 'event_sponsor', 'id' => 'event_sponsor', 'class' => 'inputbox'.$flag, 'value' => set_value('event_sponsor'));
+					// echo form_input($data);
+					// if($flag)
+						// echo form_error('event_sponsor');
+				?>
+				
+				<?php 
+					// $data = array('name' => 'event_js_add', 'id' => 'event_js_add', 'value' => site_lang('event_js_add'), 'class' => 'btn');
+					// echo form_submit($data);
+				?>
+				
+				<?php
+					echo form_label(site_lang('event_sponsor'));
+					if($sponsors)
+					{
+						foreach($sponsors as $sponsor)
+						{
+							$checkbox = array(
+												'name' => $sponsor['id'],
+												'value' => $sponsor['id'],
+												'style' => 'margin:10px',
+											);
+							echo form_checkbox($checkbox);
+							echo $sponsor['sponsor'];
+						}
+					}
+				?>
+            </p>
+            
+            <p>
+				<?php 
+					$data = array('name' => 'event_add', 'id' => 'event_add', 'value' => site_lang('event_add'), 'class' => 'btn');
+					echo form_submit($data);
+				?>
+			</p>
+
+        </form>         
+    </div>
+</div>
+ 
+<?php 
+    $this->load->view("scripts/admin_time_selected",array("date"=>"event_date1","time"=>'event_time1'));
+    $this->load->view("scripts/admin_time_selected",array("date"=>"event_date2","time"=>'event_time2'));
+?>

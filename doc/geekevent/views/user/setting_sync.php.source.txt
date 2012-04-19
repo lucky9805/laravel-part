@@ -1,0 +1,54 @@
+<?php 
+    $user_guid = $this->global_lib->get_user_guid();
+    $sync_setting = $this->user_lib->get_user_field($user_guid,'sync_setting');
+    $sync_arr = wm_unserialize($sync_setting);
+    if($sync_arr == "")
+    {
+        $sync_arr = array();
+    }
+    $this->load->view("user/navigation",array("current_on"=>"sync"));
+?>
+
+<form id='profile-sync-form' class='format account sync status' action='' method='post'>
+<?php $this->msg_lib->showmsg();?>
+<?php
+    foreach($sync_arr as $key => $value):
+        if($key == 'sina'){ ?>
+
+        <div>
+            <a href="http://weibo.com" target="_blank"><span class="sina"><i></i>新浪微博</span></a><span class="user-name">@<?=$value['userid']?></span><a href='/user/disconnect/sina'><span class="action submit-button">解除绑定</span></a><span class="stats icons"></span>
+        </div>
+
+        <?php }elseif($key == 'tencent'){ ?>
+
+       <div>
+            <a href="http://t.qq.com" target="_blank"><span class="tencent"><i></i>腾讯微博</span></a><span class="user-name">@<?=$value['userid']?></span><a href='/user/disconnect/tencent'><span class="action submit-button">解除绑定</span></a><span class="stats icons"></span>
+       </div>
+
+        <?php }
+    endforeach;
+
+    $all_arr = array('sina','tencent');
+    $unconn_arr = array_diff($all_arr,array_keys($sync_arr));
+
+    foreach($unconn_arr as $key):
+        if($key == 'sina'){ ?>
+
+        <div>
+            <a href="http://weibo.com" target="_blank"><span class="sina"><i></i>新浪微博</span></a><span class="user-name"></span><a href='/user/connect/sina'><span class="action submit-button">绑定</span></a>
+        </div>
+
+        <?php }elseif($key == 'tencent'){ ?>
+
+       <div>
+		   <a href="http://t.qq.com" target="_blank"><span class="tencent"><i></i>腾讯微博</span></a><span class="user-name"></span><a href='/user/connect/tencent'><span class="action submit-button">绑定</span></a>
+        </div>
+
+        <?php }
+    endforeach;
+?>
+       <!--<div>
+          	<span class="twitter"><i></i>Twitter</span><span class="user-name">:xxx</span><span class="action submit-button">解除绑定</span><span class="stats icons"></span>
+       </div>-->
+</form>
+<div style="padding-bottom:300px"></div>

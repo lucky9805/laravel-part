@@ -1,0 +1,119 @@
+<div class="contentcontainer">
+	<?php if(isset($action)):?>
+		<?php if($action === 'update'):?>
+			<div class="contentbox">
+				<?php echo form_open_multipart($this->uri->uri_string());?>
+					<p>
+						<?php 
+							$flag = style_choose('sponsor');
+							echo form_label(site_lang('edit_sponsor_name'), 'sponsor');
+							$data = array('name' => 'sponsor', 'id' => 'sponsor', 'class' => 'inputbox'.$flag, 'value' => set_value('sponsor', $row->sponsor));
+							echo form_input($data);
+							if($flag)
+								echo form_error('sponsor');
+						?> 
+					</p>
+
+					<p>
+						<?php 
+							$flag = style_choose('url');
+							echo form_label('url', 'url');
+							$data = array('name' => 'url', 'id' => 'url', 'class' => 'inputbox'.$flag, 'value' => set_value('url', $row->url));
+							echo form_input($data);
+							if($flag)
+								echo form_error('url');
+						?>
+					</p>
+					
+					<p>
+                        <?php 
+							echo form_label(site_lang('add_sponsor_logo'), 'add_sponsor_logo');
+							$data = array('name' => 'sponsor_logo', 'id' => 'sponsor_logo', 'value' => 'upload');
+							echo form_upload($data);
+						?>
+                    </p>
+					<p>
+						<?php if($row->logo):?>
+                        <?php 
+                            $pic_path = $this->img_lib->obtain_img_by_id($row->logo);
+                        ?>
+						<img src='<?php echo $pic_path;?>' width=150px />
+						<?php endif;?>
+						
+					</p>
+					<p>
+						<?php echo form_hidden('key', $key);?>
+					</p>
+					<p>
+						<?php 
+							$data = array('name' => 'update', 'id' => 'update', 'value' => site_lang('edit_update'), 'class' => 'btn');
+							echo form_submit($data);
+						?>
+					</p>
+				</form>         
+		    </div>
+		<?php endif;?>
+	<?php else:?>
+            <div class="headings altheading">
+                <h2><?php echo site_lang('edit_sponsor_list');?></h2>
+            </div>
+            <div class="contentbox">
+					<div class = 'search'>
+						<form action='ctr/sponsor_list' method='get'>
+							<p><?php echo site_lang('sponsor_list_total');?><?php echo ':';?><?php echo $num_rows;?></p>
+							<p>
+								<?php echo site_lang('sponsor_list_keyword');?>
+								<?php echo form_input('keyword', $search_parameter);?>
+								<?php echo form_submit('search', site_lang('sponsor_list_search'));?>
+							</p>
+						</form>
+				   </div>
+				   
+            	<table width="100%">
+                	<thead>
+                    	<tr>
+                        	<th><?php echo site_lang('edit_sponsor_name');?></th>
+                            <th><?php echo site_lang('edit_sponsor_logo');?></th>
+                            <th><?php echo site_lang('edit_sponsor_url');?></th>
+							<th><?php echo site_lang('edit_edit');?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+					<?php 
+						if(!$result)
+							echo '<tr><td>' . site_lang('sponsor_list_no_record') . '</td></tr>';
+					?>
+					<?php $even = false;?>
+					<?php foreach($result as $row):?>
+						<?php if(!$even):?>
+						<tr>
+						<?php else:?>
+						<tr class="alt">
+						<?php endif;?>
+							<td><?=$row['sponsor']?></td>
+                            <?php 
+                                $logo_path = $this->img_lib->obtain_img_by_id($row['logo']);
+                            ?>
+							<td><img src='<?=$logo_path?>' width=64px /></td>
+							<td><?php echo $row['url'];?></td>
+							<td>
+                            	<a title="" href="/ctr/sponsors_do/update/<?php echo $row['id'];?>"><?php echo site_lang('edit_update');?></a>
+                                <a title="" href="/ctr/sponsors_do/delete/<?php echo $row['id'];?>" onclick="if(!confirm('<?php echo site_lang('js_confirm_delete');?>')) return false;"><?php echo site_lang('edit_delete');?></a>
+                            </td>
+
+						<?php $even = !$even;?>
+						</tr>
+					<?php endforeach;?>	
+                    </tbody>
+                </table>
+				<div style="float:left">
+				<ul class="pagination">
+					<?php 
+						echo $this->pagination->create_links(); 
+					?>
+				</ul>
+				</div>
+                <div style="clear: both;"></div>
+            </div>
+        <?php endif;?>    
+        </div>

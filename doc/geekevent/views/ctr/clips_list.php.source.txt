@@ -1,0 +1,97 @@
+<div class="contentcontainer">
+            <div class="headings alt">
+                <h2><?php echo site_lang('clips_list_title');?></h2>
+            </div>
+            <div class="contentbox">
+			<?php //echo form_open($this->uri->uri_string());?>
+			<form action='/ctr/clips_list/' method='get'>
+            		<p>
+						<tr>
+                        <?php
+							echo site_lang('clips_list_query');
+							echo form_input('clip_title');
+
+							echo site_lang('clips_list_event');
+							$option[''] = site_lang('clips_list_all');
+							if($events)
+							{
+								foreach($events as $event)
+								{
+									$option[$event['guid']] = $event['title'];
+								}
+							}							
+							echo form_dropdown('clips_respective_activity', $option, '');
+							unset($option);
+
+							echo site_lang('clips_list_series');
+							$option[''] = site_lang('clips_list_all');
+							if($clips_collection)
+							{
+								foreach($clips_collection as $clip_collection)
+									$option[$clip_collection['id']] = $clip_collection['collection_name'];
+							}
+							echo form_dropdown('clips_respective_series', $option, '');
+
+							echo form_submit('submit', site_lang('clips_list_query_button'));
+
+
+						?> 
+						</tr>
+                    </p>
+					<p>
+						<table width="100%">
+							<thead>
+								<tr>
+									<th><?php echo site_lang('clips_list_clip_title');?></th>
+									<th><?php echo site_lang('clips_list_speaker');?></th>
+									<th><?php echo site_lang('clips_list_edit');?></th>
+								</tr>
+							</thead>
+							<tbody>
+							<?php if(!isset($clips_title)):?>
+								<?php echo site_lang('no_record');?>
+							<?php else:?>
+								<?php foreach($clips_title as $guid=>$title):?>
+									<tr>
+										<td><a href="<?php echo $this->web_router_lib->get_clip_url($guid);?>" target=_blank><?php echo $title;?></a></td>
+										<?php
+											$speaker_where = array('father_id'=>$guid, 'type'=>'clip');
+											$user_guids = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_SPEAKERS, 'user_guid', $speaker_where);
+										?>
+										<td>
+										<?php
+											if(!$user_guids)
+												echo site_lang('no_record');
+											else
+											{
+												foreach($user_guids as $user_guid)
+												{
+													$user_where['guid'] = $user_guid->user_guid;
+													$user_name = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'real_name', $user_where);
+													if($user_name)
+														echo $user_name . ' ';
+												}
+												
+											}
+										?>
+										</td>
+										<td>
+										<a href='/ctr/clips_do/update/<?php echo $guid;?>'><?php echo site_lang('clips_list_update');?></a>
+										<a href='/ctr/clips_do/delete/<?php echo $guid;?>' onclick="if(!confirm('<?php echo site_lang('js_confirm_delete');?>')) return false;"><?php echo site_lang('clips_list_delete');?></a>
+										</td>
+									</tr>
+								<?php endforeach;?>
+							<?php endif;?>
+							</tbody>
+						</table>
+						<div style="float:left">
+							<ul class="pagination">
+								<?php //echo $this->pagination->create_links(); ?>
+							</ul>
+						</div>
+						<div style="clear: both;"></div>
+					</p>
+			</form>
+				
+            </div>
+        </div>

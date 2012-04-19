@@ -1,0 +1,72 @@
+<?php 
+	$this->load->view($this->web_router_lib->Get_user_navigation_url(),array("current_on"=>"videos", "user_guid"=>$user_guid));
+	$screen_name = $this->user_lib->get_screen_name($user_guid);
+?>
+<dl class='user-timeline'>
+	<?php if($clips_num > 0):?>
+    <dt>
+        <?=$screen_name.lang('user_video')?><span class='num'> (<?=$clips_num?>)</span>
+	</dt>
+	<dd>			
+	<?php 
+	    $is_last = 0;
+		$last_str = "";
+	    foreach($clips as $val):
+			$is_last++;
+            if($is_last == $clips_num)
+                $last_str=" clear-border";
+			$clip_guid = $val->father_id;
+            $c_img = $this->img_lib->clip($clip_guid);
+            $c_url = $this->web_router_lib->Get_clip_url($clip_guid);
+            $c_title = $this->entity_engine_lib->obtain_title($clip_guid);
+			$c_detail = $this->dbmanager_lib->obtain_a_row(TABLE_CLIPS, 'highlight, publish_time', array('guid'=>$clip_guid));
+            $c_date = date('Y.m.d H:i',$c_detail->publish_time);
+            $c_highlight = $c_detail->highlight;
+			
+		?>
+		<article class='cast-item <?=$last_str?>'>
+            <div class="photo">
+                <img src="<?=$c_img?>" alt="<?=$c_title?>"/>
+				<a class='play png_bg' href="<?=$c_url?>">play</a>
+            </div>
+            <div class="entry cast-card">
+                <header>
+                    <h1><a href="<?=$c_url?>"><?=$c_title?></a></h1>
+                </header>
+                <div class="meta">
+
+                    <time datetime="<?=$c_date?>"><?=$c_date?></time>
+                </div>
+                <div class="main">
+                <?php
+                    $length = mb_strlen($c_highlight);
+                    $len = 78;
+                    if($length>$len)
+                        $c_highlight = cn_substr($c_highlight, 0, $len-1,false)."...";
+                ?>
+                    <?=$c_highlight?>
+                </div>
+                <footer>
+                    <div class="toolbar">
+					<?php
+						$extra_data = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_EXTRA_ENTITY, '*', array('guid'=>$clip_guid));
+					?>
+                        <a class="visited" href="javascript:;"><?=$extra_data->view?></a>
+                        <a class="comment" href="javascript:;"><?=$extra_data->comment?></a>
+                        <a class="play" href="<?=$c_url?>"><?=lang('user_watch')?></a>
+                    </div>
+                </footer>
+            </div>
+        </article>
+		<?php endforeach;?>
+		<div class="pagination">
+            <?=$this->pagination->create_links()?>
+		</div>
+    </dd>
+	<?php else:?>
+	<dt></dt>
+		<div class="result-info result-alert">
+		    <div class="message"><?=lang('user_no_video_msg')?></div>
+		</div>
+	<?php endif;?>
+</dl>

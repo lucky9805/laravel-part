@@ -1,0 +1,16 @@
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title><?php echo $title;?></title>
+<link href="/public/admin/styles/layout.css" rel="stylesheet" type="text/css" />
+<link href="/public/admin/styles/wysiwyg.css" rel="stylesheet" type="text/css" />
+<!-- Theme Start -->
+<link href="/public/admin/themes/blue/styles.css" rel="stylesheet" type="text/css" />
+<!-- Theme End -->
+    <script type="text/javascript" src="/public/admin/scripts/enhance.js"></script>	
+    <script type='text/javascript' src='/public/admin/scripts/excanvas.js'></script>
+	<script type='text/javascript' src='/public/admin/scripts/jquery.min.js'></script>
+    <script type='text/javascript' src='/public/admin/scripts/jquery-ui.min.js'></script>
+	<script type='text/javascript' src='/public/admin/scripts/jquery.wysiwyg.js'></script>
+    <script type='text/javascript' src='/public/admin/scripts/visualize.jQuery.js'></script>
+    <script type="text/javascript" src='/public/admin/scripts/functions.js'></script>
+</head>

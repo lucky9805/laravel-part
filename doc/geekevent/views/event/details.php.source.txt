@@ -1,0 +1,190 @@
+<?php
+    $event_pic      = $this->img_lib->event($entity_guid,'event_small');
+    $event_status   = $event->status;
+    $exp_id=152042;
+    $this->template->write('extra_scripts1',$this->load->view("scripts/counter",'',TRUE));
+?>
+<article class='view'>
+    <?php $this->load->view('event/header');?>
+    <div class='main'>
+        <?php 
+          $this->load->view($this->web_router_lib->Get_event_navigation_url(),array("current_on"=>"details", "entity_guid"=>$entity_guid, "event_status"=>$event_status));
+    	?>
+        <dl class='event-detail' <?php  if($entity_guid==$exp_id) echo "id='event-{$exp_id}'";?>>
+            <dt style='display: none'><?=lang('details')?></dt>
+            <dd class='basic'>
+                <img src='<?=$event_pic?>' class='banner'>
+				<div class='entry'>
+                <?php 
+                    if($event_status< 2):
+                        echo lang('details_time_left_to_start')
+                ?>
+                        <div id="countdown" class="countdown">
+                            <!--<div class="cuntDigit">12</div>
+                            <div class="cntSep">天</div>
+                            <div class="cuntDigit">06</div>
+                            <div class="cntSep">时</div>
+                            <div class="cuntDigit">54</div>
+                            <div class="cntSep">分</div>
+                            <div class="cuntDigit">23</div>
+                            <div class="cntSep">秒</div>-->
+                        </div>
+                        <div id="counter"></div>
+                    
+                <?php 
+                    elseif($event_status === '2'):
+                        echo lang("event_status2");
+                    elseif($event_status === '3'):
+                ?>
+					    <div class="ended"><?=lang("event_status3")?></div>
+                <?php
+                    else:
+                ?>
+					    <div class="ended"><?=lang("event_status4")?></div>
+                <?php 
+                    endif;
+
+                    if($event_status>=3):
+                ?>
+                    <p>
+						<?=sprintf(lang("event_status{$event_status}_content"),$entity_guid)?></p>
+                <?php
+                    else:
+                    ?>
+                     <p><span class="label"><?=lang('details_location')?>:</span><?=$venue?$venue->venue:''?></p>
+                    <?php if($entity_guid!=$exp_id):
+                    ?>
+                   
+                    <p><span class="label"><?=lang('details_num')?>:</span><?=$event->people_count?></p>
+                <?php 
+                		endif;
+                    endif;
+                ?>
+				<!--判断报名是否结束 by 张晓旭-->
+             	<?php
+             	    if($event->enroll_end_time > time()): 	
+             			//	if($event->status < 2):
+             	?>
+			    <?php
+                  if($entity_guid==$exp_id):
+                  	$total_num = 600;
+                  	$member_where['event_id'] = $entity_guid;
+                  	$member_where['status >= '] = 0;
+				  	$row_num = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'userguid', $member_where, NULL, NULL, NULL, NULL, TRUE);
+                    if($row_num > 300) $row_num=300;
+                 
+                  	$left_num =300-$row_num;
+                  	$current_percent= $row_num/$total_num*100;
+                  	 
+                 // 	$row_num = $row_num+300;
+                  //	if($row_num > 600) $row_num=600;
+                 	$total_percent= 48 + $current_percent;
+                 // if($left_num==0)
+                 // echo  '<p id="intro_pro">现在已经没有剩余名额了</p>';
+                //  else
+                //  echo '<p id="intro_pro">300个名额已被预留，剩余'.$left_num.'个</p>';
+                  ?>
+                  
+                   <div class="back">
+									<div style="width: 50%; border-bottom-right-radius: 0pt; border-top-right-radius: 0pt;" class="bar poll_theme_1">预留</div>
+									<div style="width:<?=$current_percent?>%;" class="bar poll_theme_2"></div>
+							<!--		<div style="left:<?=$total_percent?>%" id="arrow"></div>-->
+									<div id="min">0</div>
+                                    <div id="middle">300</div>
+									<div id="max">600</div>									
+					 </div>
+               	
+                <?php
+                	endif;
+                ?>
+                	 <a href='<?=$this->web_router_lib->Get_event_sign_up_url($entity_guid)?>' class='button'><?=lang('latest_event_sign_up')?></a>
+              	<?php
+                    else:
+                ?>
+					    <div class="result-info result-alert"><div class="message"><?=lang("sign_up_msg5")?></div></div>
+                <?php
+                    endif;
+                ?>
+    
+				<!--end:判断报名是否结束 -->
+
+				</div>
+            </dd>
+            <?php if(1==2){?>
+			<dt>现场直播</dt>
+            <dd><embed src="http://js.tudouui.com/bin/online/OnlinePlayerAngel_6.swf?md5s=e42e35d9387a5965c8bdb4a662fe0c6d&bps=380.0&kfps=4.0&channels=11&dataUrl=294" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" wmode="opaque" width="550" height="480"></embed></dd>
+			<?php }?>
+            <dt><?=lang('details_desc')?></dt>
+            <dd><?=$core_entity->desc?></dd>
+
+            <dt><?=lang('details_main')?></dt>
+            <dd><?=$core_entity->main?></dd>
+
+            <dt><?=lang('details_event_flow')?></dt>
+            <dd>
+                <table width="100%" cellspacing="0" class="format event-shedule">
+                    <tr>
+                        <th width="100"><?=lang('agenda_time')?></th>
+                        <th><?=lang('agenda_content')?></th>
+                        <th width="150"><?=lang('agenda_guest')?></th>
+                    </tr>
+					<?php foreach($agendas as $agenda):?>
+					<tr>
+						<td><time datetime=""><?=date('H:i', $agenda->time_started)."-".date('H:i', $agenda->time_ended)?></time></td>
+						<td><?=$agenda->activity?></td>
+						<td>
+							<?php
+								$speaker_where = array('father_id' => $agenda->id, 'type' => 'agenda');
+								$speakers = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_SPEAKERS, 'user_guid', $speaker_where);
+                                $speakers = $this->event_lib->obtain_event_speakers($agenda->id,'agenda');
+								foreach($speakers as $row):
+                                    $s_user_guid = $row->user_guid;
+                                    $s_screen_name = $this->user_lib->get_real_name($s_user_guid);
+									if($s_screen_name=="") $s_screen_name = $this->user_lib->get_screen_name($s_user_guid);
+                                    $s_home_link = $this->web_router_lib->Get_home_url($s_user_guid,"index");
+							?>		
+							<a href="<?=$s_home_link?>" class="guest" rel="<?=$s_user_guid?>"><?=$s_screen_name?></a>
+                            <?php 
+                                endforeach;
+                            ?>	
+						</td>
+					</tr>
+					<?php endforeach;?>
+                </table>
+            </dd>
+            <dt><?=lang('event_location_details')?></dt>
+            <dd>
+                <?php 
+					echo $venue->venue;
+					echo '<br/>';
+
+                    if($venue->map_api):
+                        $pic_path = $this->img_lib->obtain_img_by_id($venue->map_api);
+                    ?>
+					<img src='<?=$pic_path?>'/>
+                    <?php
+                    endif;
+                    echo geek_content($venue->descp);
+                ?>
+            </dd>
+            <dt><?=lang('event_sponsor')?></dt>
+            <dd>
+                <ul class="format wall links">
+                    <?php 
+                        foreach($sponsors as $sponsor):
+						    $detail_where['id'] = $sponsor->sponsor_id;
+						    $sponsor_detail = $this->dbmanager_lib->obtain_a_row(TABLE_SPONSORS, 'sponsor,url, logo', $detail_where);
+                            $logo_path = $this->img_lib->obtain_img_by_id($sponsor_detail->logo);
+					?>
+                    <li>
+                        <a href="<?=$sponsor_detail->url?>"><img src="<?=$logo_path?>" alt="<?=$sponsor_detail->sponsor?>" /></a>
+                    </li>
+                    <?php 
+                        endforeach;
+                    ?>
+                </ul>
+            </dd>
+        </dl>
+    </div>
+</article>
+

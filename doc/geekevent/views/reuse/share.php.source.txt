@@ -1,0 +1,294 @@
+<?php
+    $user_guid = $this->global_lib->get_user_guid();
+    $user_guid = ($user_guid) ? $user_guid : 0;
+    $like_num  = $this->entity_engine_lib->obtain_like_num($entity_guid);
+
+    $where = array('guid' => $entity_guid);
+    $e_info = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_EXTRA_ENTITY, 'sina,tencent,twitter,gplus', $where);
+    $to_be_first = '去做第一个分享人吧';
+    $sina_info      = ($e_info->sina) ? '已经有'.$e_info->sina.'人分享到新浪微博' : $to_be_first;
+    $tencent_info   = ($e_info->tencent) ? '已经有'.$e_info->tencent.'人分享到腾讯微博' : $to_be_first;
+    $twitter_info   = ($e_info->twitter) ? '已经有'.$e_info->twitter.'人分享到Twitter' : $to_be_first;
+    $gplus_info     = ($e_info->gplus) ? '已经有'.$e_info->gplus.'人分享到Google+' : $to_be_first;
+
+    $sync_url = $this->web_router_lib->Get_user_setting_sync_url();
+
+    //分享的URL
+    $e_title = $this->entity_engine_lib->obtain_title($entity_guid);
+    if($subtype_id == MODULE_CLIPS)
+    {
+        $s_content = "分享视频-《{$e_title}》: {$share_content}";
+        $tag = "%23极客活动%23 ";
+        $s_content2 = "#极客活动# 分享视频-《{$e_title}》: {$share_content}";
+        $share_url = substr($this->config->item('base_url'), 0, -1).$this->web_router_lib->Get_clip_url($entity_guid)."?u={$user_guid}";
+        $pic_url = $this->img_lib->clip($entity_guid, 'clips_big');
+        $thumb_pic_url = $this->img_lib->clip($entity_guid, 'clips_medium');
+    }
+    elseif($subtype_id == MODULE_SEED)
+    {
+        $s_content = "《{$e_title}》-{$share_content}";
+        $tag = "%23极客阅读%23 ";
+        $s_content2 = "#极客阅读# 《{$e_title}》-{$share_content}";
+        $share_url = substr($this->config->item('base_url'), 0, -1).$this->web_router_lib->Get_seed_url($entity_guid)."?u={$user_guid}";
+        $pic_url = $this->img_lib->seed($entity_guid, 'seed_share');
+        $thumb_pic_url = $this->img_lib->seed($entity_guid, 'seed_share');
+    }
+    $sina_url    = valid_url($share_url."%26t=sina");
+    $tencent_url = valid_url($share_url."%26t=tencent");
+    $twitter_url = valid_url($share_url."%26t=twitter");
+    $gplus_url   = valid_url($share_url."%26t=gplus");
+
+    //分享的内容
+    $length = mb_strlen($s_content);
+    $len = 108;
+    if($length > $len)
+    {
+        $s_content = cn_substr($s_content, 0, 108, FALSE)."..."; 
+    }
+
+    $user_guid = $this->global_lib->get_user_guid();
+    $sync_setting = $this->user_lib->get_user_field($user_guid, 'sync_setting');
+    $sync_arr = wm_unserialize($sync_setting);
+    $sync_items = (empty($sync_arr)) ? array() : array_keys($sync_arr);
+
+    if($user_guid == 0)
+    {
+        $like_style = 'like-button offline';
+        $guids = $this->input->cookie('l_guids');
+        if($guids != FALSE AND strpos($guids, $entity_guid) != FALSE)
+        {
+            $like_style = 'like-button checked';
+        }
+    }
+    else
+    {
+        $like_style = 'like-button online';
+        $like_flag = $this->entity_engine_lib->does_user_like($user_guid, $entity_guid);
+        if($like_flag)
+            $like_style = 'share-to-button';
+    }
+?>
+<script type="text/javascript">
+
+function GPshareTo ( item_stats, share_url ){
+	item_stats = $.trim( item_stats );
+	if( item_stats === "" ){
+		return false;
+	}
+
+	var _url = $.trim( share_url );
+    var _pic = encodeURI('<?php echo $pic_url; ?>');//（例如：var _pic='图片url1|图片url2|图片url3....）
+    var _t = '<?=addslashes(strip_tags(geek_content($s_content)))?>';//标题和描述信息
+    var _tag = '<?=$tag?>'
+	_t = encodeURI(_t);
+    _t = _tag + _t;
+	
+	switch( item_stats ){
+		case "sina":
+		var _u = 'http://service.weibo.com/share/share.php?url='+_url+'&appkey=3896321144&title='+_t+'&pic='+_pic;
+		break;
+		
+		case "tencent":
+		var _u = 'http://share.v.t.qq.com/index.php?c=share&a=index&url='+_url+'&appkey=801087896&pic='+_pic+'&assname=&title='+_t;
+		break;
+		
+		case "twitter":
+		var _u = 'https://twitter.com/share?url='+_url+'&text='+_t;
+		break;
+		
+		case "gplus":
+		var _u = 'https://plusone.google.com/_/+1/confirm?hl=en&url='+_url;
+		break;
+
+		default:
+		return false;
+	}
+	window.open( _u,'', 'width=700, height=400, top=0, left=0, toolbar=no, menubar=no, scrollbars=no, location=yes, resizable=no, status=no' );
+}
+	
+</script>
+<div class="share-buttons">
+<div class="share-button-left">
+    <span id="like-button" class="<?=$like_style?>"><?=$entity_guid?></span>
+    <span class="like-count">有<span id="like-count-num"><?=$like_num?></span>人喜欢</span>
+</div>
+<div class="share-button-right <?=$entity_guid?>">
+
+	<div class="sina GP_Uu">
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td>
+						<div class="GP_t5">
+                            <a class="GP_s5 GP_LF GP_Uu" title="分享到新浪微博" onclick="GPshareTo('sina', '<?=$sina_url?>');">Sina</a>		
+						</div>
+					</td>
+					<td>
+						<div class="GP_MN">
+							<table cellspacing="0" cellpadding="0">
+								<tbody>
+									<tr>
+										<td>
+											<div class="GP_uW"></div>
+										</td>
+										<td>
+                                            <div class="GP_sW" title="<?=$sina_info?>">
+                                                <a onclick="GPshareTo('sina', '<?=$sina_url?>');"><span id="extra-info-sina" class="GP_tW"><?=$e_info->sina?></span></a>
+											</div>
+										</td>
+										<td>
+											<div class="GP_vW"></div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div class="tencent GP_Uu">
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td>
+                        <div class="GP_t5"><a style="height:16px;font-size:12px;line-height:16px;" title="分享到腾讯微博" id="share_btn_1326166083993" class="GP_s5 GP_LF GP_Uu" onclick="GPshareTo('tencent', '<?=$tencent_url?>');">腾讯微博</a>
+						</div>
+					</td>
+					<td>
+						<div class="GP_MN">
+							<table cellspacing="0" cellpadding="0">
+								<tbody>
+									<tr>
+										<td>
+											<div class="GP_uW"></div>
+										</td>
+										<td>
+                                            <div class="GP_sW" title="<?=$tencent_info?>">
+                                                <a onclick="GPshareTo('tencent', '<?=$tencent_url?>');"><span id="extra-info-tencent" class="GP_tW"><?=$e_info->tencent?></span></a>
+											</div>
+										</td>
+										<td>
+											<div class="GP_vW"></div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div class="twitter GP_Uu">
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td>
+						<div class="GP_t5">
+                            <a class="GP_s5 GP_LF GP_Uu" title="分享到Twitter" onclick="GPshareTo('twitter', '<?=$twitter_url?>');">Tweet</a>			
+						</div>
+					</td>
+					<td>
+						<div class="GP_MN">
+							<table cellspacing="0" cellpadding="0">
+								<tbody>
+									<tr>
+										<td>
+											<div class="GP_uW"></div>
+										</td>
+										<td>
+                                            <div class="GP_sW" title="<?=$twitter_info?>">
+                                               <a onclick="GPshareTo('twitter', '<?=$twitter_url?>');"><span id="extra-info-twitter" class="GP_tW"><?=$e_info->twitter?></span></a>
+											</div>
+										</td>
+										<td>
+											<div class="GP_vW"></div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<div class="gplus GP_Uu">
+		<table cellspacing="0" cellpadding="0">
+			<tbody>
+				<tr>
+					<td>
+						<div class="GP_t5">
+                            <a class="GP_s5 GP_LF GP_Uu"  title="分享到Google+" onclick="GPshareTo('gplus', '<?=$gplus_url?>');">Gplus</a>
+						</div>
+					</td>
+					<td>
+						<div class="GP_MN">
+							<table cellspacing="0" cellpadding="0">
+								<tbody>
+									<tr>
+										<td>
+											<div class="GP_uW"></div>
+										</td>
+										<td>
+                                            <div class="GP_sW" title="<?=$gplus_info?>">
+                                                <a onclick="GPshareTo('gplus', '<?=$gplus_url?>');"><span id="extra-info-twitter" class="GP_tW"><?=$e_info->gplus?></span></a>
+											</div>
+										</td>
+										<td>
+											<div class="GP_vW"></div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+</div>
+<div id="share-tips" class="share-tips">
+<div class="tra"></div>
+	<a id="like-button-close" class="like-button-close"></a>
+	<div class="share-tip-content">
+		<div class="sync-stats"><i></i><span></span></div>
+		<div class="title">分享到其它网站</div>
+        <div class="content">
+        	<div class="content_text"><?=$s_content2?></div>
+            <div class="content_img"><img src='<?php echo $thumb_pic_url; ?>' alt='' /></div>
+        </div>
+		<div class="settings">
+        <?php
+            if(empty($sync_items)){ ?>
+
+                <span class="config-no"><i></i><a href="<?=$sync_url?>" target="_blank">去绑定新浪，腾讯等微博</a></span>
+
+            <?php }else{ ?>
+			<span class="status">
+            <?php
+                foreach($sync_items as $row):
+                    if($row == 'sina'){ ?>
+
+				        <span id="share-to-sina" class="sina"><i></i><span class="checked"></span>新浪微博</span>
+
+                    <?php }elseif($row == 'tencent'){ ?>
+
+				        <span id="share-to-tencent" class="tencent"><i></i><span class="checked"></span>腾讯微博</span>
+
+                    <?php }
+                endforeach;
+            ?>
+				<!--<span id="share-to-twitter" class="twitter"><i></i><span class="checked"></span>Twitter</span>-->
+			</span>
+			<span class="config">
+                <a href="<?=$sync_url?>" title="微博绑定"  target="_blank"><span class="share-setting"><i></i>微博绑定</span></a>
+				<span id="share-ok" class="share-ok">确定</span>
+			</span>
+            <?php } ?>
+		</div>
+	</div>
+</div>

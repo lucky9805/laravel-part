@@ -1,0 +1,44 @@
+<div style="min-height:550px">
+    <h1 class='page_title'><?php echo site_lang('notify_list_title');?></h1>	
+	<?php if($notification_num > 0):
+	$is_last=0;
+	foreach($notifications as $notification):
+	$is_last++;
+	$unread = ($notification->is_read === '0')?'unread':'';
+	if ($notification_num==$is_last)
+	$unread=$unread." clear-border";
+	?>
+		<article class='notice-item <?php echo $unread;?>' rel="<?php echo $notification->id;?>">
+			<?php if($notification->operate === 'comment'):?>
+			<img src='<?php echo $this->img_lib->get_avatar($notification->uid,'small');?>' alt='' class='avatar'/>
+			<div class='entry'>
+				<?php
+					$remarker = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'screen_name', array('guid'=>$notification->uid));
+				?>
+				<a href='<?php echo $this->web_router_lib->Get_home_url($notification->uid,"index");?>' class='user'><?php echo $remarker;?></a>
+				<?php echo site_lang('notify_list_comment');?>
+				<time pubdate datetime='<?php echo geekTime($notification->time_created);?>'><?php echo geekTime($notification->time_created);?></time>
+			</div>
+			<?php else:?>
+				<img src='<?php echo $this->img_lib->get_avatar(SUPER_ADMIN,'small');?>' alt='' class='avatar'>
+				<div class='entry'>
+				<?php $event_title = $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_ENTITIES, 'title', array('guid'=>$notification->object_id));?>
+				<?php
+					$supergeek = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'screen_name', array('guid'=>SUPER_ADMIN));
+				?>
+					<a href='<?php echo $this->web_router_lib->Get_home_url(SUPER_ADMIN,"index");?>'><?php echo $supergeek;?></a><?php echo site_lang('notify_list_confirm');?>
+					<a href="<?php echo $this->web_router_lib->Get_event_details_url($notification->object_id)?>"><?php echo $event_title;?></a>
+					
+					<time pubdate datetime=''><?php echo date('Y.m.d H:i', $notification->time_created);?></time>
+				</div>
+			<?php endif;?>
+		</article>
+	<?php endforeach;?>
+    <div class="pagination">
+    <?php echo $this->pagination->create_links(); ?>
+    </div>
+	<?php else:?>
+		<?php $this->msg_lib->showmsg();?>
+	<?php endif;?>
+	
+</div>

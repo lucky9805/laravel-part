@@ -1,0 +1,43 @@
+<?php
+	class Seed extends CI_Controller
+	{
+ 
+		function __construct()
+		{
+			parent::__construct(); 
+            $this->load->library('seed_lib');
+            $this->load->add_package_path(APPPATH.'third_party/user/');
+            $this->load->library('tp_user');
+            $this->load->library('tag_lib');
+            $this->load->library('tp_privilege');
+        }
+
+        function view($guid)
+        {
+            $subtype_id = $this->entity_engine_lib->obtain_subtype_id($guid);
+            if($subtype_id == 8)
+            {
+                $data = array();
+                $data['guid'] = $data['entity_guid'] =  $guid;
+                $title = $this->entity_engine_lib->obtain_title($guid);
+                $keywords = "";
+                $description = "";
+                $this->template->write('title',$title); 
+                $this->template->write('keywords',$keywords);
+                $this->template->write('description',$description);
+                $this->template->write('layout','w_s');
+                $this->template->write('css_type','cast');
+                $this->template->write('body_class','news');
+                $this->template->write('breadcrumb',$title);
+                $this->template->write_view('main',"reading/seed_content", $data);
+                $this->template->write('extra_scripts',$this->load->view("scripts/comment",$data,TRUE));
+                $this->template->write('extra_scripts1',$this->load->view("scripts/clips",'',TRUE));	
+                $this->template->write_view('sidebar','reuse/comment');
+                $this->template->render();
+            }
+            else
+            {
+				show_404();
+            }
+        }
+    }

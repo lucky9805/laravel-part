@@ -1,0 +1,64 @@
+<?php
+if (! defined ( 'BASEPATH' )) exit ( 'No direct script access allowed' );
+
+    class River_lib extends Dbmanager_lib
+    {
+        function __construct()
+        {
+            $this->ci = & get_instance();
+        }
+        
+        function comment($user_guid,$entity_guid,$object_guid)
+        {
+            $data = array(
+                'userguid'      => $user_guid,
+                'time_created'  => time(),
+                'entity_guid'   => $entity_guid,
+                'object_guid'   => $object_guid,
+                'view_type'     => 'comment'
+            );
+            $this->create_a_row(TABLE_RIVER,$data);
+        }
+
+        function enroll($user_guid,$entity_guid)
+        {
+            $data = array(
+                'userguid'      => $user_guid,
+                'time_created'  => time(),
+                'entity_guid'   => $entity_guid,
+                'object_guid'   => NULL,
+                'view_type'     => 'enroll'
+            );
+            $this->create_a_row(TABLE_RIVER,$data);
+        }
+
+        function adopt($user_guid,$entity_guid)
+        {
+            $data = array(
+                'userguid'      => $user_guid,
+                'time_created'  => time(),
+                'entity_guid'   => $entity_guid,
+                'object_guid'   => NULL,
+                'view_type'     => 'adopt'
+            );
+            $this->create_a_row(TABLE_RIVER,$data);
+        }
+
+        function check_in($user_guid,$entity_guid,$time_created)
+        {
+            $data = array(
+                'userguid'      => $user_guid,
+                'time_created'  => $time_created,
+                'entity_guid'   => $entity_guid,
+                'object_guid'   => NULL,
+                'view_type'     => 'check_in'
+            );
+            $this->create_a_row(TABLE_RIVER,$data);
+        }
+
+        function obtain_user_river($user_guid,$limit=10,$offset=0,$forcount=FALSE)
+        {
+            $where = array('userguid'=>$user_guid);
+            return $this->obtain_rows(TABLE_RIVER,'*',$where,NULL,'time_created DESC',$limit,$offset,$forcount);
+        }
+    }

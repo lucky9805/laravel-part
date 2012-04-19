@@ -1,0 +1,207 @@
+ <?php
+	$user_guid = $this->global_lib->get_user_guid();
+	$user_info = $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'real_name, company, position, tel, is_recommend', array('guid'=>$user_guid));
+ ?>
+ <article class='view'>
+    <?php $this->load->view('event/header');?>
+    <div class='main'>
+       <?php
+			$this->load->view($this->web_router_lib->Get_event_navigation_url(),array("current_on"=>"sign_up", "entity_guid"=>$entity_guid, "event_status"=>$event->status));
+       ?>
+        <dl class='event-detail'>
+		<?php if($event->status <2):?>
+            <dt style='display: none'><?php echo site_lang('latest_event_sign_up');?></dt>
+            <dd>
+			<?php //$this->msg_lib->showmsg();?>
+			<?php if($find_row):?>
+				<?php if($find_row->status < 1):?>
+					<?php
+						//echo site_lang('sign_up_msg1');
+						$this->msg_lib->setmsg(site_lang('sign_up_msg1'),SUCCESS);
+
+					?>
+				<?php elseif($find_row->status < 2):?>
+				<div class="result-info result-alert">
+						<div class="message">
+						<?php echo site_lang('sign_up_msg2');?>
+						</div>
+				</div>
+				<?php else:?>
+					<?php
+						//echo site_lang('sign_up_msg3');
+						$this->msg_lib->setmsg(site_lang('sign_up_msg3'),SUCCESS);
+					?>
+				<?php endif;?>
+				<?php $this->msg_lib->showmsg();?>
+				<?php elseif($event->enroll_end_time < time()):?>
+				<div class="result-info result-alert">
+						<div class="message">
+						<?php echo site_lang('sign_up_msg5');?>
+						</div>
+				</div>
+			<?php else:?>
+			<?php if($user_info):?>
+				<div class="result-info result-alert">
+						<div class="message">
+						<?php echo site_lang('sign_up_msg4');?>
+						</div>
+				</div>
+				<?php
+					///如果有错误，这里显示错误信息
+					$this->msg_lib->showmsg();
+
+				///报名表
+					$data = array('id'=>'event-join', 'name'=>'', 'class'=>'format account');
+
+					$real_name = $user_info->real_name;
+					$company = $user_info->company;
+					$tel = $user_info->tel;
+					$position = $user_info->position;
+					if($event->enroll_end_time > time()){
+					echo form_open("/event/sign_up/$entity_guid", $data);
+
+				?>
+                    <h2><?php echo site_lang('sign_up_request')?></h2>
+                    <div class='help'>
+
+                    </div>
+                    <div>
+						<?php
+							echo form_label(site_lang('sign_up_real_name'), 'real_name');
+							$data = array('name'=>'real_name', 'id'=>'real_name', 'class'=>'text', 'value'=>set_value('real_name', $real_name));
+							echo form_input($data);
+						?>
+                    </div>
+                    <div>
+						<?php
+							echo form_label(site_lang('sign_up_company'), 'company');
+							$data = array('name'=>'company', 'id'=>'company', 'class'=>'text', 'value'=>set_value('company', $company));
+							echo form_input($data);
+						?>
+                    </div>
+                    <div>
+						<?php
+							echo form_label(site_lang('sign_up_position'), 'position');
+							$data = array('name'=>'position', 'id'=>'position', 'class'=>'text', 'value'=>set_value('position', $position));
+							echo form_input($data);
+						?>
+                    </div>
+                    <div>
+						<?php
+							echo form_label(site_lang('sign_up_phone'), 'phone');
+							$data = array('name'=>'phone', 'id'=>'phone', 'class'=>'text', 'value'=>set_value('phone', $tel));
+							echo form_input($data);
+						?>
+                    </div>
+                    <div style="position:relative;">
+						<?php
+							$data = array('style' => "float:left;margin-right:6px;position:relative;top:4px;");
+							echo form_label(site_lang('sign_up_product'), 'app', $data);
+							$data = array('name'=>'app', 'id'=>'app', 'class'=>'text', "style"=>'width: 190px');
+							echo form_input($data);
+						?>
+						<label for="app" class="msg info" style="position:absolute;left:330px;top:5px;width:300px">
+							<?php echo site_lang('sign_up_product_info');?>
+						</label>
+                    </div>
+                    <div>
+						<?php
+							echo form_label(site_lang('sign_up_reason'), 'reason');
+							$data = array('name'=>'reason', 'id'=>'reason', 'class'=>'text', 'rows'=>4);
+							echo form_textarea($data);
+						?>
+                    </div>
+<?php if ($user_info->is_recommend == 0): ?>
+                    <div class="checkbox">
+                        <input type="checkbox" name="is_recommend" id="is_recommend" class="test" value="1"<?php if ($user_info->is_recommend == 1) { echo ' checked="checked"'; } ?><?php echo set_checkbox('is_recommend', '1'); ?> />
+						<label for="is_recommend"><?php echo site_lang('sign_up_is_recommend');?></label><span title="<?php echo site_lang('sign_up_is_recommend_desc');?>"></span>
+                    </div>
+<?php endif; ?>
+                    <div class='act'>
+						<?php
+							echo form_hidden('event_guid', $entity_guid);
+							$data = array('name'=>'submit', 'value'=>site_lang('sign_up_submit'), 'class'=>'submit');
+							echo form_submit($data);
+						?>
+                    </div>
+                </form>
+                <?php }?>
+				<?php elseif($event->enroll_end_time < time()):?>
+				<div class="result-info result-alert">
+						<div class="message">
+						<?php echo site_lang('sign_up_msg5');?>
+						</div>
+				</div>
+				<?php else:?>
+				<?php
+					$this->msg_lib->setmsg(site_lang('sign_up_login_msg'),ALERT);
+					$this->msg_lib->showmsg();
+				?>
+				<?php endif;?>
+			<?php endif;?>
+            </dd>
+		<?php endif;?>
+            <dt><?php echo site_lang('sign_up_requested_member');?></dt>
+            <dd>
+
+				<?php
+				//////演讲嘉宾
+					// $clips = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS, 'guid', array('event_guid'=>$entity_guid));
+					// $speakers_id = NULl;
+					// foreach($clips as $clip)
+					// {
+						// $rows = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_SPEAKERS, 'user_guid', array('father_id'=>$clip->guid, 'type'=>'clip'));
+						// foreach($rows as $row)
+						// {
+							// $speakers_id[] = $row->user_guid;
+						// }
+					// }
+					// if(is_array($speakers_id))
+						// $speakers_id = array_unique($speakers_id);
+				?>
+
+				<?php
+				/////报名参与活动的人
+					// $member_where['event_id'] = $entity_guid;
+					// if($event->status === '1')
+					// {
+						// $member_where['status >='] = 0;
+						// $msg = site_lang('signed_up_member_msg1');
+					// }
+					// else
+					// {
+						// $member_where['status'] = 2;
+						// $msg = site_lang('signed_up_member_msg2');
+					// }
+
+					// $rows = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'userguid', $member_where);
+					// $row_num = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'userguid', $member_where, NULL, NULL, NULL, NULL, TRUE);
+				?>
+				<?php //if($row_num > 0):?>
+				<p><?php //echo $msg;?><?php //echo ($row_num + count($speakers_id));?><?php //echo site_lang('signed_up_people');?></p>
+				<?php //endif;?>
+                <ul id='joiner-wall' class='format avatar-wall'>
+
+				<?php if($speakers_id):?>
+				<?php foreach($speakers_id as $speaker_id):?>
+					<?php
+						$user_where = array('guid' => $speaker_id);
+						$user_name = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'screen_name', $user_where);
+					?>
+                    <a href="<?php echo $this->web_router_lib->Get_home_url($speaker_id,"index");?>">
+						<img src="<?php echo $this->img_lib->get_avatar($speaker_id,'thumb');?>" alt="<?php echo $user_name;?>" /></a>
+				<?php endforeach;?>
+				<?php endif;?>
+				<?php foreach($rows as $row):?>
+					<?php
+						$user_where = array('guid' => $row->userguid);
+						$user_name = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'screen_name', $user_where);
+					?>
+                    <a href="<?php echo $this->web_router_lib->Get_home_url($row->userguid,"index");?>">
+						<img src="<?php echo $this->img_lib->get_avatar($row->userguid,'thumb');?>" title="<?php echo $user_name;?>" width="30" height="30" /></a>
+				<?php endforeach;?>
+                </ul>
+            </dd>
+        </dl>
+    </div>
+</article>

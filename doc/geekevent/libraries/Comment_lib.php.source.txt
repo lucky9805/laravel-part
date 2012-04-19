@@ -1,0 +1,27 @@
+<?php if(!defined('BASEPATH')) exit('No direct script access allowed');
+
+	class Comment_lib extends Dbmanager_lib
+	{
+		function __construct(){
+        	$this->ci =& get_instance();
+        }
+
+        function obtain_comments($limit=10,$offset=0,$forcount=FALSE)
+        {
+            return $this->obtain_rows(TABLE_CORE_ENTITY,'guid,main',array('subtype_id'=>3),NULL,'guid DESC',$limit,$offset,$forcount);
+        }
+
+        function obtain_user_comments($user_guid,$limit=10,$offset=0,$forcount=FALSE)
+        {
+            $where = array('user_guid'=>$user_guid);
+            return $this->obtain_rows(TABLE_COMMENT,'guid,entity_guid,fid',$where,NULL,'id DESC',$limit,$offset,$forcount);
+        }
+
+        //获取评论所在的entity guid
+        function obtain_comment_eid($guid)
+        {
+            $where = array('guid'=>$guid);
+            return $this->obtain_a_row_field(TABLE_COMMENT,'entity_guid',$where);
+        }
+	}
+?>

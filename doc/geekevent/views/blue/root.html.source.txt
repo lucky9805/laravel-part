@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title><?php echo $title;?> | 极客公园</title>
+    <meta name="keywords" content="<?php echo $keywords;?>极客公园,Geekpark">
+    <meta name="description" content="<?php echo $description;?>">
+    <meta name="author" content="">
+	<meta http-equiv="Cache-Control" content="max-age=7200" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="http://feeds.geekpark.net/" />
+    <link rel="shortcut icon" href="/public/favicon.ico?v=1">
+    <link rel="apple-touch-icon" href="/public/apple-touch-icon.png">
+    <link rel="stylesheet" href="/public/css/style.css">
+    <link rel="stylesheet" href="/public/css/icons.css">
+<?php
+	if ($css_type != '')
+	{
+		echo '    <link rel="stylesheet" href="/public/css/'.$css_type.'.css">';
+	}
+?>
+<?php
+	if ($prev_next != '')
+	{
+		$this->load->view('reuse/prev_next',array('prev_next_show' => $prev_next));
+	}
+?>
+    <link rel="stylesheet" href="/public/css/media.css">
+    <link rel="alternate" type="application/rss+xml" title="RSS 2.0" href="http://feeds.geekpark.net/" />
+	<script src="/public/js/libs/jquery-1.7.1.min.js"></script>
+	<script>window.jQuery || document.write("<script src='/public/js/libs/jquery-1.6.2.min.js'>\x3C/script>")</script>
+	<!--<script src='/public/js/libs/jquery-1.6.2.min.js'></script>-->
+	
+    <script src="/public/js/libs/modernizr-1.7.min.js"></script>
+    <script src="/public/js/libs/ajaxupload/fileuploader.js"></script>
+    <link rel="stylesheet" href="/public/js/libs/ajaxupload/fileuploader.css">
+
+ 	<script type="text/javascript">
+
+  	var _gaq = _gaq || [];
+  	_gaq.push(['_setAccount', 'UA-1083082-15']);
+  	_gaq.push(['_setDomainName', 'geekpark.net']);
+  	_gaq.push(['_setAllowLinker', true]);
+  	_gaq.push(['_trackPageview']);
+	
+  	(function() {
+    	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  	})();
+
+	</script>
+
+</head>
+ 
+<body class='<?php echo $body_class;?>'>
+<div id="container">
+ 	  <header id='header'>
+   		  <?php $this->load->view("frame/root_header");?>
+    </header>
+
+    <div id="main" role="main" class='container'>
+    	  <?php $this->load->view('layout/switch');?>
+	  </div>
+
+    <footer id='footer'>
+        <div class="container">
+
+          <div class="col">
+            <div class="footer-title">极客公园</div>
+            <ul class="footer-content">
+              <li><a title="关于极客公园" href="/pub/index/about">关于极客公园</a></li>
+              <li><a title="联系我们" href="/pub/index/about">联系我们</a></li>
+              <li><a title="加入我们" href="/pub/index/job">加入我们</a></li>
+              <li><a title="访问旧版" target="_blank" href="http://2009.geekpark.net/">访问旧版</a></li>
+            </ul>
+          </div>
+          <div class="col">
+            <div class="footer-title">服务与支持</div>
+            <ul class="footer-content">
+              <li><a title="用户协议" href="/pub/index/terms">用户协议</a></li>
+              <li><a title="隐私条款" href="/pub/index/privacy">隐私条款</a></li>
+              <li><a href="javascript:UserVoice.showPopupWidget();" title="点击打开意见反馈窗口">意见反馈</a></li>
+            </ul>
+          </div>
+          <div class="col">
+            <div class="footer-title">订阅</div>
+            <ul class="footer-content">
+              <li><a class="social-media-icon rss" title="RSS" target="_blank" href="http://feeds.geekpark.net/">极客阅读RSS</a></li>
+              <li><a class="social-media-icon email" title="Email Service" target="_blank" href="http://eepurl.com/fzlSk">极客活动邮件通知</a></li>
+            </ul>
+          </div>
+          <div class="col">
+            <div class="footer-title">关注我们</div>
+            <ul class="footer-content">
+              <li><a class="social-media-icon sina" title="新浪微博" target="_blank" href="http://weibo.com/geekpark">@geekpark</a></li>
+              <li><a class="social-media-icon tencent" title="腾讯微博" target="_blank" href="http://t.qq.com/geekparknet">@geekparknet</a></li>
+              <li><a class="social-media-icon twitter" title="Twitter" target="_blank" href="https://twitter.com/GeekParkNet">@GeekParkNet</a></li>
+              <li><a class="social-media-icon gplus" title="Google+" target="_blank" href="https://plus.google.com/b/117900237066383009895/">+极客公园</a></li>
+            </ul>
+          </div>
+          <div class="col">
+              <div class="copyright">Copyright &copy; 2009 - 2012</br>北京文德致远文化传播有限公司</div>
+              <div class="ICP">京ICP备09035963号</br>京公网安备110105001682号</div>
+          </div>
+
+        </div>
+    </footer>
+</div>
+<div id="scrollTop" style="display:none;">
+  <div class="level-2"></div>
+  <div class="level-3"></div>
+</div>
+
+
+<!-- scripts concatenated and minified via ant build script-->
+<script src="/public/js/plugins.js"></script>
+<script src="/public/js/script.js?<?=time()?>"></script>
+<script src="/public/js/libs/jquery.highlight.js"></script>
+<!-- end scripts-->
+<?php echo $extra_scripts;?>
+<?php echo $extra_scripts1;?>
+<?php echo $extra_scripts2;?>
+<?php echo $extra_scripts3;?>
+
+<!--[if lt IE 7 ]>
+<script src="/public/js/libs/dd_belatedpng.js"></script>
+<script>DD_belatedPNG.fix("img, .png_bg");</script>
+<![endif]-->
+<script type="text/javascript">
+  UI.global_search();
+
+  
+  var uvOptions = {};
+  (function() {
+      initScrollTop();
+    var uv = document.createElement('script'); uv.type = 'text/javascript'; uv.async = true;
+    uv.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'widget.uservoice.com/lSi3bNSYWrjHoHDBBubNLA.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(uv, s);
+  })();
+</script>
+</body>
+</html>

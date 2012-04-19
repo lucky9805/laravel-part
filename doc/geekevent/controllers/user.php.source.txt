@@ -1,0 +1,730 @@
+<?php
+	class User extends My_Controller
+	{
+
+		function __construct()
+		{
+			parent::__construct();
+		    $this->lang->load('user');
+			$this->load->helper('form');
+			$this->load->helper('url');
+			$this->load->library('form_validation');
+			$this->load->library('pagination');
+            $this->load->library('sys_lib');
+            $this->load->add_package_path(APPPATH.'third_party/user/');
+            $this->load->library('tp_user');
+		}
+
+        function setting($page='profile')
+        {
+
+	 		if(!$this->global_lib->is_login()) redirect(LOGIN_URL);
+ 		   	$title = '';
+            $body_class = 'ui-' . $page;
+
+            switch ($page)
+            {
+                case 'profile':
+                    $title = lang('setting:profile');
+                    break;
+                case 'password':
+                    $title = lang('setting:password');
+                    break;
+                case 'avatar':
+                	$this->template->write('extra_scripts2', $this->load->view('scripts/upload_avatar', '', TRUE));
+                    $title = lang('setting:avatar');
+                    break;
+                case 'sync':
+                    $title = lang("setting:sync");
+                    break;
+            }
+
+			$this->template->write('title', $title);
+            $this->template->write('layout', 'w_s');
+            $this->template->write('body_class', 'account '.$body_class);
+            $this->template->write('breadcrumb', $title);
+
+			$search_row = array('user_guid' => $this->global_lib->get_user_guid());
+			$products= $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER_PRODUCTS, 'product_name', $search_row);
+			$datalist=null;
+
+            if (count($products)>0)
+            {
+                foreach ($products as $p)
+                {
+					$datalist[]=array('value' => $p->product_name, 'label' => $p->product_name);
+					//$datalist[]["label"]=$p->product_name;
+				}
+			}
+
+			$scripts_data=array('tagname' => 'app', 'datalist' => $datalist);
+			$this->template->write('extra_scripts', $this->load->view('scripts/tags', $scripts_data, TRUE));
+			$this->template->write('extra_scripts1', $this->load->view('scripts/setting_update', '', TRUE));
+			//$this->template->write('extra_scripts2',$this->load->view("scripts/upload_avatar",'',TRUE));
+            $this->template->write_view('main', "user/setting_{$page}");
+            $this->template->write_view('sidebar', 'user/right', array('type' => $page));
+		    $this->template->render();
+	 	}
+
+		private function _update_setting()
+		{
+			$var = $this->form_validation;
+			$var->set_rules('real_name','real_name','trim|xss_clean');
+			$var->set_rules('company','company','trim|xss_clean');
+			$var->set_rules('position','position','trim|xss_clean');
+			$var->set_rules('project','project','xss_clean');
+			$var->set_rules('tel',site_lang('profile:tel'),'trim|xss_clean');
+			$var->set_rules('bio','bio','trim|xss_clean');
+			$var->set_rules('is_recommend','is_recommend','trim|xss_clean');
+			if($var->run())
+			{
+				$user_guid = $this->global_lib->get_user_guid();
+
+				$data['real_name']		= $var->set_value('real_name');
+				$data['company']		= $var->set_value('company');
+				$data['position']		= $var->set_value('position');
+				$data['tel']			= $var->set_value('tel');
+				$data['bio']			= $var->set_value('bio');
+				$data['is_recommend']	= $var->set_value('is_recommend');
+
+				$where['guid'] = $user_guid;
+				$this->dbmanager_lib->update_rows(TABLE_USER, $where, $data);
+
+				$products = $this->input->post('project');
+
+				$products_where['user_guid'] = $user_guid;
+				$this->dbmanager_lib->delete_rows(TABLE_EVENTS_MEMBER_PRODUCTS, $products_where);
+				if(!empty($products) and is_array($products))
+				{
+					foreach($products as $product)
+					{
+						$add_data = array(
+                            'user_guid'     => $user_guid,
+                            'product_name'  => $product
+                        );
+                        $this->dbmanager_lib->create_a_row(TABLE_EVENTS_MEMBER_PRODUCTS,$add_data);
+					}
+				}
+				$msg = site_lang('profile:update_success_msg');
+				$this->msg_lib->setmsg($msg,SUCCESS);
+			}else{
+
+				$this->msg_lib->setmsg(validation_errors(),ERROR);
+			}
+			$this->setting();
+			//redirect('/user/setting');
+		}
+
+		function update_user_do($action='update_info')
+		{
+			switch($action)
+			{
+				case 'update_info':
+					$this->_update_setting();
+					break;
+				case 'update_password':
+					$this->_update_user_password();
+					break;
+			}
+		}
+
+		private function _update_user_password()
+		{
+        	$var = $this->form_validation;
+			$var->set_rules('old_password',site_lang('profile:old_password'),'trim|required|xss_clean');
+            $var->set_rules('password',site_lang('profile:password'),'trim|required|xss_clean');
+            $var->set_rules('password_confirm',site_lang('profile:password_confirm'),'trim|required|xss_clean');
+
+            $user_guid = $this->global_lib->get_user_guid();
+
+			if($var->run())
+            {
+				$old_password = $var->set_value('old_password');
+                $password = $var->set_value('password');
+                $password_confirm = $var->set_value('password_confirm');
+
+				$get_password = $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'salt, password', array('guid'=>$user_guid));
+				$created_password = md5(md5($old_password).$get_password->salt);
+				if($created_password === $get_password->password)
+				{
+					if($password_confirm === $password)
+					{
+						$data = array($user_guid,$password);
+						//$result = $this->load->module('user/user/update_user_password',$data,TRUE);
+						$result = $this->tp_user->update_user_password($user_guid,$password);
+						$msg = site_lang('profile:password_success');
+						$this->msg_lib->setmsg($msg,SUCCESS);
+					}
+					else
+					{
+						$msg = site_lang('profile:password_diff_msg');
+						$this->msg_lib->setmsg($msg,ERROR);
+					}
+				}
+				else
+				{
+					$msg = site_lang('profile:password_old_error');
+					$this->msg_lib->setmsg($msg,ERROR);
+				}
+            }
+			else
+			{
+				$this->msg_lib->setmsg(validation_errors(),ERROR);
+			}
+		//	$this->setting('setting_password');
+		$this->setting('password');
+		}
+
+        function home($page='index', $user_guid='', $offset='0')
+        {
+            $libraries = array('comment_lib', 'clip_lib', 'river_lib', 'seed_lib');
+            $this->load->library($libraries);
+	 		if($user_guid == '')
+				$user_guid = $this->global_lib->get_user_guid();
+			$count = $this->dbmanager_lib->obtain_rows(TABLE_USER, 'guid', array('guid' => $user_guid), NULL, NULL, NULL, NULL, TRUE);
+
+			if(!$count)
+				show_404();
+
+            $sys_data['entity_guid'] = $user_guid;
+
+	 		$data['user_guid'] = $user_guid;
+            $screen_name = $this->user_lib->get_screen_name($user_guid);
+
+            //分页设置
+            $per_page = 15;
+			$config['base_url'] = "/user/home/$page/$user_guid";
+			$config['uri_segment'] = 5;
+            $config['per_page'] = $per_page;
+
+			if($page === 'index')
+			{
+                $title = lang('u_n_index');
+                $sys_data['operate'] = 'v_u_index';
+			}
+			elseif($page === 'videos')
+			{
+                $sys_data['operate'] = 'v_u_videos';
+                $title = lang('u_n_video');
+                $per_page = 10;
+				$config['per_page'] = $per_page;
+                $data['clips'] = $this->clip_lib->obtain_user_clips($user_guid, $per_page, $offset);
+                $data['clips_num'] = $this->clip_lib->obtain_user_clips($user_guid, NULL, NULL, TRUE);
+				$config['total_rows'] = $data['clips_num'];
+			}
+			elseif($page === 'events')
+			{
+                $sys_data['operate'] = 'v_u_events';
+                $title = lang('u_n_event');
+				$config['per_page'] = $per_page;
+				$member_event_where = array('userguid' => $user_guid);
+				$data['events_object'] = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'event_id', $member_event_where, NULL, 'id DESC', $config['per_page'], $offset);
+				$data['event_num'] = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'event_id', $member_event_where, NULL, NULL, NULL, NULL, TRUE);
+				$config['total_rows'] = $data['event_num'];
+
+			}
+			elseif($page === 'comments')
+			{
+                $sys_data['operate'] = 'v_u_comments';
+                $title = lang('u_n_comment');
+				$config['per_page'] = $per_page;
+                $data['comments'] = $this->comment_lib->obtain_user_comments($user_guid, $per_page, $offset);
+                $data['comments_num'] = $this->comment_lib->obtain_user_comments($user_guid, NULL, NULL, TRUE);
+				$config['total_rows'] = $data['comments_num'];
+			}
+            elseif($page == 'seeds')
+            {
+                $sys_data['operate'] = 'v_u_seeds';
+                $title = lang('u_n_seed');
+                $config['per_page'] = $per_page;
+                $data['seeds'] = $this->seed_lib->obtain_user_seeds($user_guid, $per_page, $offset);
+                $data['seeds_num'] = $this->seed_lib->obtain_user_seeds($user_guid, NULL, NULL, TRUE);
+                $config['total_rows'] = $data['seeds_num'];
+            }
+			else
+            {
+				show_404();
+            }
+			$this->pagination->initialize($config);
+            $this->sys_lib->create_system_logs($sys_data);
+            $title = $screen_name.' | '.$title;
+			$this->template->write('title', $title);
+            $this->template->write('layout', 'w_s');
+            $this->template->write('body_class', 'user');
+            $this->template->write('breadcrumb', $title);
+            $this->template->write('extra_scripts', $this->load->view('scripts/home_right', '', TRUE));
+            $this->template->write_view('main', "user/home_{$page}", $data);
+            $this->template->write_view('sidebar', 'user/home_right');
+		    $this->template->render();
+	 	}
+
+		function  logout()
+		{
+            $sys_data = array(
+                'operate'   => 'logout'
+            );
+            $this->sys_lib->create_system_logs($sys_data);
+           // $islogout = $this->load->module('user/user/logout');
+
+            $islogout = $this->tp_user->logout();
+            redirect(LOGIN_URL);
+		}
+
+	 	function login(){
+            if($this->global_lib->is_login())
+            {
+                redirect(HOME_URL);
+			}
+	 		$title=site_lang("user:login");
+			$this->template->write('title',$title);
+            $this->template->write('layout','w_s');
+            //$this->template->write('css_type','w_s');
+            $this->template->write('body_class','account');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"user/form_login");
+            $right_data["_info"]=site_lang("user_no_account");
+	        $this->template->write_view('sidebar','user/no_account',$right_data);
+		    $this->template->render();
+
+	 	}
+
+	 	function register(){
+	 		if($this->global_lib->is_login()){
+
+				 redirect(HOME_URL);
+			}
+
+				$this->load->library('form_validation');
+	 	 	 	$this->load->config('form_validate');
+ 	  			$val=$this->form_validation;
+			$is_submit = $this->input->post("submit");
+			if($is_submit){
+
+             if ($this->form_validation->set_rules($this->config->item('user/check_register')) and $this->form_validation->run() == FALSE)
+             {
+          		     $this->msg_lib->setmsg(validation_errors(),ERROR);
+
+             }
+             else{
+                $data['father_guid']    = 0;
+				$data['type']           = 'user';
+				$data['subtype_id']     = MODULE_USER;
+				$data['second_type']    = 0;
+				$data['is_recommend']   = 0;
+				$data['visibility']     = 'yes';
+
+				$data['title']  = $this->input->post("username");
+                $user_guid = $this->dbmanager_lib->create_an_entity($data);
+                $salt   = rand_str(6);
+			    $unique_id					= rand_str(6,'abcdefghijklmnopqrstuvwxyz1234567890').(time()+rand());
+			    $activation_key = md5(rand().microtime());
+			    $user_email = $this->input->post('email');
+                $user_data = array(
+                    'guid'          => $user_guid,
+                    'group_id'      => 4,
+                    'unique_id'     => $unique_id,
+                    'salt'          => $salt,
+                    'screen_name'   => $this->input->post("username"),
+                    'real_name'     => $this->input->post("username"),
+                    'username'      => $this->input->post("username"),
+                    'password'      => md5(md5($this->input->post('password')).$salt),
+                    'email'         => $user_email,
+                    'last_ip'		=> $this->input->ip_address(),
+                    'activation_key'=> $activation_key,
+                    'status'        => 'inactive'
+                );
+
+                 $this->dbmanager_lib->create_a_row(TABLE_USER,$user_data);
+				//$this->msg_lib->setmsg(site_lang("ok_register"),SUCCESS);
+
+ 				//Create email
+				$from = $this->config->item('wm_webmaster_email');
+				$subject = sprintf(site_lang('auth_activate_subject'),$this->config->item('wm_website_name'));
+				$new_url=site_url("/user/activate/{$unique_id}/{$activation_key}");
+				//Activation Link
+				$new_user['email'] = $this->input->post('email');
+				$new_user['activate_url'] = '<a href="'.$new_url.'">'.$new_url.'</a>';
+				$this->_sending_activation_email($new_user,$message); //get the mail content
+
+				$email = $this->email;
+				$email->from($from);
+				$email->to($user_email);
+				$email->subject($subject);
+				$email->message($message);
+				$email->send();
+
+	            $this->template->write_view('main',"user/register_success",array("email"=>$this->input->post('email')));
+
+             }
+			}else{
+				$this->load->library('Captcha_engine_lib');
+				$this->captcha_engine_lib->captcha();//Create catpcha
+
+	            $this->template->write('extra_scripts',$this->load->view("scripts/register",'',TRUE));
+		 		$this->template->write_view('main',"user/register");
+			}
+				$title=site_lang("user:register");
+				$this->template->write('title',$title);
+	            $this->template->write('layout','w_s');
+		        $this->template->write('body_class','account');
+	            $this->template->write('breadcrumb',$title);
+
+			  	$right_data["_info"] = site_lang("user_login_tips");
+	            $this->template->write_view('sidebar','user/no_account',$right_data);
+			    $this->template->render();
+	 	}
+
+	 	function _sending_activation_email($data,&$content)
+		{
+			$content = sprintf(
+				site_lang('auth_activate_content'),
+				$this->config->item('wm_website_name'),
+				$data['activate_url'],
+				$this->config->item('wm_email_activation_expire')/60/60,
+				$data['email'],
+				$this->config->item('wm_webmaster_email'),
+				$this->config->item('wm_website_name')
+			);
+		}
+	 	function check_register($form_element='username'){
+ 			$this->load->library('form_validation');
+ 	 	 	$this->load->config('form_validate');
+
+             if ($this->form_validation->set_rules($this->config->item('user/check_register')) and $this->form_validation->run() == FALSE)
+             {
+          		if($form_element!=''){
+
+          		if($this->form_validation->error($form_element)!=''){
+          			$this->form_validation->set_error_delimiters('','');
+                 echo "{
+						error: true,
+						message:'{$this->form_validation->error($form_element)}'
+					}";
+          		}else{
+          			echo "{
+						error: false,
+						message: ''
+						}";
+          		}
+          		}else{
+          			$this->msg_lib->setmsg(validation_errors(),ERROR);
+          		}
+             }
+             else{
+                echo "{
+					error: false,
+					message: ''
+				}";
+             }
+
+ 		}
+	 	function generate_captcha(){
+	 		$this->load->library('Captcha_engine_lib');
+			$this->captcha_engine_lib->captcha();//Create catpcha
+		    echo  $this->captcha_engine_lib->get_captcha_image();
+		  // echo "aa";
+	 	}
+
+	 	function password_valid($password){
+	 		if(!is_chinese_char($password) or !is_nbsp_char($password)) {
+	 			$this->form_validation->set_message('password_valid',site_lang('password_valid'));
+	 			return false;
+	 		}else{
+	 			return true;
+	 		}
+	 	}
+
+
+	 	function check_user_name($username){
+ 			//$is_success = $this->load->module('user/user/check_user_in_system',array($username),TRUE);
+ 		 	$is_success = $this->tp_user->check_user_in_system($username);
+ 			if($is_success=="yes")
+ 			{
+ 				$this->form_validation->set_message('check_user_name',site_lang('check_user_name_yes'));
+ 				return false;
+ 			}elseif($is_success=="censor")
+ 			{
+ 				$this->form_validation->set_message('check_user_name',site_lang('check_user_name_censor'));
+ 				return false;
+ 			}else{
+ 				return true;
+ 			}
+
+ 		}
+
+
+
+ 		function email_exist($email){
+ 			//$is_success = $this->load->module('user/user/check_email_in_system',array($email),TRUE);
+ 			$is_success = $this->tp_user->check_email_in_system($email);
+ 			if($is_success=="yes")
+ 			{
+ 				return false;
+ 			}else{
+ 				return true;
+ 			}
+ 		}
+
+
+    function captcha_check($code)
+	 {
+		$result = TRUE;
+		$this->load->library('Captcha_engine_lib');
+		//$r=$this->captcha_engine_lib->check_captcha($code);
+		//$this->form_validation->set_message('captcha_check',$r);
+		//return false;
+		if(!$this->captcha_engine_lib->check_captcha($code))
+		{
+			$this->form_validation->set_message('captcha_check',site_lang('user:captcha:not_match'));
+			$result = FALSE;
+		}
+		return $result;
+	}
+
+ 		 function captcha_check1($code)
+		{
+			$result = TRUE;
+			$this->load->library('Captcha_engine_lib');
+			if($this->captcha_engine_lib->is_captcha_expired())
+			{
+				//Will replace this error msg with $lang
+				$this->form_validation->set_message('captcha_check',site_lang('user:captcha:expire'));
+				$result = FALSE;
+			}
+			elseif(!$this->captcha_engine_lib->is_captcha_match($code))
+			{
+				$this->form_validation->set_message('captcha_check',site_lang('user:captcha:not_match'));
+				$result = FALSE;
+			}
+			return $result;
+		}
+
+
+	 	function pwd_reset($tempass="",$unique_id=""){
+	 		if($tempass=="" or $unique_id==""){
+	 			$this->msg_lib->setmsg(site_lang('err_no_unique_id'),ERROR);
+
+	 		}else{
+
+			 		//$is_success = $this->load->module('user/user/confirm_reset_password',array($tempass,$unique_id),TRUE);
+			 		$is_success = $this->tp_user->confirm_reset_password($tempass,$unique_id);
+			 		if($is_success=="ok")$this->msg_lib->setmsg(site_lang('ok_pwd_reset'),SUCCESS);
+			 		if($is_success=="no")$this->msg_lib->setmsg(site_lang('err_no_unique_id'),ERROR);
+	 		}
+	 		$title=site_lang("user:forgetpassword");
+			$this->template->write('title',$title);
+            $this->template->write('layout','w_s');
+	        $this->template->write('body_class','account');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"user/reset_password");
+            $this->template->write_view('sidebar','user/no_account');
+		    $this->template->render();
+
+	 	}
+	 	function forgot_password(){
+	 		if($this->global_lib->is_login()){
+
+				 redirect(HOME_URL);
+			}
+			$is_submit = $this->input->post("submit");
+			if($is_submit){
+					$email = $this->input->post("email");
+					if(empty($email)){
+						$this->msg_lib->setmsg(site_lang('err_no_unique_id'),ERROR);
+					}else{
+						//$is_find = $this->load->module('user/user/forget_password',array($email),TRUE);
+						$is_find = $this->tp_user->forget_password($email);
+						if($is_find=="no_user")$this->msg_lib->setmsg(site_lang('err_'.$is_find),ERROR);
+						if($is_find=="ok")$this->msg_lib->setmsg(site_lang('ok_send_find_password'),SUCCESS);
+					}
+			}
+	 		$title=site_lang("user:forgetpassword");
+			$this->template->write('title',$title);
+            $this->template->write('layout','w_s');
+	        $this->template->write('body_class','account');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"user/forgot_password");
+            $this->template->write_view('sidebar','user/forgot_password_right');
+		    $this->template->render();
+
+	 	}
+
+ 		function activate($unique_id="",$key="")
+		{
+			if($unique_id=="" or $key==""){
+
+				$this->msg_lib->setmsg(site_lang("activate:error"),ALERT);
+			}else{
+				//$is_active = $this->load->module('user/user/activate',array($unique_id,$key),TRUE);
+				$is_active = $this->tp_user->activate($unique_id,$key);
+				$data["msg"]=site_lang("activate:{$is_active}");
+			 	if($is_active=="yes")
+			 	$this->msg_lib->setmsg(site_lang("activate:{$is_active}"),SUCCESS);
+			 	else
+				$this->msg_lib->setmsg(site_lang("activate:{$is_active}"),ALERT);
+			}
+
+
+
+			$title="帐号激活";
+			$this->template->write('title',$title);
+            $this->template->write('layout','w_s');
+	        $this->template->write('body_class','account');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"user/activate_success",$data);
+            $this->template->write_view('sidebar','user/no_account');
+		    $this->template->render();
+		}
+
+        function logon()
+        {
+			$is_submit = $this->input->post("submit");
+			$this->load->library('form_validation');
+	 	 	$this->load->config('form_validate');
+            if($is_submit)
+            {
+				if ($this->form_validation->set_rules($this->config->item('user/logon')) and $this->form_validation->run() == FALSE)
+                {
+                    $this->msg_lib->setmsg(validation_errors(),ERROR);
+                }
+                else
+                {
+					$username = $this->input->post("username");
+					$password = $this->input->post("password");
+					$remember = $this->input->post("remember");
+					//$is_login = $this->load->module('user/user/login',array($username,$password,$remember),TRUE);
+					$is_login = $this->tp_user->login($username,$password,$remember);
+					if($is_login=="ok"){
+                        $sys_data = array(
+                            'operate'   => 'login',
+                            'descp'     => $this->input->ip_address()
+                        );
+                        $this->sys_lib->create_system_logs($sys_data);
+                        $previous_url = $this->session_lib->userdata('previous_url');
+                        if($previous_url == NULL)
+                        {
+					        redirect(HOME_URL);
+                        }
+                        else
+                        {
+                            $this->session_lib->unset_userdata('previous_url');
+                            redirect($previous_url);
+                        }
+					}else{
+						$this->msg_lib->setmsg(site_lang('err_'.$is_login),ERROR);
+					}
+             }
+			}
+
+			if(!$this->global_lib->is_login()){
+				$this->login();
+			}else{
+				 //redirect(LOGIN_URL);
+			}
+
+	 	}
+
+        function connect($party=NULL)
+        {
+            if($party == 'sina')
+            {
+                $this->load->add_package_path(APPPATH.'third_party/sina_weibo/');
+                $this->load->library('tp_sina');
+                $callback_url = substr($this->config->item('base_url'),0,-1).$this->web_router_lib->Get_sync_callback_url('sina');
+                $sync_url = $this->tp_sina->get_authorize_url($callback_url);
+                redirect($sync_url);
+            }
+            elseif($party == 'tencent')
+            {
+                $this->load->add_package_path(APPPATH.'third_party/tencent_weibo/');
+                $this->load->library('tp_tencent');
+                $callback_url = substr($this->config->item('base_url'),0,-1).$this->web_router_lib->Get_sync_callback_url('tencent');
+                $sync_url = $this->tp_tencent->get_authorize_url($callback_url);
+                redirect($sync_url);
+            }
+        }
+
+        function disconnect($party=NULL)
+        {
+            $user_guid = $this->global_lib->get_user_guid();
+            $sync_setting = $this->user_lib->get_user_field($user_guid, 'sync_setting');
+            $sync_arr = wm_unserialize($sync_setting);
+            if($party == 'sina')
+            {
+                unset($sync_arr['sina']);
+            }
+            elseif($party == 'tencent')
+            {
+                unset($sync_arr['tencent']);
+            }
+            $sync_setting = wm_serialize($sync_arr);
+            $where = array('guid'=>$user_guid);
+            $data = array('sync_setting'=>$sync_setting);
+            $this->dbmanager_lib->update_rows(TABLE_USER, $where, $data);
+            redirect($this->web_router_lib->Get_user_setting_sync_url());
+        }
+
+        function callback($party=NULL)
+        {
+            if(isset($_REQUEST['oauth_verifier']))
+            {
+                $user_guid = $this->global_lib->get_user_guid();
+                $sync_setting = $this->user_lib->get_user_field($user_guid, 'sync_setting');
+                $sync_arr = wm_unserialize($sync_setting);
+                if($party == 'sina')
+                {
+                    $this->load->add_package_path(APPPATH.'third_party/sina_weibo/');
+                    $this->load->library('tp_sina');
+                    $token = $this->tp_sina->get_access_token($_REQUEST['oauth_verifier']);
+                    $oauth_token = $token['oauth_token'];
+                    $oauth_token_secret = $token['oauth_token_secret'];
+                    $userid = $this->tp_sina->get_userid($oauth_token ,$oauth_token_secret);
+                    $sync_arr['sina'] = array(
+                        'oauth_token'           => $oauth_token,
+                        'oauth_token_secret'    => $oauth_token_secret,
+                        'userid'                => $userid
+                    );
+                }
+                elseif($party == 'tencent')
+                {
+                    $this->load->add_package_path(APPPATH.'third_party/tencent_weibo/');
+                    $this->load->library('tp_tencent');
+                    $token = $this->tp_tencent->get_access_token($_REQUEST['oauth_verifier']);
+                    $oauth_token = $token['oauth_token'];
+                    $oauth_token_secret = $token['oauth_token_secret'];
+                    $userid = $this->tp_tencent->get_userid($oauth_token ,$oauth_token_secret);
+                    $sync_arr['tencent'] = array(
+                        'oauth_token'           => $oauth_token,
+                        'oauth_token_secret'    => $oauth_token_secret,
+                        'userid'                => $userid
+                    );
+                }
+                $sync_setting = wm_serialize($sync_arr);
+                $where = array('guid'=>$user_guid);
+                $data = array('sync_setting'=>$sync_setting);
+                $this->dbmanager_lib->update_rows(TABLE_USER, $where, $data);
+            }
+            redirect($this->web_router_lib->Get_user_setting_sync_url());
+        }
+
+        function sync_id($party=NULL)
+        {
+            $oauth_token = "322f5d7461da415892996384e06770e2";
+            $oauth_token_secret = "eac24bb9688232ac0d7f4f50e2726a82";
+            $userid = NULL;
+            if($party == 'sina')
+            {
+                $this->load->add_package_path(APPPATH.'third_party/sina_weibo/');
+                $this->load->library('tp_sina');
+                $userid = $this->tp_sina->get_userid($oauth_token, $oauth_token_secret);
+            }
+            elseif($party == 'tencent')
+            {
+                $this->load->add_package_path(APPPATH.'third_party/tencent_weibo/');
+                $this->load->library('tp_tencent');
+                $userid = $this->tp_tencent->get_userid($oauth_token ,$oauth_token_secret);
+            }
+            echo $userid;
+        }
+	}
+?>

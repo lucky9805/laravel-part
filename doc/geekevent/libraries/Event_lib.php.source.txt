@@ -1,0 +1,27 @@
+<?php
+    class Event_lib extends Dbmanager_lib
+    {
+        var $ci;
+        function __construct()
+        {
+            $this->ci = &get_instance();
+        }
+
+        function obtain_user_events($user_guid,$limit=10,$offset=0,$forcount=FALSE)
+        {
+            $where = array('userguid'=>$user_guid);
+            return $this->obtain_rows(TABLE_EVENTS_MEMBER,'event_id',$where,NULL,NULL,$limit,$offset,$forcount);
+        }
+
+        function obtain_event_speakers($father_id,$type)
+        {
+			$where = array('father_id' => $father_id,'type'=>$type);
+            return $this->obtain_rows(TABLE_EVENTS_SPEAKERS,'*',$where);
+        }
+
+        function obtain_event_field($event_id,$field)
+        {
+            return $this->obtain_a_row_field(TABLE_EVENTS,$field,array('guid'=>$event_id));
+        }
+    }
+?>

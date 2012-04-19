@@ -1,0 +1,165 @@
+<div class="contentcontainer">
+	<?php if(isset($action)):?>
+		<?php if($action === 'update'):?>
+			<div class="headings altheading">
+                <h2><?php echo site_lang('edit_venue');?></h2>
+            </div>
+			<div class="contentbox">
+				<?php echo form_open_multipart($this->uri->uri_string())?>
+					<p>
+						<?php 
+							$flag = style_choose('venue_name');
+							echo form_label(site_lang('add_venue_name'), 'venue_name');
+							$data = array('name' => 'venue_name', 'id' => 'venue_name', 'class' => 'inputbox'.$flag, 'value' => set_value('venue_name', $row->venue));
+							echo form_input($data);
+							if($flag)
+								echo form_error('venue_name');
+						?> 
+					</p>
+
+					<p>
+						<?php 
+							$flag = style_choose('location');
+							echo form_label(site_lang('add_venue_location'), 'location');
+							$data = array('name' => 'location', 'id' => 'location', 'class' => 'inputbox'.$flag, 'value' => set_value('location', $row->address), 'style' => 'width:600px');
+							echo form_textarea($data);
+							if($flag)
+								echo form_error('location');
+						?>
+					</p>
+					
+					<p>
+                        <?php 
+							$flag = style_choose('lat_lng');
+							echo form_label(site_lang('add_venue_map_lat_lng'), 'lat_lng');
+							$data = array('name' => 'lat_lng', 'id' => 'lat_lng', 'class' => 'inputbox'.$flag, 'value' => set_value('lat_lng', $row->lat_lng), 'style' => 'width:600px');
+							echo form_textarea($data);
+							if($flag)
+								echo form_error('lat_lng');
+						?>
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label(site_lang('add_venue_website'), 'website');
+							$data = array('name' => 'website', 'id' => 'website', 'class' => 'inputbox', 'value' => $row->website);
+							echo form_input($data);
+						?>
+                    </p>
+					
+					<p>
+                        <?php 
+							$flag = style_choose('phone');
+							echo form_label(site_lang('add_venue_phone'), 'phone');
+							$data = array('name' => 'phone', 'id' => 'phone', 'class' => 'inputbox'.$flag, 'value' => set_value('phone', $row->telephone));
+							echo form_input($data);
+							if($flag)
+								echo form_error('phone');
+						?>
+                    </p>
+					
+					<p>
+                        <?php
+							echo form_label($this->lang->line('venue_descp'), 'venue_descp');
+							$data = array('name' => 'venue_descp', 'id' => 'venue_descp', 'class' => 'inputbox', 'style' => 'width:600px', 'value' => $row->descp);
+							echo form_textarea($data);
+						?> 
+                    </p>
+					
+					<p>
+						<?php if($row->map_api):?>
+                        <?php 
+                            $pic_path = $this->img_lib->obtain_img_by_id($row->map_api);
+                        ?>
+						<img src='<?php echo $pic_path;?>'/>
+						<?php endif;?>
+						
+					</p>
+					
+					<p>
+                        <?php 
+							echo form_label(site_lang('venue_map'), 'venue_map');
+							$data = array('name' => 'venue_map', 'id' => 'venue_map', 'value' => 'upload');
+							echo form_upload($data);
+							if(form_error('venue_map'))
+								echo form_error('venue_map');
+						?>
+                    </p>
+					
+					<p>
+						<?php echo form_hidden('key', $key);?>
+					</p>
+					<p>
+						<?php 
+							$data = array('name' => 'update', 'id' => 'update', 'value' => '更新', 'class' => 'btn');
+							echo form_submit($data);
+						?>
+					</p>
+				</form>         
+		    </div>
+		<?php endif;?>
+	<?php else:?>
+            <div class="headings altheading">
+                <h2><?php echo site_lang('venue_list');?></h2>
+            </div>
+            <div class="contentbox">
+				<div class = 'search'>
+					<form action='/ctr/venue_list' method='get'>
+						<p><?php echo site_lang('venue_list_total');?><?php echo ':';?><?php echo $num_rows;?></p>
+						<p>
+							<?php echo site_lang('venue_list_keyword');?>
+							<?php echo form_input('keyword', $search_parameter);?>
+							<?php echo form_submit('search', site_lang('venue_list_search'));?>
+						</p>
+					</form>
+				</div>
+            	<table width="100%">
+                	<thead>
+                    	<tr>
+                        	<th><?php echo site_lang('venue_list_name');?></th>
+                            <th><?php echo site_lang('venue_list_address');?></th>
+							<th><?php echo site_lang('venue_list_phone');?></th>
+							<th><?php echo site_lang('edit_edit');?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+					<?php $even = false;?>
+					<?php 
+						if(!$rows)
+							echo '<tr><td>' . site_lang('venue_list_no_record') . '</td></tr>';
+					?>
+					<?php $i = 0;?>
+					<?php foreach($rows as $row):?>					
+						<?php if(!$even):?>
+						<tr>
+						<?php else:?>
+						<tr class="alt">
+						<?php endif;?>
+							<td><?php echo $row['venue'];?></td>
+							<td><?php echo $row['address'];?></td>
+							<td><?php echo $row['telephone'];?></td>
+							<td>
+                            	<a title="" href="/ctr/venue_do/update/<?php echo $row['id'];?>"><?php echo site_lang('edit_update');?></a>
+                                <a title="" href="/ctr/venue_do/delete/<?php echo $row['id'];?>" onclick="if(!confirm('<?php echo site_lang('js_confirm_delete');?>')) return false;"><?php echo site_lang('edit_delete');?></a>
+                            </td>
+						<?php 
+							$even = !$even;
+							$i++;
+						?>
+						</tr>
+					<?php endforeach;?>	
+                    </tbody>
+                </table>
+				<div style="float:left">
+				<ul class="pagination">
+					<?php 
+						echo $this->pagination->create_links(); 
+					?>
+				</ul>
+				</div>
+                <div style="clear: both;"></div>
+            </div>
+			
+			
+        <?php endif;?>    
+        </div>

@@ -1,0 +1,12 @@
+<div class="contentcontainer">            <div class="headings alt">                <h2><?php echo site_lang('clips_add_title');?></h2>            </div>            <div class="contentbox">
+            <form name="form1" action="/ctr/privilege_do/insert" method="post">                 <p>
+                   权限名称:	<input type="text" class="inputbox" name="privilege_name">                 </p>								 	 <p>
+                   权限编码：	<input type="text" class="inputbox" name="code">                 </p>      			
+      			 <p>
+                   <input type="submit" class="btn"  name="submit" value="添加">                 </p>                </form>       
+                <table>  				<?php
+					foreach($privileges as $p){
+						echo "<tr><td>{$p['privilege_name']}</td><td>{$p['code']}</td><td><a href=\"/ctr/privilege_do/delete?id={$p['id']}\">delete</a></td></tr>";
+					}
+					?>
+					</table>            </div></div>

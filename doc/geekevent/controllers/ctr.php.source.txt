@@ -1,0 +1,2039 @@
+<?php
+class Ctr extends CI_Controller
+{
+	var $min_username = 2;
+	var $max_username = 15;
+	var $min_password = 4;
+	var $max_password = 15;
+
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->add_package_path(APPPATH . 'third_party/user/');
+		$this->load->library('tp_user');
+		$this->load->library('tp_privilege');
+
+		$this->lang->load('ctr', 'chinese');
+		$this->load->helper('form');
+		$this->load->library('form_validation');
+		$this->load->library('pagination');
+		$this->load->add_package_path(APPPATH . 'third_party/image/');
+		$this->load->add_package_path(APPPATH . 'third_party/tag/');
+		$this->load->library('tp_image');
+		$this->load->library('tp_tag');
+		$this->load->library('clicklog_lib');
+		$this->template->set_template("admin");
+		// if(!$this->load->module("user/privilege/check_group_privilege",array("admin"),TRUE)){
+		if (!$this->tp_privilege->check_group_privilege("admin"))
+		{
+			redirect("pg/show_404");
+			exit;
+		}
+		// redirect(LOGIN_URL);
+	}
+
+	function index()
+	{
+		/**
+		 * echo "OK";
+		 */
+		$title = "用户测试";
+		$this->load->library('pagination');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		// $data["show_data"] =  $this->load->module("task/tasks/task_list",array(0),TRUE);
+		// $this->template->write_view('main',"ctr/tasks",$data);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+	function sss()
+	{
+		$data["show_data"] = $this->load->module("task/tasks/task_list", array(0), true);
+	}
+
+	function edit_user($user_guid = null)
+	{
+		/**
+		 * echo "OK";
+		 */
+		$this->load->library('img_lib');
+		if ($user_guid != null)
+		{
+			$data = $this->dbmanager_lib->obtain_a_row(TABLE_USER, '*', array('guid' => $user_guid), null, 'array');
+			$user_products = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER_PRODUCTS, 'product_name', array('user_guid' => $user_guid));
+			if (!empty($user_products))
+			{
+				foreach($user_products as $row)
+				{
+					$old_products[] = array('value' => $row->product_name,
+						'label' => $row->product_name
+						);
+				}
+			}
+			else
+			{
+				$old_products = array();
+			}
+			$data['products'] = $old_products;
+
+			$title = "修改用户";
+			$this->template->write('title', $title);
+			$this->template->write('layout', 'a_l_m');
+			$this->template->write('breadcrumb', $title);
+			$this->template->write_view('main', "ctr/edit_user", $data);
+			$this->template->write_view('sidebar', 'ctr/left');
+			$this->template->render();
+		}
+	}
+
+	function user_list($page = '0')
+	{
+		$this->load->library('ctr_lib');
+		$keyword = $this->input->get('keyword');
+		$group_id = $this->input->get('user_group');
+		$filter = $this->input->get('filter');
+		$search = urlencode(lang('user_list_search'));
+		if ($keyword or $group_id or $filter)
+		{
+			$this->pagination->set_search_query("keyword=$keyword&user_group=$group_id&filter=$filter&search=$search");
+		}
+		$table_name = TABLE_USER;
+		$query_string = "	SELECT *
+								FROM $table_name
+						";
+		$where = null;
+
+		if ($group_id AND $group_id != "all")
+		{
+			$where = 'WHERE ' . "group_id = $group_id ";
+		}
+		if ($filter and $keyword)
+		{
+			if ($where)
+			{
+				if ($filter === 'all')
+					$where .= " and (screen_name LIKE '%$keyword%' or username LIKE '%$keyword%' or email LIKE '%$keyword%')";
+				else
+					$where .= " and $filter LIKE '%$keyword%'";
+			}
+			else
+			{
+				if ($filter === 'all')
+					$where = 'WHERE ' . "screen_name LIKE '%$keyword%' or username LIKE '%$keyword%' or email LIKE '%$keyword%'";
+				else
+					$where = 'WHERE ' . "$filter LIKE '%$keyword%'";
+			}
+		}
+		$query_string .= $where . " order by guid desc";
+
+		$config = pagination_style();
+		$config['base_url'] = '/' . $this->uri->segment(1) . '/' . $this->uri->segment(2);
+
+		$config['total_rows'] = $this->ctr_lib->obtain_rows($query_string, true);
+		$per_page = '20';
+		$config['per_page'] = $per_page;
+		$this->pagination->initialize($config);
+
+		$limit = " LIMIT $page, $per_page";
+		$query_string .= $limit;
+
+		$result['num_rows'] = $config['total_rows'];
+
+		$result['user_group'] = $this->dbmanager_lib->obtain_rows(TABLE_PRIVILEGE_GROUP, 'group_id, group_name');
+		$result['rows'] = $this->ctr_lib->obtain_rows($query_string, false);
+		$result['search_parameter']['keyword'] = $keyword?$keyword:'';
+		$result['search_parameter']['group_id'] = $group_id?$group_id:'all';
+		$result['search_parameter']['filter'] = $filter?$filter:'all';
+
+		$title = lang('user_list');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/user_list", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function user_do($action, $key = null)
+	{
+		switch ($action)
+		{
+			case 'add':
+				$this->_add_user();
+				break;
+			case 'update':
+				$this->_update_user();
+				break;
+			case 'update_password':
+				$this->_update_user_password();
+				break;
+			case 'upload_avatar':
+				$this->_upload_avatar();
+				break;
+			case 'delete':
+				$this->_delete_user();
+				break;
+		}
+	}
+
+	private function _add_user()
+	{
+		$val = $this->form_validation;
+		$val->set_rules('email', 'email', 'trim|required|xss_clean|valid_email|callback_email_check');
+		// $val->set_rules('username','username','trim|required|xss_clean|min_length['.$this->min_username.']|max_length['.$this->max_username.']|callback_username_check');
+		$val->set_rules('screen_name', 'screen name', 'trim|required|xss_clean|min_length[' . $this->min_username . ']|max_length[' . $this->max_username . ']|callback_username_check');
+		$val->set_rules('password', 'password', 'trim|required|min_length[' . $this->min_password . ']|max_length[' . $this->max_password . ']|xss_clean');
+		$val->set_rules('password_confirm', 'password confirm', 'trim|required|xss_clean');
+		$val->set_rules('real_name', 'real_name', 'trim|xss_clean');
+		$val->set_rules('company', 'company', 'trim|xss_clean');
+		$val->set_rules('position', 'position', 'trim|xss_clean');
+		$val->set_rules('mobilephone', 'mobilephone', 'trim|xss_clean');
+		$val->set_rules('bio', 'bio', 'trim|xss_clean');
+		if ($val->run())
+		{
+			$data['father_guid'] = 0;
+			$data['type'] = 'user';
+			$data['subtype_id'] = MODULE_USER;
+			$data['second_type'] = 0;
+			$data['is_recommend'] = 0;
+			$data['visibility'] = 'yes';
+
+			$data['title'] = $val->set_value('screen_name');
+			$user_guid = $this->dbmanager_lib->create_an_entity($data);
+			$salt = rand_str(6);
+			$unique_id = rand_str(6, 'abcdefghijklmnopqrstuvwxyz1234567890') . (time() + rand());
+			$user_data = array('guid' => $user_guid,
+				'group_id' => $this->input->post("group_id"),
+				'unique_id' => $unique_id,
+				'salt' => $salt,
+				'screen_name' => $val->set_value('screen_name'),
+				'real_name' => $val->set_value('real_name'),
+				'username' => $val->set_value('screen_name'),
+				'password' => md5(md5($val->set_value('password')) . $salt),
+				'email' => $val->set_value('email'),
+				'status' => 'active',
+				'company' => $val->set_value('company'),
+				'position' => $val->set_value('position'),
+				'mobilephone' => $val->set_value('mobilephone'),
+				'bio' => $val->set_value('bio')
+				);
+			$this->dbmanager_lib->create_a_row(TABLE_USER, $user_data);
+			$product = $this->input->post('product');
+			if (!empty($product))
+			{
+				foreach($product as $row)
+				{
+					$add_data = array('user_guid' => $user_guid,
+						'product_name' => $row
+						);
+					$this->dbmanager_lib->create_a_row(TABLE_EVENTS_MEMBER_PRODUCTS, $add_data);
+				}
+			}
+			redirect("/ctr/user_list");
+		}
+		else
+		{
+			$title = "添加用户";
+			$this->template->write('title', $title);
+			$this->template->write('layout', 'a_l_m');
+			$this->template->write('breadcrumb', $title);
+			$this->template->write_view('main', "ctr/add_user");
+			$this->template->write_view('sidebar', 'ctr/left');
+			$this->template->render();
+		}
+	}
+
+	function email_check($email)
+	{
+		$where = array('email' => $email);
+		$rows = $this->dbmanager_lib->obtain_rows(TABLE_USER, 'guid', $where);
+		if (empty($rows))
+		{
+			$result = true;
+		}
+		else
+		{
+			$result = false;
+			$this->form_validation->set_message('email_check', lang('email_exist'));
+		}
+		return $result;
+	}
+
+	function username_check($username)
+	{
+		$where = array('username' => $username);
+		$rows = $this->dbmanager_lib->obtain_rows(TABLE_USER, 'guid', $where);
+		if (empty($rows))
+		{
+			$result = true;
+		}
+		else
+		{
+			$result = false;
+			$this->form_validation->set_message('username_check', lang('username_exist'));
+		}
+		return $result;
+	}
+
+	private function _update_user()
+	{
+		$val = $this->form_validation;
+		$val->set_rules('user_guid', 'user_guid', 'trim|required|xss_clean');
+		$val->set_rules('email', 'email', 'trim|required|xss_clean');
+		$val->set_rules('screen_name', 'screen name', 'trim|required|xss_clean');
+		$val->set_rules('real_name', 'real_name', 'trim|xss_clean');
+		$val->set_rules('company', 'company', 'trim|xss_clean');
+		$val->set_rules('position', 'position', 'trim|xss_clean');
+		$val->set_rules('mobilephone', 'mobilephone', 'trim|xss_clean');
+		$val->set_rules('bio', 'bio', 'trim|xss_clean');
+		if ($val->run())
+		{
+			$data = array('group_id' => $this->input->post('group_id'),
+				'email' => $val->set_value('email'),
+				'screen_name' => $val->set_value('screen_name'),
+				'real_name' => $val->set_value('real_name'),
+				'company' => $val->set_value('company'),
+				'position' => $val->set_value('position'),
+				'mobilephone' => $val->set_value('mobilephone'),
+				'bio' => $val->set_value('bio')
+				);
+			$user_guid = $val->set_value('user_guid');
+			$this->dbmanager_lib->update_rows(TABLE_USER, array('guid' => $user_guid), $data);
+			$product = $this->input->post('product');
+			$product = ($product == "") ? array() : $product;
+			$user_products = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER_PRODUCTS, 'product_name', array('user_guid' => $user_guid));
+			if (!empty($user_products))
+			{
+				foreach($user_products as $row)
+				{
+					$old_products[] = $row->product_name;
+				}
+			}
+			else
+			{
+				$old_products = array();
+			}
+			// 需要删除的产品
+			$need_to_del = array_diff($old_products, $product);
+			if (!empty($need_to_del))
+			{
+				foreach($need_to_del as $row)
+				{
+					$del_where = array('user_guid' => $user_guid,
+						'product_name' => $row
+						);
+					$this->dbmanager_lib->delete_rows(TABLE_EVENTS_MEMBER_PRODUCTS, $del_where);
+				}
+			}
+			// 需要添加的产品
+			$need_to_add = array_diff($product, $old_products);
+			if (!empty($need_to_add))
+			{
+				foreach($need_to_add as $row)
+				{
+					$add_data = array('user_guid' => $user_guid,
+						'product_name' => $row
+						);
+					$this->dbmanager_lib->create_a_row(TABLE_EVENTS_MEMBER_PRODUCTS, $add_data);
+				}
+			}
+			$redirect_url = "/ctr/edit_user/" . $user_guid;
+			redirect($redirect_url);
+		}
+		else
+		{
+		}
+	}
+
+	private function _update_user_password()
+	{
+		$user_guid = $this->input->post('user_guid');
+		$val = $this->form_validation;
+		$val->set_rules('user_guid', 'user_guid', 'trim|required|xss_clean');
+		$val->set_rules('password', 'password', 'trim|required|xss_clean');
+		$val->set_rules('password_confirm', 'password_confirm', 'trim|required|xss_clean');
+		if ($val->run())
+		{
+			$password = $val->set_value('password');
+			$password_confirm = $val->set_value('password_confirm');
+			if ($password_confirm == $password)
+			{
+				$user_guid = $val->set_value('user_guid');
+				$data = array($user_guid, $password);
+				// $result = $this->load->module('user/user/update_user_password',$data,TRUE);
+				$result = $this->tp_user->update_user_password($user_guid, $password);
+			}
+			$redirect_url = "/ctr/edit_user/" . $user_guid . "#tabs-2";
+			redirect($redirect_url);
+		}
+	}
+
+	private function _upload_avatar()
+	{
+		$upload_config['upload_path'] = IMG_ABSOLUTE_PATH . UPLOAD_TEMP;
+		$upload_config['allowed_types'] = 'gif|jpg|png|jpeg';
+		$upload_config['max_size'] = '2048';
+		$upload_config['max_width'] = '1280';
+		$upload_config['max_height'] = '800';
+
+		$img_config['userfile'] = 'avatar';
+		$result = $this->tp_image->upload_image_to_tmp($upload_config, $img_config);
+		unset($img_config);
+		$img_config = array('size' => array(
+				array('w' => AVATAR_SMALL, 'h' => AVATAR_SMALL),
+				array('w' => AVATAR_THUMB, 'h' => AVATAR_THUMB),
+				array('w' => AVATAR_MEDIUM, 'h' => AVATAR_MEDIUM)
+				),
+			'x' => 0,
+			'y' => 0,
+			'w' => $result['data']['image_width'],
+			'h' => $result['data']['image_height']
+			);
+		$user_guid = $this->input->post('user_guid');
+		$unique_id = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'unique_id', array('guid' => $user_guid));
+		$img_data = array('unique_id' => $unique_id
+			);
+		$result = $this->tp_image->upload_avatar_image($result['data'], $img_config, $img_data);
+		if ($result['error'] == '')
+		{
+			$redirect_url = "ctr/edit_user/" . $user_guid . "#tabs-3";
+			redirect($redirect_url);
+		}
+		else
+		{
+			echo $result['error'];
+		}
+	}
+
+	private function _delete_user()
+	{
+	}
+
+	private function _add_sponsor()
+	{
+		/**
+		 * echo "OK";
+		 */
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('add_sponsor_name', lang('add_sponsor_name'), 'trim|xss_clean' . $required);
+		$var->set_rules('add_sponsor_link', lang('add_sponsor_link'), 'trim|xss_clean|callback_check_url' . $required);
+
+		if ($var->run() === true)
+		{
+			$sponsor_name = $this->input->post('add_sponsor_name');
+			$sponsor_link = $this->input->post('add_sponsor_link');
+
+			$upload_config['upload_path'] = '.' . UPLOAD_TEMP;
+			$upload_config['allowed_types'] = 'jpg|jpeg|png|gif|bmp';
+
+			$upload_config['max_size'] = '100';
+			$upload_config['max_width'] = '1024';
+			$upload_config['max_height'] = '768';
+
+			$img_config['userfile'] = 'add_sponsor_logo';
+			$img_config['destination'] = '.' . SPONSOR_LOGO_PATH;
+			$img_config['relative_path'] = SPONSOR_LOGO_PATH;
+
+			$img_data['entity_guid'] = null;
+			$img_data['create_type'] = 'sponsor';
+			$img_data['user_guid'] = $this->global_lib->get_user_guid();
+
+			if (!$_FILES["add_sponsor_logo"]["error"] > 0)
+			{
+				$result = $this->tp_image->upload_image($upload_config, $img_config, $img_data);
+				if (!$result['error'])
+				{
+					$data = array('sponsor' => $sponsor_name, 'url' => $sponsor_link, 'logo' => $result['id']);
+					$this->dbmanager_lib->create_a_row(TABLE_SPONSORS, $data);
+
+					$response['OK'] = true;
+
+					$title = lang('sponsor_response_title');
+					$this->template->write('title', $title);
+					$this->template->write('layout', 'a_l_m');
+					$this->template->write('breadcrumb', $title);
+					$this->template->write_view('main', "ctr/add_sponsor_response", $response);
+					$this->template->write_view('sidebar', 'ctr/left');
+					$this->template->render();
+				}
+
+				else
+				{
+					$response['OK'] = false;
+
+					$title = lang('sponsor_response_title');
+					$this->template->write('title', $title);
+					$this->template->write('layout', 'a_l_m');
+					$this->template->write('breadcrumb', $title);
+					$this->template->write_view('main', "ctr/add_sponsor_response", $response);
+					$this->template->write_view('sidebar', 'ctr/left');
+					$this->template->render();
+				}
+			}
+		}
+		$title = lang('add_sponsor_title');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/add_sponsor");
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	private function _delete_sponsor($key)
+	{
+		$where['id'] = $key;
+		$row = $this->dbmanager_lib->obtain_a_row(TABLE_SPONSORS, '*', $where);
+		$img_id = $row->logo;
+		$this->tp_image->delete_image($img_id);
+		$this->dbmanager_lib->delete_rows(TABLE_SPONSORS, $where);
+		redirect('/ctr/sponsor_list');
+	}
+
+	private function _update_sponsor($key)
+	{
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('sponsor', lang('edit_sponsor_name'), 'trim|xss_clean' . $required);
+		$var->set_rules('url', lang('url'), 'trim|xss_clean|callback_check_url' . $required);
+
+		if ($var->run() and $this->input->post('update'))
+		{
+			$where['id'] = $key;
+			$record['sponsor'] = $this->input->post('sponsor');
+			$record['url'] = $this->input->post('url');
+
+			$upload_config['upload_path'] = '.' . UPLOAD_TEMP;
+			$upload_config['allowed_types'] = 'jpg|jpeg|png|gif|bmp';
+
+			$upload_config['max_size'] = '100';
+			$upload_config['max_width'] = '1024';
+			$upload_config['max_height'] = '768';
+
+			$img_config['userfile'] = 'sponsor_logo';
+			$img_config['destination'] = '.' . SPONSOR_LOGO_PATH;
+			$img_config['relative_path'] = SPONSOR_LOGO_PATH;
+
+			$img_data['entity_guid'] = null;
+			$img_data['create_type'] = 'sponsor';
+			$img_data['user_guid'] = $this->global_lib->get_user_guid();
+
+			if (!$_FILES["sponsor_logo"]["error"] > 0)
+			{
+				$result = $this->tp_image->upload_image($upload_config, $img_config, $img_data);
+				if (!$result['error'])
+				{
+					$where['id'] = $key;
+					$old_img_id = $this->dbmanager_lib->obtain_a_row_field(TABLE_SPONSORS, 'logo', $where);
+					$this->tp_image->delete_image($old_img_id);
+					$record['logo'] = $result['id'];
+				}
+			}
+			$this->dbmanager_lib->update_rows(TABLE_SPONSORS, $where, $record);
+			redirect('/ctr/sponsor_list');
+		}
+		else
+		{
+			$data['action'] = 'update';
+			$data['key'] = $key;
+
+			$where['id'] = $key;
+			$data['row'] = $this->dbmanager_lib->obtain_a_row('sponsors', '*', $where);
+			$title = lang('edit_sponsor');
+			$this->template->write('title', $title);
+			$this->template->write('layout', 'a_l_m');
+			$this->template->write('breadcrumb', $title);
+			$this->template->write_view('main', "ctr/edit_sponsor", $data);
+			$this->template->write_view('sidebar', 'ctr/left');
+			$this->template->render();
+		}
+	}
+
+	function sponsor_list($offset = '0')
+	{
+		$keyword = $this->input->get('keyword');
+		$like['sponsor'] = $keyword;
+		if ($keyword)
+			$this->pagination->set_search_query("keyword=$keyword");
+		$config = pagination_style();
+		$config['base_url'] = '/' . $this->uri->segment(1) . '/' . $this->uri->segment(2);
+		$config['total_rows'] = $this->dbmanager_lib->obtain_rows(TABLE_SPONSORS, '*', null, $like, null, null, null, true, 'array');
+		$config['per_page'] = '10';
+		$this->pagination->initialize($config);
+		$result['num_rows'] = $config['total_rows'];
+		$result['result'] = $this->dbmanager_lib->obtain_rows(TABLE_SPONSORS, '*', null, $like, 'id DESC', $config['per_page'], $offset, false, 'array');
+		$result['search_parameter'] = $keyword?$keyword:'';
+
+		$title = lang('edit_sponsor_list');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/edit_sponsor", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function sponsors_do($action, $key = null)
+	{
+		switch ($action)
+		{
+			case 'add':
+				$this->_add_sponsor();
+				break;
+			case 'delete':
+				$this->_delete_sponsor($key);
+			case 'update':
+				$this->_update_sponsor($key);
+				break;
+		}
+	}
+
+	function venue_do($action, $key = null)
+	{
+		switch ($action)
+		{
+			case 'add':
+				$this->_add_venue();
+				break;
+			case 'update':
+				$this->_update_venue($key);
+				break;
+			case 'delete':
+				$this->_delete_venue($key);
+				break;
+		}
+	}
+
+	private function _add_venue()
+	{
+		/**
+		 * echo "OK";
+		 */
+
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('add_venue_name', lang('add_venue_name'), 'trim|xss_clean' . $required);
+		$var->set_rules('add_venue_location', lang('add_venue_location'), 'trim' . $required);
+		$var->set_rules('add_venue_map_lat_lng', lang('add_venue_map_lat_lng'), 'trim' . $required);
+		$var->set_rules('add_venue_phone', lang('add_venue_phone'), 'trim|xss_clean|numeric' . $required);
+
+		if ($var->run() === true)
+		{
+			// $record['id'] = null;
+			$record['venue'] = $this->input->post('add_venue_name');
+			$record['address'] = $this->input->post('add_venue_location');
+			$record['lat_lng'] = $this->input->post('add_venue_map_lat_lng');
+			$record['website'] = $this->input->post('add_venue_website');
+			$record['telephone'] = $this->input->post('add_venue_phone');
+			$record['descp'] = $this->input->post('venue_descp');
+
+			$upload_config['upload_path'] = '.' . UPLOAD_TEMP;
+			$upload_config['allowed_types'] = 'jpg|jpeg|png|gif|bmp';
+
+			$img_config['userfile'] = 'venue_map';
+			$img_config['destination'] = '.' . VENUE_MAP_PATH;
+			$img_config['relative_path'] = VENUE_MAP_PATH;
+
+			$img_data['entity_guid'] = null;
+			$img_data['create_type'] = 'venue';
+			$img_data['user_guid'] = $this->global_lib->get_user_guid();
+
+			if (!$_FILES["venue_map"]["error"] > 0)
+			{
+				$result = $this->tp_image->upload_image($upload_config, $img_config, $img_data);
+				if (!$result['error'])
+				{
+					$record['map_api'] = $result['id'];
+					$this->dbmanager_lib->create_a_row(TABLE_VENUE, $record);
+
+					$response['OK'] = true;
+
+					$title = lang('venue_response_title');
+					$this->template->write('title', $title);
+					$this->template->write('layout', 'a_l_m');
+					$this->template->write('breadcrumb', $title);
+					$this->template->write_view('main', "ctr/venue_response", $response);
+					$this->template->write_view('sidebar', 'ctr/left');
+					$this->template->render();
+				}
+
+				else
+				{
+					echo $result['error'];
+					exit;
+				}
+			}
+		}
+
+		$title = lang('add_venue_title');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/add_venue");
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	private function _delete_venue($key)
+	{
+		$where['id'] = $key;
+		$old_img_id = $this->dbmanager_lib->obtain_a_row_field(TABLE_VENUE, 'map_api', $where);
+		$this->tp_image->delete_image($old_img_id);
+		$this->dbmanager_lib->delete_rows(TABLE_VENUE, $where);
+		$url = '/ctr/venue_list';
+		redirect($url);
+	}
+
+	private function _update_venue($key)
+	{
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('venue_name', lang('add_venue_name'), 'trim|xss_clean' . $required);
+		$var->set_rules('location', lang('add_venue_location'), 'trim' . $required);
+		$var->set_rules('lat_lng', lang('add_venue_map_lat_lng'), 'trim' . $required);
+		$var->set_rules('phone', lang('add_venue_phone'), 'trim|xss_clean|numeric' . $required);
+
+		$where['id'] = $key;
+		if ($var->run() and $this->input->post('update'))
+		{
+			$data['venue'] = $this->input->post('venue_name');
+			$data['address'] = $this->input->post('location');
+			$data['lat_lng'] = $this->input->post('lat_lng');
+			$data['website'] = $this->input->post('website');
+			$data['telephone'] = $this->input->post('phone');
+			$data['descp'] = $this->input->post('venue_descp');
+
+			$upload_config['upload_path'] = '.' . UPLOAD_TEMP;
+			$upload_config['allowed_types'] = 'jpg|jpeg|png|gif|bmp';
+
+			$img_config['userfile'] = 'venue_map';
+			$img_config['destination'] = '.' . VENUE_MAP_PATH;
+			$img_config['relative_path'] = VENUE_MAP_PATH;
+
+			$img_data['entity_guid'] = null;
+			$img_data['create_type'] = 'venue';
+			$img_data['user_guid'] = $this->global_lib->get_user_guid();
+
+			if (!$_FILES["venue_map"]["error"] > 0)
+			{
+				$result = $this->tp_image->upload_image($upload_config, $img_config, $img_data);
+				if (!$result['error'])
+				{
+					$old_img_id = $this->dbmanager_lib->obtain_a_row_field(TABLE_VENUE, 'map_api', $where);
+					$this->tp_image->delete_image($old_img_id);
+					$data['map_api'] = $result['id'];
+				}
+			}
+
+			$this->dbmanager_lib->update_rows(TABLE_VENUE, $where, $data);
+			$url = '/ctr/venue_list';
+			redirect($url);
+		}
+
+		else
+		{
+			$data['action'] = 'update';
+			$data['key'] = $key;
+
+			$data['row'] = $this->dbmanager_lib->obtain_a_row(TABLE_VENUE, '*', $where);
+			$title = lang('edit_venue');
+			$this->template->write('title', $title);
+			$this->template->write('layout', 'a_l_m');
+			$this->template->write('breadcrumb', $title);
+			$this->template->write_view('main', "ctr/venue_list", $data);
+			$this->template->write_view('sidebar', 'ctr/left');
+			$this->template->render();
+		}
+	}
+
+	function venue_list($offset = '0')
+	{
+		$keyword = $this->input->get('keyword');
+		$like['venue'] = $keyword;
+		if ($keyword)
+			$this->pagination->set_search_query("keyword=$keyword");
+		$config = pagination_style();
+		$config['base_url'] = '/' . $this->uri->segment(1) . '/' . $this->uri->segment(2);
+		$config['total_rows'] = $this->dbmanager_lib->obtain_rows(TABLE_VENUE, 'id', null, $like, null, null, null, true);
+		$config['per_page'] = '10';
+		$this->pagination->initialize($config);
+
+		$result['num_rows'] = $config['total_rows'];
+		$result['rows'] = $this->dbmanager_lib->obtain_rows(TABLE_VENUE, '*', null, $like, 'id DESC', $config['per_page'], $offset, false, 'array');
+		$result['search_parameter'] = $keyword?$keyword:'';
+
+		$title = lang('venue_list');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/venue_list", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function clips_list($page = '0')
+	{
+		$event_guid = $this->input->get('clips_respective_activity');
+		$collection_id = $this->input->get('clips_respective_series');
+		$clip_title = $this->input->get('clip_title');
+
+		$where = 'subtype_id = ' . MODULE_EVENTS;
+		$result['events'] = $this->dbmanager_lib->obtain_rows('core_entities', 'guid, title', $where, null, null, null, null, false, "array");
+		$result['clips_collection'] = $this->dbmanager_lib->obtain_rows('clips_collection', 'id, collection_name', null, null, null, null, null, false, "array");
+
+		$where = null;
+
+		if ($event_guid)
+			$where['event_guid'] = $event_guid;
+		if ($collection_id)
+			$where['collection_related_id'] = $collection_id;
+		// 分页
+		// if($event_guid or $collection_id or $clip_title)
+		// $this->pagination->set_search_query("event_guid=$event_guid&collection_id=$collection_id&clip_title=&clip_title");
+		// $config = pagination_style();
+		// $config['base_url'] = '/'. $this->uri->segment(1). '/' . $this->uri->segment(2);
+		// $config['per_page'] = '10';
+		// $config['total_rows'] = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS, 'guid', $where, NULL, NULL, NULL, NULL, TRUE, "array");
+		// $guid_list = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS, 'guid', $where, NULL, 'guid DESC', $config['per_page'], $page, FALSE, "array");
+		$guid_list = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS, 'guid', $where, null, 'guid DESC', null, null, false, "array");
+
+		foreach($guid_list as $guid)
+		{
+			if ($clip_title)
+			{
+				$where = 'guid = ' . $guid['guid'];
+				$find_clip_title = $this->dbmanager_lib->obtain_a_row_field('core_entities', 'title', $where);
+				if (strstr($find_clip_title, $clip_title))
+					$result['clips_title'][$guid['guid']] = $find_clip_title;
+				// echo $clip_title . '-------' . $find_clip_title;
+				// echo '<br />';
+			}
+			else
+			{
+				$where = 'guid = ' . $guid['guid'];
+				$result['clips_title'][$guid['guid']] = $this->dbmanager_lib->obtain_a_row_field('core_entities', 'title', $where);
+			}
+		}
+		// print_r($result['clips_title']);
+		// exit;
+		// $this->pagination->initialize($config);
+		$title = lang('clips_list_title');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/clips_list", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function clips_do($action, $key = null)
+	{
+		switch ($action)
+		{
+			case 'add':
+				$this->_add_clips();
+				break;
+
+			case 'update':
+				$this->_update_clips($key);
+				break;
+
+			case 'delete':
+				$this->_delete_clips($key);
+				break;
+		}
+	}
+
+	private function _add_clips()
+	{
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('clips_speech_title', lang('clips_speech_title'), 'trim|xss_clean' . $required);
+		$var->set_rules('clips_record_time_date', lang('clips_record_time'), 'trim|xss_clean' . $required);
+		// $var->set_rules('clips_record_time_time',lang('clips_record_time'),'trim|xss_clean'.$required);
+		$var->set_rules('clips_publish_date_date', lang('clips_publish_date'), 'trim|xss_clean' . $required);
+		// $var->set_rules('clips_publish_date_time',lang('clips_publish_date'),'trim|xss_clean'.$required);
+		$var->set_rules('clips_cc_url', lang('clips_cc_url'), 'trim|xss_clean|');
+		$var->set_rules('clips_youku_url', lang('clips_youku_url'), 'trim|xss_clean|');
+		$var->set_rules('clips_respective_activity', lang('clips_respective_activity'), $required);
+		$var->set_rules('clips_respective_series', lang('clips_respective_series'), $required);
+		$var->set_rules('clips_speech_abstract', lang('clips_speech_abstract'), 'trim|xss_clean' . $required);
+		$var->set_rules('clips_speech_intruduction', lang('clips_speech_intruduction'), 'trim|xss_clean' . $required);
+		// $var->set_rules('clips_speech_caption',lang('clips_speech_caption'),'trim|xss_clean'.$required);
+		if ($var->run() and $this->input->post('clips_add'))
+		{
+			$data['father_guid'] = $this->input->post('clips_respective_activity');
+			$data['type'] = 'object';
+			$data['subtype_id'] = MODULE_CLIPS;
+			$data['second_type'] = 0;
+			$data['is_recommend'] = 0;
+			$data['visibility'] = 'yes';
+
+			$data['title'] = $this->input->post('clips_speech_title');
+			$data['main'] = $this->input->post('clips_speech_caption');
+			$data['desc'] = $this->input->post('clips_speech_abstract');
+
+			$guid = $this->dbmanager_lib->create_an_entity($data);
+
+			$user_guid = $this->global_lib->get_user_guid();
+			$tags = $this->input->post('clips_tags');
+			if (!empty($tags))
+			{
+				foreach($tags as $tag_name)
+				{
+					$result = $this->tp_tag->add_tag_relation($guid, $tag_name, "clip", $user_guid);
+				}
+			}
+
+			$speakers = $this->input->post('clips_speaker');
+			if (!empty($speakers))
+			{
+				foreach($speakers as $row)
+				{
+					$where = array("screen_name" => $row);
+					$speaker_guid = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'guid', $where);
+					if ($speaker_guid != null)
+					{
+						$data = array('father_id' => $guid,
+							'user_guid' => $speaker_guid,
+							'user_name' => '',
+							'type' => 'clip'
+							);
+						$this->dbmanager_lib->create_a_row(TABLE_EVENTS_SPEAKERS, $data);
+					}
+				}
+			}
+
+			$clip_data['guid'] = $guid;
+			$clip_data['api_cc'] = $this->input->post('clips_cc_url');
+			$clip_data['api_youku'] = $this->input->post('clips_youku_url');
+			$clip_data['event_guid'] = $this->input->post('clips_respective_activity');
+			$clip_data['collection_related_id'] = $this->input->post('clips_respective_series');
+			$clip_data['highlight'] = $this->input->post('clips_speech_intruduction');
+			// $publish_time = $this->input->post('clips_publish_date_date') . ' ' . $this->input->post('clips_publish_date_time');
+			// $record_time = $this->input->post('clips_record_time_date') . ' ' . $this->input->post('clips_record_time_time');
+			$publish_time = $this->input->post('clips_publish_date_date');
+			$record_time = $this->input->post('clips_record_time_date');
+
+			$clip_data['publish_time'] = std_unix_time_conversion2($publish_time);
+			$clip_data['record_time'] = std_unix_time_conversion2($record_time);
+			$clip_data['is_public'] = $this->input->post('is_public');
+			$this->dbmanager_lib->create_a_row(TABLE_CLIPS, $clip_data);
+			// redirect('/ctr/clips_do/add');
+			$title = lang('clips_response_title');
+			$this->template->write('title', $title);
+			$this->template->write('layout', 'a_l_m');
+			$this->template->write('breadcrumb', $title);
+			$this->template->write_view('main', "ctr/add_clips_response");
+			$this->template->write_view('sidebar', 'ctr/left');
+			$this->template->render();
+		}
+
+		$where = 'subtype_id = ' . MODULE_EVENTS;
+		$result['events'] = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid, title', $where, null, 'guid DESC', null, null, false, "array");
+		$result['clips_collection'] = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS_COLLECTION, 'id, collection_name', null, null, 'id DESC', null, null, false, "array");
+
+		$title = lang('clips_add_title');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/add_clips", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	private function _update_clips($key)
+	{
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('clips_speech_title', lang('clips_speech_title'), 'trim|xss_clean' . $required);
+		$var->set_rules('clips_record_time_date', lang('clips_record_time'), 'trim|xss_clean' . $required);
+		// $var->set_rules('clips_record_time_time',lang('clips_record_time'),'trim|xss_clean'.$required);
+		$var->set_rules('clips_publish_date_date', lang('clips_publish_date'), 'trim|xss_clean' . $required);
+		// $var->set_rules('clips_publish_date_time',lang('clips_publish_date'),'trim|xss_clean'.$required);
+		$var->set_rules('clips_respective_activity', lang('clips_respective_activity'), $required);
+		$var->set_rules('clips_respective_series', lang('clips_respective_series'), $required);
+		$var->set_rules('clips_speech_abstract', lang('clips_speech_abstract'), 'trim|xss_clean' . $required);
+		$var->set_rules('clips_speech_intruduction', lang('clips_speech_intruduction'), 'trim|xss_clean' . $required);
+
+		if ($this->input->post('upload_pic'))
+		{
+			$upload_config['upload_path'] = '.' . UPLOAD_TEMP;
+			$upload_config['allowed_types'] = 'jpg|jpeg|png|gif|bmp';
+
+			if (!$_FILES["pic_standard"]["error"] > 0)
+			{
+				$where = array('entity_guid' => $key,
+					'create_type' => 'clips_standard',
+					);
+				$old_image_id = $this->dbmanager_lib->obtain_a_row_field(TABLE_IMAGES, 'id', $where);
+				if ($old_image_id)
+				{
+					$this->tp_image->delete_image($old_image_id);
+				}
+
+				$img_standard_config['userfile'] = 'pic_standard';
+				$img_standard_config['destination'] = '.' . CLIP_PATH;
+				$img_standard_config['relative_path'] = CLIP_PATH;
+
+				$img_standard_data['entity_guid'] = $key;
+				$img_standard_data['create_type'] = 'clips_standard';
+				$img_standard_data['user_guid'] = $this->global_lib->get_user_guid();
+
+				$result = $this->tp_image->upload_image($upload_config, $img_standard_config, $img_standard_data);
+			}
+
+			if (!$_FILES["pic_medium"]["error"] > 0)
+			{
+				$where = array('entity_guid' => $key,
+					'create_type' => 'clips_medium',
+					);
+				$old_image_id = $this->dbmanager_lib->obtain_a_row_field(TABLE_IMAGES, 'id', $where);
+				if ($old_image_id)
+				{
+					$this->tp_image->delete_image($old_image_id);
+				}
+
+				$img_medium_config['userfile'] = 'pic_medium';
+				$img_medium_config['destination'] = '.' . CLIP_PATH;
+				$img_medium_config['relative_path'] = CLIP_PATH;
+
+				$img_medium_data['entity_guid'] = $key;
+				$img_medium_data['create_type'] = 'clips_medium';
+				$img_medium_data['user_guid'] = $this->global_lib->get_user_guid();
+
+				$result = $this->tp_image->upload_image($upload_config, $img_medium_config, $img_medium_data);
+			}
+
+			if (!$_FILES["pic_big"]["error"] > 0)
+			{
+				$where = array('entity_guid' => $key,
+					'create_type' => 'clips_big',
+					);
+				$old_image_id = $this->dbmanager_lib->obtain_a_row_field(TABLE_IMAGES, 'id', $where);
+				if ($old_image_id)
+				{
+					$this->tp_image->delete_image($old_image_id);
+				}
+
+				$img_big_config['userfile'] = 'pic_big';
+				$img_big_config['destination'] = '.' . CLIP_PATH;
+				$img_big_config['relative_path'] = CLIP_PATH;
+
+				$img_big_data['entity_guid'] = $key;
+				$img_big_data['create_type'] = 'clips_big';
+				$img_big_data['user_guid'] = $this->global_lib->get_user_guid();
+
+				$this->tp_image->upload_image($upload_config, $img_big_config, $img_big_data);
+			}
+			redirect("ctr/clips_do/update/$key#tabs-2");
+		}elseif ($var->run() and $this->input->post('clips_update'))
+		{
+			$data['title'] = $this->input->post('clips_speech_title');
+			$data['main'] = $this->input->post('clips_speech_caption');
+			$data['desc'] = $this->input->post('clips_speech_abstract');
+
+			$where_condition['guid'] = $key;
+			$this->dbmanager_lib->update_rows('core_entities', $where_condition, $data);
+
+			$clip_data['api_cc'] = $this->input->post('clips_cc_url');
+			$clip_data['api_youku'] = $this->input->post('clips_youku_url');
+			$clip_data['event_guid'] = $this->input->post('clips_respective_activity');
+			$clip_data['collection_related_id'] = $this->input->post('clips_respective_series');
+			$clip_data['highlight'] = $this->input->post('clips_speech_intruduction');
+			// $publish_time = $this->input->post('clips_publish_date_date') . ' ' . $this->input->post('clips_publish_date_time');
+			// $record_time = $this->input->post('clips_record_time_date') . ' ' . $this->input->post('clips_record_time_time');
+			$publish_time = $this->input->post('clips_publish_date_date');
+			$record_time = $this->input->post('clips_record_time_date');
+
+			$clip_data['publish_time'] = std_unix_time_conversion2($publish_time);
+			$clip_data['record_time'] = std_unix_time_conversion2($record_time);
+
+			$clip_data['is_public'] = $this->input->post('is_public');
+
+			$this->dbmanager_lib->update_rows('clips', $where_condition, $clip_data);
+
+			$entity_where = array('guid' => $key);
+			$entity_data = array('time_updated' => time());
+			$this->dbmanager_lib->update_rows(TABLE_ENTITIES, $entity_where, $entity_data);
+
+			$user_guid = $this->global_lib->get_user_guid();
+
+			$tag_where = array('entity_guid' => $key, 'type' => 'clip');
+			$this->dbmanager_lib->delete_rows(TABLE_TAG_RELATIONS, $tag_where);
+
+			$tags = $this->input->post('clips_tags');
+			if (!empty($tags))
+			{
+				foreach($tags as $tag_name)
+				{
+					$result = $this->tp_tag->add_tag_relation($key, $tag_name, "clip", $user_guid);
+				}
+			}
+
+			$speaker_where = array('father_id' => $key, 'type' => 'clip');
+			$this->dbmanager_lib->delete_rows(TABLE_EVENTS_SPEAKERS, $speaker_where);
+
+			$speakers = $this->input->post('clips_speaker');
+			if (!empty($speakers))
+			{
+				foreach($speakers as $row)
+				{
+					$where = array("screen_name" => $row);
+					$speaker_guid = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'guid', $where);
+					if ($speaker_guid != null)
+					{
+						$data = array('father_id' => $key,
+							'user_guid' => $speaker_guid,
+							'user_name' => '',
+							'type' => 'clip'
+							);
+						$this->dbmanager_lib->create_a_row(TABLE_EVENTS_SPEAKERS, $data);
+					}
+				}
+			}
+
+			redirect("/ctr/clips_do/update/$key");
+		}
+
+		$where = 'subtype_id = ' . MODULE_EVENTS;
+		$result['events'] = $this->dbmanager_lib->obtain_rows('core_entities', 'guid, title', $where, null, 'guid DESC', null, null, false, "array");
+		$result['clips_collection'] = $this->dbmanager_lib->obtain_rows('clips_collection', 'id, collection_name', null, null, 'id DESC', null, null, false, "array");
+
+		$where = 'guid = ' . $key;
+		$result['row'] = $this->dbmanager_lib->obtain_a_row(TABLE_CLIPS, '*', $where, null, 'array');
+		$result['core_entity'] = $this->dbmanager_lib->obtain_a_row('core_entities', 'title, main, desc', $where, null, 'array');
+
+		$where = 'entity_guid = ' . $key;
+		$result['images'] = $this->dbmanager_lib->obtain_rows(TABLE_IMAGES, '*', $where, null, null, null, null, $forcount = false, "object");
+
+		$tag_where = array('entity_guid' => $key, 'type' => 'clip');
+		$result['tags'] = $this->dbmanager_lib->obtain_rows(TABLE_TAG_RELATIONS, 'tag_id', $tag_where);
+
+		$speaker_where = array('father_id' => $key, 'type' => 'clip');
+		$result['speakers'] = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_SPEAKERS, 'user_guid', $speaker_where);
+
+		$title = lang('clips_update_title');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/edit_clips", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	private function _delete_clips($key)
+	{
+		$where['guid'] = $key;
+		$this->dbmanager_lib->delete_rows('core_entities', $where);
+		$this->dbmanager_lib->delete_rows('entities', $where);
+		$this->dbmanager_lib->delete_rows(TABLE_CLIPS, $where);
+
+		$speaker_where['father_id'] = $key;
+		$speaker_where['type'] = 'clip';
+		$this->dbmanager_lib->delete_rows(TABLE_EVENTS_SPEAKERS, $speaker_where);
+
+		$tag_where['entity_guid'] = $key;
+		$tag_where['type'] = 'clip';
+		$this->dbmanager_lib->delete_rows(TABLE_TAG_RELATIONS, $tag_where);
+
+		redirect('/ctr/clips_list');
+	}
+
+	function clips_collection_list($page = '0')
+	{
+		$keyword = $this->input->get('keyword');
+		$like['collection_name'] = $keyword;
+		$event_guid = $this->input->get('event_guid');
+		if (!$event_guid or $event_guid === '0')
+			$where = null;
+		else
+			$where = array('event_guid' => $event_guid);
+		if ($keyword or $where)
+			$this->pagination->set_search_query("keyword=$keyword&event_guid=$event_guid");
+		$config = pagination_style();
+		$config['base_url'] = '/' . $this->uri->segment(1) . '/' . $this->uri->segment(2);
+		$config['per_page'] = '15';
+		$config['total_rows'] = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS_COLLECTION, 'id', $where, $like, null, null, null, true, 'array');
+		$this->pagination->initialize($config);
+
+		$result['num_rows'] = $config['total_rows'];
+		$result['rows'] = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS_COLLECTION, '*', $where, $like, 'id DESC', $config['per_page'], $page, false, 'array');
+		$result['search_parameter'] = $keyword?$keyword:'';
+		$result['search_parameter2'] = $event_guid?$event_guid:'';
+
+		$title = lang('clips_collection_list_title');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/clips_collection_list", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function clips_collection_do($action, $key = null)
+	{
+		switch ($action)
+		{
+			case 'add':
+				$this->_add_clip_collection();
+				break;
+			case 'update':
+				$this->_update_clip_collection($key);
+				break;
+			case 'delete':
+				$this->_delete_clip_collection($key);
+				break;
+		}
+	}
+
+	private function _add_clip_collection()
+	{
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('clips_collection_title', lang('clips_collection_title'), 'trim|xss_clean' . $required);
+		$var->set_rules('clips_collection_description', lang('clips_collection_description'), 'trim|xss_clean' . $required);
+		$var->set_rules('record_time_date', lang('clips_collection_record_time'), 'trim|xss_clean' . $required);
+		// $var->set_rules('record_time_time',lang('clips_collection_record_time'),'trim|xss_clean'.$required);
+		$var->set_rules('publish_time_date', lang('clips_collection_publish_time'), 'trim|xss_clean' . $required);
+		// $var->set_rules('publish_time_time',lang('clips_collection_publish_time'),'trim|xss_clean'.$required);
+		$var->set_rules('ppt_url', lang('cc_ppt_url'), 'trim|xss_clean');
+
+		if ($var->run() and $this->input->post('clips_collection_add_button'))
+		{
+			$clip_collection_data['collection_name'] = $this->input->post('clips_collection_title');
+			$clip_collection_data['event_guid'] = $this->input->post('clips_respective_activity');
+			$clip_collection_data['collection_desc'] = $this->input->post('clips_collection_description');
+			// $record_time = $this->input->post('record_time_date') . ' ' . $this->input->post('record_time_time');
+			// $publish_time = $this->input->post('publish_time_date') . ' ' . $this->input->post('publish_time_time');
+			$record_time = $this->input->post('record_time_date');
+			$publish_time = $this->input->post('publish_time_date');
+
+			$clip_collection_data['record_time'] = std_unix_time_conversion2($record_time);
+			$clip_collection_data['publish_time'] = std_unix_time_conversion2($publish_time);
+			$clip_collection_data['ppt_url'] = $this->input->post('ppt_url');
+			$this->dbmanager_lib->create_a_row('clips_collection', $clip_collection_data);
+			// redirect('/ctr/clips_collection_do/add');
+			$title = lang('clips_collection_response_title');
+			$this->template->write('title', $title);
+			$this->template->write('layout', 'a_l_m');
+			$this->template->write('breadcrumb', $title);
+			$this->template->write_view('main', "ctr/add_clips_collection_response");
+			$this->template->write_view('sidebar', 'ctr/left');
+			$this->template->render();
+		}
+
+		$where = 'subtype_id = ' . MODULE_EVENTS;
+		$result['events'] = $this->dbmanager_lib->obtain_rows('core_entities', 'guid, title', $where, null, 'guid DESC', null, null, false, "array");
+
+		$title = lang('clips_collection_page_title');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/add_event_collection", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	private function _update_clip_collection($key)
+	{
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('clips_collection_title', lang('clips_collection_title'), 'trim|xss_clean' . $required);
+		$var->set_rules('clips_collection_description', lang('clips_collection_description'), 'trim|xss_clean' . $required);
+		$var->set_rules('record_time_date', lang('clips_collection_record_time'), 'trim|xss_clean' . $required);
+		// $var->set_rules('record_time_time',lang('clips_collection_record_time'),'trim|xss_clean'.$required);
+		$var->set_rules('publish_time_date', lang('clips_collection_publish_time'), 'trim|xss_clean' . $required);
+		// $var->set_rules('publish_time_time',lang('clips_collection_publish_time'),'trim|xss_clean'.$required);
+		$var->set_rules('ppt_url', lang('cc_ppt_url'), 'trim|xss_clean');
+
+		$where = 'id = ' . $key;
+
+		if ($var->run() and $this->input->post('clips_collection_update_button'))
+		{
+			$where = 'id = ' . $key;
+			$clip_collection_data['collection_name'] = $this->input->post('clips_collection_title');
+			$clip_collection_data['event_guid'] = $this->input->post('clips_respective_activity');
+			$clip_collection_data['collection_desc'] = $this->input->post('clips_collection_description');
+			// $record_time = $this->input->post('record_time_date') . ' ' . $this->input->post('record_time_time');
+			// $publish_time = $this->input->post('publish_time_date') . ' ' . $this->input->post('publish_time_time');
+			$record_time = $this->input->post('record_time_date') ;
+			$publish_time = $this->input->post('publish_time_date');
+
+			$clip_collection_data['record_time'] = std_unix_time_conversion2($record_time);
+			$clip_collection_data['publish_time'] = std_unix_time_conversion2($publish_time);
+			$clip_collection_data['first_clip'] = $this->input->post('first_clip');
+			$clip_collection_data['ppt_url'] = $this->input->post('ppt_url');
+			$this->dbmanager_lib->update_rows(TABLE_CLIPS_COLLECTION, $where, $clip_collection_data);
+
+			redirect('/ctr/clips_collection_list');
+		}
+
+		$result['row'] = $this->dbmanager_lib->obtain_a_row(TABLE_CLIPS_COLLECTION, '*', $where, null, 'array');
+
+		$where = 'subtype_id = ' . MODULE_EVENTS;
+		$result['events'] = $this->dbmanager_lib->obtain_rows('core_entities', 'guid, title', $where, null, 'guid DESC', null, null, false, "array");
+		$result['key'] = $key;
+
+		$where = 'collection_related_id = ' . $key;
+		$result['clips'] = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS, 'guid', $where);
+
+		$title = lang('clips_collection_page_title');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/edit_clips_collection", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function clips_collection_pic_do($action, $key)
+	{
+		switch ($action)
+		{
+			case 'upload':
+				$this->_upload_clips_collection_pic($action, $key);
+				break;
+		}
+	}
+
+	private function _upload_clips_collection_pic($action, $key)
+	{
+		$upload_config['upload_path'] = '.' . UPLOAD_TEMP;
+		$upload_config['allowed_types'] = 'jpg|jpeg|png|gif|bmp';
+
+		if (!$_FILES["image1"]["error"] > 0)
+		{
+			$img1_config['userfile'] = 'image1';
+			$img1_config['destination'] = '.' . COLLECTION_PIC_PATH;
+			$img1_config['relative_path'] = COLLECTION_PIC_PATH;
+
+			$img1_data['entity_guid'] = null;
+			$img1_data['create_type'] = 'collection';
+			$img1_data['user_guid'] = $this->global_lib->get_user_guid();
+
+			$result = $this->tp_image->upload_image($upload_config, $img1_config, $img1_data);
+			if (!$result['error'])
+			{
+				$this->tp_image->delete_image($this->input->post('image1_id'));
+				$row['image1'] = $result['id'];
+				$cc_where['id'] = $key;
+				$this->dbmanager_lib->update_rows(TABLE_CLIPS_COLLECTION, $cc_where, $row);
+			}
+		}
+
+		if (!$_FILES["image2"]["error"] > 0)
+		{
+			$img2_config['userfile'] = 'image2';
+			$img2_config['destination'] = '.' . COLLECTION_PIC_PATH;
+			$img2_config['relative_path'] = COLLECTION_PIC_PATH;
+
+			$img2_data['entity_guid'] = null;
+			$img2_data['create_type'] = 'collection';
+			$img2_data['user_guid'] = $this->global_lib->get_user_guid();
+
+			$result = $this->tp_image->upload_image($upload_config, $img2_config, $img2_data);
+			if (!$result['error'])
+			{
+				$this->tp_image->delete_image($this->input->post('image2_id'));
+				$row['image2'] = $result['id'];
+				$cc_where['id'] = $key;
+				$this->dbmanager_lib->update_rows(TABLE_CLIPS_COLLECTION, $cc_where, $row);
+			}
+		}
+		redirect("/ctr/clips_collection_do/update/$key#tabs-2");
+	}
+
+	private function _delete_clip_collection($key)
+	{
+		$where['id'] = $key;
+		$this->dbmanager_lib->delete_rows(TABLE_CLIPS_COLLECTION, $where);
+		redirect('/ctr/clips_collection_list');
+	}
+
+	function events_do($action, $key = null)
+	{
+		switch ($action)
+		{
+			case 'add':
+				$this->_add_event();
+				break;
+			case 'update':
+				$this->_update_event($key);
+				break;
+			case 'delete':
+				$this->_delete_event($key);
+				break;
+		}
+	}
+
+	private function _add_event()
+	{
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('event_topic', lang('event_topic'), 'trim|xss_clean' . $required);
+		// $var->set_rules('event_time',lang('event_time'),'trim|xss_clean|callback_check_date'.$required);
+		$var->set_rules('event_date', lang('event_time'), 'trim|xss_clean' . $required);
+		// $var->set_rules('event_time',lang('event_time'),'trim|xss_clean'.$required);
+		$var->set_rules('enroll_deadline_date', lang('e:enroll_deadline_date'), 'trim|xss_clean' . $required);
+		// $var->set_rules('enroll_deadline_time',lang('e:enroll_deadline_time'),'trim|xss_clean'.$required);
+		$var->set_rules('event_term', lang('event_term'), 'trim' . $required);
+		$var->set_rules('event_people_count', lang('event_people_count'), 'trim|xss_clean|is_natural' . $required);
+		$var->set_rules('event_outline', lang('event_outline'), 'trim' . $required);
+		$var->set_rules('event_abstract', lang('event_abstract'), 'trim' . $required);
+		$var->set_rules('event_detail', lang('event_detail'), 'trim' . $required);
+		if ($var->run() and $this->input->post('event_add'))
+		{
+			// $time = $this->input->post('event_date') . ' ' . $this->input->post('event_time');
+			$time = $this->input->post('event_date') ;
+			// $enroll_deadline = $this->input->post('enroll_deadline_date').' '.$this->input->post('enroll_deadline_time');
+			$enroll_deadline = $this->input->post('enroll_deadline_date');
+			$event_data['start_time'] = std_unix_time_conversion2($time);
+			$event_data['enroll_end_time'] = std_unix_time_conversion2($enroll_deadline);
+			$event_data['term'] = $this->input->post('event_term');
+			$event_data['people_count'] = $this->input->post('event_people_count');
+			$event_data['venue_Id'] = $this->input->post('event_location');
+			$event_data['highlight'] = $this->input->post('event_outline');
+
+			$data['father_guid'] = 0;
+			$data['type'] = 'object';
+			$data['subtype_id'] = MODULE_EVENTS;
+			$data['second_type'] = 0;
+			$data['is_recommend'] = 0;
+			$data['title'] = $this->input->post('event_topic');
+			$data['main'] = $this->input->post('event_detail');
+			$data['desc'] = $this->input->post('event_abstract');
+			$guid = $this->dbmanager_lib->create_an_entity($data);
+			// echo 'OK';
+			// exit;
+			$event_data['guid'] = $guid;
+			$this->dbmanager_lib->create_a_row('events', $event_data);
+
+			$sponsors = $this->dbmanager_lib->obtain_rows('sponsors', 'id, sponsor', null, null, null, null, null, false, "array");
+			foreach($sponsors as $sponsor)
+			{
+				$checked_sponsor = $this->input->post($sponsor['id']);
+				if ($checked_sponsor)
+				{
+					$row['id'] = null;
+					$row['event_guid'] = $guid;
+					$row['sponsor_id'] = $checked_sponsor;
+					$this->dbmanager_lib->create_a_row('event_sponsors', $row);
+					// echo $checked_sponsor;
+				}
+			}
+
+			$title = lang('event_add_response_title');
+			$this->template->write('title', $title);
+			$this->template->write('layout', 'a_l_m');
+			$this->template->write('breadcrumb', $title);
+			$this->template->write_view('main', "ctr/add_event_response");
+			$this->template->write_view('sidebar', 'ctr/left');
+			$this->template->render();
+		}
+		$result['venues'] = $this->dbmanager_lib->obtain_rows('venue', 'id, venue', null, null, null, null, null, false, "array");
+		$result['sponsors'] = $this->dbmanager_lib->obtain_rows('sponsors', 'id, sponsor', null, null, null, null, null, false, "array");
+		$title = lang('event_title');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/add_event", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	private function _update_event($key)
+	{
+		$where['guid'] = $key;
+		$var = $this->form_validation;
+		$required = "|required";
+		$var->set_rules('event_topic', lang('event_topic'), 'trim|xss_clean' . $required);
+		// $var->set_rules('event_time',lang('event_time'),'trim|xss_clean|callback_check_date'.$required);
+		$var->set_rules('event_date', lang('event_time'), 'trim|xss_clean' . $required);
+		// $var->set_rules('event_time',lang('event_time'),'trim|xss_clean'.$required);
+		$var->set_rules('enroll_deadline_date', lang('e:enroll_deadline'), 'trim|xss_clean' . $required);
+		// $var->set_rules('enroll_deadline_time',lang('e:enroll_deadline'),'trim'.$required);
+		$var->set_rules('event_people_count', lang('event_people_count'), 'trim|xss_clean|is_natural' . $required);
+		$var->set_rules('event_outline', lang('event_outline'), 'trim' . $required);
+		$var->set_rules('event_abstract', lang('event_abstract'), 'trim' . $required);
+		$var->set_rules('event_detail', lang('event_detail'), 'trim' . $required);
+
+		if ($var->run() and $this->input->post('event_update'))
+		{
+			$time = $this->input->post('event_date') . ' ' . $this->input->post('event_time');
+			// $enroll_deadline = $this->input->post('enroll_deadline_date') . ' ' . $this->input->post('enroll_deadline_time');
+			$enroll_deadline = $this->input->post('enroll_deadline_date');
+			$event_data['start_time'] = std_unix_time_conversion2($time);
+			$event_data['enroll_end_time'] = std_unix_time_conversion2($enroll_deadline);
+			$event_data['term'] = $this->input->post('event_term');
+			$event_data['people_count'] = $this->input->post('event_people_count');
+			$event_data['venue_Id'] = $this->input->post('event_location');
+			$event_data['highlight'] = $this->input->post('event_outline');
+			$event_data['status'] = $this->input->post('event_status');
+
+			$data['title'] = $this->input->post('event_topic');
+			$data['main'] = $this->input->post('event_detail');
+			$data['desc'] = $this->input->post('event_abstract');
+			$this->dbmanager_lib->update_rows('core_entities', $where, $data);
+			$this->dbmanager_lib->update_rows(TABLE_EVENTS, $where, $event_data);
+
+			$this->dbmanager_lib->delete_rows(TABLE_EVENT_SPONSORS, "event_guid = $key");
+			$sponsors = $this->dbmanager_lib->obtain_rows('sponsors', 'id, sponsor', null, null, null, null, null, false, "array");
+			foreach($sponsors as $sponsor)
+			{
+				$checked_sponsor = $this->input->post($sponsor['id']);
+				if ($checked_sponsor)
+				{
+					$row['id'] = null;
+					$row['event_guid'] = $key;
+					$row['sponsor_id'] = $checked_sponsor;
+					$this->dbmanager_lib->create_a_row('event_sponsors', $row);
+				}
+			}
+
+			redirect("ctr/events_do/update/$key");
+		}
+
+		$this->_render_update_event_view($key);
+	}
+
+	private function _render_update_event_view($key, $result = null)
+	{
+		$where['guid'] = $key;
+		$result['event_guid'] = $key;
+		$result['venues'] = $this->dbmanager_lib->obtain_rows(TABLE_VENUE, 'id, venue', null, null, null, null, null, false, "array");
+		$result['sponsors'] = $this->dbmanager_lib->obtain_rows(TABLE_SPONSORS, 'id, sponsor', null, null, null, null, null, false, "array");
+		$result['event'] = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS, '*', $where, null, 'array');
+		$result['core'] = $this->dbmanager_lib->obtain_a_row('core_entities', 'title, main, desc', $where, null, 'array');
+
+		$agenda_filter['event_id'] = $key;
+		$result['agendas'] = $this->dbmanager_lib->obtain_rows('agenda', '*', $agenda_filter, null, 'time_started asc', null, null, false, "array");
+
+		$added_sponsors = $this->dbmanager_lib->obtain_rows(TABLE_EVENT_SPONSORS, 'sponsor_id', "event_guid = $key", null, null, null, null, false, "array");
+		foreach($added_sponsors as $added_sponsor)
+		$result['added_sponsors'][] = $added_sponsor['sponsor_id'];
+
+		unset($where);
+		$where['entity_guid'] = $key;
+		$result['pics'] = $this->dbmanager_lib->obtain_rows(TABLE_IMAGES, '*', $where);
+		// $member_where = array('event_id' => $key, 'status' => 2);
+		// $result['check_rows'] = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, '*', $member_where, NULL, 'reg_time ASC');
+		// $result['check_rows_num'] = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, '*', $member_where, NULL, NULL, NULL, NULL, TRUE);
+		$title = lang('event_list_edit_event');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/edit_event", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	private function _delete_event($key)
+	{
+		$where['guid'] = $key;
+		$this->dbmanager_lib->delete_rows('entities', $where);
+		$this->dbmanager_lib->delete_rows('core_entities', $where);
+		$this->dbmanager_lib->delete_rows(TABLE_EVENTS, $where);
+		$this->dbmanager_lib->delete_rows(TABLE_EVENT_SPONSORS, "event_guid = $key");
+		$this->dbmanager_lib->delete_rows(TABLE_AGENDA, "event_id = $key");
+
+		redirect('/ctr/events_list');
+	}
+
+	function event_pic_do($action, $event_guid, $pic_id = null)
+	{
+		switch ($action)
+		{
+			case 'upload':
+				$this->_upload_event_pic($event_guid);
+				break;
+			case 'delete':
+				$this->_delete_event_pic($event_guid, $pic_id);
+				break;
+		}
+	}
+
+	private function _upload_event_pic($event_guid)
+	{
+		$upload_config['upload_path'] = '.' . UPLOAD_TEMP;
+		$upload_config['allowed_types'] = 'jpg|jpeg|png|gif|bmp';
+
+		if (!$_FILES["upload_pic"]["error"] > 0)
+		{
+			$img_config['userfile'] = 'upload_pic';
+			$img_config['destination'] = '.' . EVENT_PIC_PATH;
+			$img_config['relative_path'] = EVENT_PIC_PATH;
+
+			$img_data['entity_guid'] = $event_guid;
+			$img_data['create_type'] = $this->input->post('create_type');
+			$img_data['user_guid'] = $this->global_lib->get_user_guid();
+
+			$result = $this->tp_image->upload_image($upload_config, $img_config, $img_data);
+
+			redirect("/ctr/events_do/update/$event_guid#tabs-5");
+		}
+	}
+
+	private function _delete_event_pic($event_guid, $pic_id)
+	{
+		$this->tp_image->delete_image($pic_id);
+		redirect("/ctr/events_do/update/$event_guid#tabs-5");
+	}
+
+	function events_list($page = '0')
+	{
+		$keyword = $this->input->get('keyword');
+		$like = array('title' => $keyword);
+		$where['subtype_id'] = MODULE_EVENTS;
+		if ($keyword)
+			$this->pagination->set_search_query("keyword=$keyword");
+		$config = pagination_style();
+		$config['base_url'] = '/' . $this->uri->segment(1) . '/' . $this->uri->segment(2);
+		$config['per_page'] = '10';
+		$config['total_rows'] = $this->dbmanager_lib->obtain_rows('core_entities', 'guid, title', $where, $like, null, null, null, true);
+
+		$result['num_rows'] = $config['total_rows'];
+		$result['search_rows'] = $this->dbmanager_lib->obtain_rows('core_entities', 'guid, title', $where, $like, 'guid DESC', $config['per_page'], $page, false, 'array');
+		$result['search_parameter'] = $keyword?$keyword:'';
+
+		$this->pagination->initialize($config);
+		$title = lang('event_list');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/event_list", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function agenda_do($action, $event_id = null, $key = null)
+	{
+		switch ($action)
+		{
+			case 'add':
+				$this->_add_agenda($event_id);
+				break;
+			case 'delete':
+				$this->_delete_agenda($event_id, $key);
+				break;
+		}
+	}
+
+	private function _add_agenda($event_id)
+	{
+		$agenda_var = $this->form_validation;
+		$required = '|required';
+		$agenda_var->set_rules('agenda_start_time_date', lang('agenda_start_time'), 'trim|xss_clean' . $required);
+		// $agenda_var->set_rules('agenda_start_time_time',lang('agenda_start_time'),'trim|xss_clean'.$required);
+		$agenda_var->set_rules('agenda_end_time_date', lang('agenda_end_time'), 'trim|xss_clean' . $required);
+		// $agenda_var->set_rules('agenda_end_time_time',lang('agenda_end_time'),'trim|xss_clean'.$required);
+		$agenda_var->set_rules('agenda_content', lang('agenda_content'), 'trim|xss_clean' . $required);
+
+		$where['guid'] = $event_id;
+
+		if ($agenda_var->run())
+		{
+			$record['event_id'] = $this->input->post('event_id');
+			// $time_started = $this->input->post('agenda_start_time_date').' '.$this->input->post('agenda_start_time_time');
+			// $time_ended = $this->input->post('agenda_end_time_date').' '.$this->input->post('agenda_end_time_time');
+			$time_started = $this->input->post('agenda_start_time_date');
+			$time_ended = $this->input->post('agenda_end_time_date');
+
+			$record['time_started'] = std_unix_time_conversion2($time_started);
+			$record['time_ended'] = std_unix_time_conversion2($time_ended);
+			$record['activity'] = $this->input->post('agenda_content');
+
+			$agenda_id = $this->dbmanager_lib->create_a_row(TABLE_AGENDA, $record);
+
+			$speakers = $this->input->post('agenda_speaker');
+			if (!empty($speakers))
+			{
+				foreach($speakers as $row)
+				{
+					$where = array("screen_name" => $row);
+					$speaker_guid = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'guid', $where);
+					if ($speaker_guid != null)
+					{
+						$data = array('father_id' => $agenda_id,
+							'user_guid' => $speaker_guid,
+							'user_name' => '',
+							'type' => 'agenda'
+							);
+						$this->dbmanager_lib->create_a_row(TABLE_EVENTS_SPEAKERS, $data);
+					}
+				}
+			}
+
+			redirect("/ctr/events_do/update/$event_id#tabs-2");
+		}
+		else
+		{
+			$this->_render_update_event_view($event_id);
+		}
+	}
+
+	private function _delete_agenda($event_id, $agenda_id)
+	{
+		$this->dbmanager_lib->delete_rows(TABLE_AGENDA, "id = $agenda_id");
+		$speaker_where = array('father_id' => $agenda_id, 'type' => 'agenda');
+		$this->dbmanager_lib->delete_rows(TABLE_EVENTS_SPEAKERS, $speaker_where);
+		redirect("/ctr/events_do/update/$event_id#tabs-2");
+	}
+
+	function sign_up_update()
+	{
+		$user_guid = $this->global_lib->get_user_guid();
+		$this->load->library('river_lib');
+		$ids = $this->input->post('ids');
+		$event_id = $this->input->post('event_id');
+		$submit_third_content = $this->input->post('submit_third_content');
+		$status = 0;
+		if ($submit_third_content == "tongguo")
+		{
+			$status = 2;
+		}
+		if ($submit_third_content == "jujue")
+		{
+			$status = 1;
+		}
+		foreach($ids as $id)
+		{
+			$where = array('id' => $id);
+			$member = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS_MEMBER, 'userguid,status', $where);
+
+			$row['status'] = $status;
+			$this->dbmanager_lib->update_rows(TABLE_EVENTS_MEMBER, $where, $row);
+			if ($status == 2)
+			{
+				$notification = array('uid' => $this->global_lib->get_user_guid(),
+					'object_id' => $event_id,
+					'user_guid' => $member->userguid,
+					'operate' => 'confirm',
+					'time_created' => time(),
+					'anchor_id' => null
+					);
+				$this->dbmanager_lib->create_a_row(TABLE_NOTIFICATIONS, $notification);
+				// $this->river_lib->adopt($user_guid,$event_id);
+			}
+		}
+		redirect("/ctr/events_do/update/$event_id#tabs-3");
+	}
+
+	function export_sign_up_users()
+	{
+		$this->load->helper('phpexcel_helper');
+		$event_guid = $this->input->post('event_guid');
+		$sign_up_users_guid = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'userguid, topics', array('event_id' => $event_guid), NULL, 'reg_time ASC');
+		if ($sign_up_users_guid)
+		{
+			$data[] = array('姓名', '报名次数/通过次数/签到次数', '综合评分指数', '邮箱', '公司', '电话', '职位', '申请原因', '是否愿意被推荐');
+			foreach($sign_up_users_guid as $sign_up_user_guid)
+			{
+				$user_info = $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'real_name, email, company, tel, position, is_recommend', array('guid' => $sign_up_user_guid->userguid));
+				// 报名次数/通过次数/签到次数
+				$total_counts = $this->dbmanager_lib->obtain_rows("events_member", "*", array('userguid' => $sign_up_user_guid->userguid, 'event_id >=' => 150577, 'event_id <=' => $event_guid), NULL, NULL, NULL, NULL, TRUE);
+
+				$pass_counts = $this->dbmanager_lib->obtain_rows("events_member", "*", array('userguid' => $sign_up_user_guid->userguid, 'event_id >=' => 150577, 'event_id <' => $event_guid, 'status' => 2), NULL, NULL, NULL, NULL, TRUE);
+
+				$came_count = $this->dbmanager_lib->obtain_rows("events_member", "*", array('userguid' => $sign_up_user_guid->userguid, 'event_id >=' => 150577, 'event_id <' => $event_guid, 'is_came' => 1), NULL, NULL, NULL, NULL, TRUE);
+				$show_counts = $total_counts . "/" . $pass_counts . "/" . $came_count;
+
+				/**
+				 * a=总报名次数，a>=1
+				 * b=报名通过次数，b>=0
+				 * c=报名被拒绝次数，c>=0，c=a-b
+				 * d=报名通过并到现场的次数，d>=0
+				 * e=报名通过但最后取消报名的次数，e>=0
+				 * f=无故缺席次数，f>=0，f=b-d-e
+				 * 诚信度计算公式：x = (0.8*d+0.5*e-f) / (b+1)
+				 * 通过指数计算公式：y = 1-(b+0.5*e+f) / a + 0.01*(a-2)
+				 * 综合评分指数G=100*(x+y) ，最后的结果取2位小数。
+				 */
+				$stat_a = $total_counts;
+				$stat_b = $pass_counts;
+				$stat_c = $stat_a - $stat_b;
+				$stat_d = $came_count;
+				$stat_e = 0;
+				$stat_f = $stat_b - $stat_d - $stat_e;
+				$stat_x = (0.8 * $stat_d + 0.5 * $stat_e - $stat_f) / ($stat_b + 1);
+				$stat_x = number_format($stat_x, 2, '.', '');
+				$stat_y = 1 - ($stat_b + 0.5 * $stat_e + $stat_f) / $stat_a + 0.01 * ($stat_a - 2);
+				$stat_y = number_format($stat_y, 2, '.', '');
+				$stat_g = 100 * ($stat_x + $stat_y);
+				$stat_g = number_format($stat_g, 2, '.', '');
+				$is_recommend = ($user_info->is_recommend == 0) ? 'no' : 'yes';
+				$data_n[$stat_g][] = array($user_info->real_name, $show_counts, $stat_g, $user_info->email, $user_info->company, $user_info->tel, $user_info->position, $sign_up_user_guid->topics, $is_recommend);
+			}
+			krsort($data_n);
+			foreach ($data_n as $key => $val)
+			{
+				foreach ($val as $k => $v)
+				{
+					$data[] = $v;
+				}
+			}
+
+			$xls = new Excel_XML('UTF-8', FALSE, 'sign_up_users');
+			$xls->addArray($data);
+			$xls->generateXML('export_sign_up_users');
+			exit;
+		}
+	}
+
+	function check_in_update()
+	{
+		$this->load->library('river_lib');
+		$this->load->library('event_lib');
+		$user_guid = $this->global_lib->get_user_guid();
+		$id = $this->input->post('id');
+		$event_id = $this->input->post('event_id');
+		$where = array('id' => $id);
+		$row['is_came'] = $this->input->post('is_came');
+		$this->dbmanager_lib->update_rows(TABLE_EVENTS_MEMBER, $where, $row);
+		$time_created = $this->event_lib->obtain_event_field($event_id, 'start_time');
+		$this->river_lib->check_in($user_guid, $event_id, $time_created);
+		redirect("/ctr/events_do/update/$event_id#tabs-4");
+	}
+
+	function export_check_in_users()
+	{
+		$this->load->helper('phpexcel_helper');
+		$event_guid = $this->input->post('event_guid');
+		$member_where = array('event_id' => $event_guid, 'status' => 2);
+		$check_rows = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'userguid', $member_where, null, 'reg_time ASC');
+		$data[] = array('真实姓名', '昵称', '邮箱');
+		foreach($check_rows as $row)
+		{
+			$info = $this->user_lib->get_user_info($row->userguid, 'real_name,screen_name,email');
+			$data[] = array($info->real_name, $info->screen_name, $info->email);
+		}
+		$xls = new Excel_XML('UTF-8', false, 'check_in_users');
+		$xls->addArray($data);
+		$xls->generateXML('export_check_in_users');
+		exit;
+	}
+
+	function search_check_user()
+	{
+		$this->load->library('ctr_lib');
+		$key = $this->input->post('key');
+		$screen_name = $this->input->post('screen_name');
+		$email = $this->input->post('email');
+		if (!$screen_name and !$email)
+			redirect("ctr/events_do/update/$key#tabs-4");
+		$like = $screen_name?array('screen_name' => $screen_name):null;
+		$where = $email?array('email' => $email):null;
+		$find_users = $this->dbmanager_lib->obtain_rows(TABLE_USER, 'guid', $where, $like);
+		$event_where["event_id"] = $key;
+		foreach($find_users as $find_user)
+		$find_user_array[] = $find_user->guid;
+		if (count($find_users) > 0)
+		{
+			$result['find_check_users'] = $this->ctr_lib->obtain_rows_by_where_in(TABLE_EVENTS_MEMBER, 'userguid', 'userguid', $find_user_array, false, $event_where);
+			$result['find_check_users_num'] = $this->ctr_lib->obtain_rows_by_where_in(TABLE_EVENTS_MEMBER, 'userguid', 'userguid', $find_user_array, true, $event_where);
+			$this->_render_update_event_view($key, $result);
+		}
+		else
+		{
+			echo "查无此人";
+		}
+	}
+
+	function tags_list($page = '0')
+	{
+		$where = array('subtype_id' => 6);
+		$config = pagination_style();
+		$config['base_url'] = '/' . $this->uri->segment(1) . '/' . $this->uri->segment(2);
+		$config['total_rows'] = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, '*', $where, null, null, null, null, true);
+		$config['per_page'] = '10';
+		$this->pagination->initialize($config);
+
+		$result['rows'] = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, '*', $where, null, 'guid DESC', $config['per_page'], $page);
+		$title = lang('tags_list_title');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/tags_list", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function check_url($url)
+	{
+		if (check_is_url($url))
+			return true;
+		else
+		{
+			$this->form_validation->set_message('check_url', lang('msg:check_url'));
+			return false;
+		}
+	}
+
+	function check_date($date)
+	{
+		if (is_formated_date($date))
+			return true;
+		else
+		{
+			$this->form_validation->set_message('check_date', lang('msg:check_date'));
+			return false;
+		}
+	}
+
+	function settting_privilege()
+	{
+		// $data["show_data"] =  $this->load->module("user/privilege/setting_privilege",array(0),TRUE);
+		// $data["show_data"] = $this->tp_privilege->setting_privilege(0);
+		$title = lang('event_list');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/tasks");
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function add_privilege()
+	{
+		$title = lang('event_list');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		// $data["privileges"] = $this->load->module("user/privilege/obtain_all_privilege",array(0),TRUE);
+		$data["privileges"] = $this->tp_privilege->obtain_all_privilege(0);
+		$this->template->write_view('main', "ctr/add_privilege", $data);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function privilege_do($action = "insert")
+	{
+		if ($action == "insert")
+		{
+			$data["privilege_name"] = $this->input->post("privilege_name");
+			$data["code"] = $this->input->post("code");
+			// $this->load->module("user/privilege/do_privilege",array("insert",$data),TRUE);
+			$this->tp_privilege->do_privilege("insert", $data);
+			$this->add_privilege();
+		}
+		if ($action == "delete")
+		{
+			$id = $this->input->get("id");
+			// $this->load->module("user/privilege/do_privilege",array("delete",$id),TRUE);
+			$this->tp_privilege->do_privilege("delete", $id);
+			$this->add_privilege();
+		}
+	}
+
+	function logs($offset = 0)
+	{
+		$this->load->library('sys_lib');
+		$limit = 15;
+		$config = pagination_style();
+		$config['base_url'] = '/ctr/logs/';
+		$config['total_rows'] = $this->sys_lib->obtain_system_logs(null, null, true);
+		$config['per_page'] = $limit;
+		$this->pagination->initialize($config);
+
+		$data['logs'] = $this->sys_lib->obtain_system_logs($limit, $offset);
+		$title = "所有日志";
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/log_list", $data);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function comments($offset = 0)
+	{
+		$this->load->library('comment_lib');
+		$limit = 15;
+		$config = pagination_style();
+		$config['base_url'] = '/ctr/comments/';
+		$config['total_rows'] = $this->comment_lib->obtain_comments(null, null, true);
+		$config['per_page'] = $limit;
+		$this->pagination->initialize($config);
+
+		$data['comments'] = $this->comment_lib->obtain_comments($limit, $offset);
+		$title = "所有评论";
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/comment_list", $data);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	function comment_edit($guid)
+	{
+		$val = $this->form_validation;
+		$val->set_rules('comment', 'comment', 'trim|required|xss_clean');
+		if ($val->run())
+		{
+			$new_comment = $val->set_value('comment');
+			$new_data['main'] = $new_comment;
+			$this->dbmanager_lib->update_rows(TABLE_CORE_ENTITY, array('guid' => $guid), $new_data);
+			$data['comment'] = $new_comment;
+		}
+		else
+		{
+			$main = $this->entity_engine_lib->obtain_main($guid);
+			$data['comment'] = $main;
+		}
+		$title = "编辑评论";
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/edit_comment", $data);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	// 统计 - 极客观察
+	function stat_seed_list()
+	{
+		$result['total'] = $this->clicklog_lib->get_stat_seed_count();
+		$result['rows'] = $this->clicklog_lib->get_stat_seed_list();
+
+		$title = lang('stat_seed_list');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/stat_seed_list", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	// 统计 - 极客广播
+	function stat_cast_list()
+	{
+		$result['total'] = $this->clicklog_lib->get_stat_cast_count();
+		$result['rows'] = $this->clicklog_lib->get_stat_cast_list();
+
+		$title = lang('stat_cast_list');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/stat_cast_list", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+
+	// 统计 - 极客快闻
+	function stat_news_list()
+	{
+		$result['total'] = $this->clicklog_lib->get_stat_news_count();
+		$result['rows'] = $this->clicklog_lib->get_stat_news_list();
+
+		$title = lang('stat_news_list');
+		$this->template->write('title', $title);
+		$this->template->write('layout', 'a_l_m');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', "ctr/stat_news_list", $result);
+		$this->template->write_view('sidebar', 'ctr/left');
+		$this->template->render();
+	}
+}

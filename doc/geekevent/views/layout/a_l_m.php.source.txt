@@ -1,0 +1,15 @@
+<!-- Right Side/Main Content Start -->
+<div id="rightside">
+<?php echo $main;?>
+ <div id="footer">
+        	&copy; Copyright 2011 WindMaker
+ </div> 
+</div>
+<!-- Right Side/Main Content End -->
+
+<!-- Left Dark Bar Start -->
+<div id="leftside">
+<?php echo $sidebar;?>
+</div>
+ 
+<!-- Left Dark Bar End -->

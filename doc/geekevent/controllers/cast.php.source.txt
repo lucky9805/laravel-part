@@ -1,0 +1,232 @@
+<?php
+class Cast extends My_Controller
+{
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->library('tag_lib');
+		$this->load->library('pagination');
+		$this->load->library('clip_lib');
+		$this->load->library('event_lib');
+		$this->lang->load('clip', 'chinese');
+	}
+
+	function index()
+	{
+		$title			= lang('common:cast');
+		$keywords		= lang('cast_keywords');
+		$description	= lang('cast_description');
+		$this->template->write('title', $title);
+		$this->template->write('keywords', $keywords);
+		$this->template->write('description', $description);
+		$this->template->write('layout', 'filter-box');
+		$this->template->write('css_type', 'cast');
+		$this->template->write('body_class', 'cast');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('nav', 'cast/navigation');
+		$this->template->write('extra_scripts', $this->load->view('scripts/cast_load', '', TRUE));
+		$this->template->render();
+	}
+
+	function view($entity_guid = '')
+	{
+		$this->load->library('sys_lib');
+		$this->load->library('user_agent');
+		$this->load->library('common_lib');
+
+		$user_guid	= $this->input->get('u');
+		$t			= $this->input->get('t');
+		$t_arr		= array('sina', 'tencent', 'twitter');
+		if ($user_guid !== FALSE && $t !== FALSE && in_array($t, $t_arr))
+		{
+			$share_data = array(
+				'guid'		=> $entity_guid,
+				'user_guid'	=> $user_guid,
+				'platform'	=> $t
+			);
+			$this->entity_engine_lib->share_log($share_data);
+		}
+
+		$sys_data = array(
+			'entity_guid'	=> $entity_guid,
+			'operate'		=> 'v_clip'
+		);
+		$this->sys_lib->create_system_logs($sys_data);
+
+		$where = array('guid' => $entity_guid);
+
+		$core_entity = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_ENTITIES, 'title, main, desc', $where);
+		$clip = $this->dbmanager_lib->obtain_a_row(TABLE_CLIPS, '*', $where);
+
+		if (!$core_entity or !$clip)
+		{
+			show_404();
+		}
+
+		$data['core_entity']	= $core_entity;
+		$data['clip']			= $clip;
+
+		$view_num	= $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_EXTRA_ENTITY, 'view', $where);
+		$e_data		= array('view' => $view_num+1);
+		$this->dbmanager_lib->update_rows(TABLE_CORE_EXTRA_ENTITY, $where, $e_data);
+
+		$title = $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_ENTITY, 'title', $where);
+		$keywords = '';
+		$tags_str = $speakers_str = '';
+		$tags = $this->tag_lib->obtain_clip_tags($entity_guid);
+		foreach ($tags as $row)
+		{
+			$tags_str = $tags_str.$row->title.',';
+		}
+		$speakers = $this->event_lib->obtain_event_speakers($entity_guid, 'clip');
+		foreach ($speakers as $row)
+		{
+			$real_name		= $this->user_lib->get_real_name($row->user_guid);
+			$speakers_str	= $speakers_str.$real_name.',';
+		}
+
+		//获取相关视频数据
+		$related_clips	= $this->clip_lib->obtain_related_clips($clip->collection_related_id);
+		$clips_list		= NULL;
+		$count			= 1;
+		$current		= 0;
+		foreach ($related_clips as $row)
+		{
+			$clip_guid		= $row->guid;
+			$clip_title		= $this->entity_engine_lib->obtain_title($clip_guid);
+			$clips_list[]	= array('count' => $count, 'clip_guid' => $clip_guid, 'clip_title'=>$clip_title);
+			if ($clip_guid == $clip->guid)
+			{
+				$current = $count;
+			}
+			$count++;
+		}
+		$num				= count($clips_list);
+		$data['clips_list']	= $clips_list;
+		$data2['num']		= $num;
+		$data2['current']	= $current;
+
+		$tmp_tags = array();
+		if ( ! empty($tags))
+		{
+			foreach ($tags as $k => $v)
+			{
+				$tmp_tags[] = $v->guid;
+			}
+		}
+		// 相关文章、视频
+		$data['reciprocal']	= $this->tag_lib->obtain_interrelated_content($entity_guid, $tmp_tags);
+		// 推荐视频
+		$data['recom_list']			= $this->tag_lib->obtain_recommended_list($entity_guid, 'clips');
+		$data['recom_list_title']	= $this->tag_lib->obtain_recommended_list_title(array_keys($data['recom_list']));
+		$data['type'] = 'clips';
+
+		// 获取上一篇、下一篇内容 - start
+		$link_rel = '';
+		if ($clip->next_guid === NULL)
+		{
+			$s_guid		= $this->common_lib->obtain_prev_n_next_id($entity_guid, 'clips');
+			$next_guid	= $s_guid['next_guid'];
+		}
+		else
+		{
+			$next_guid = $clip->next_guid;
+		}
+
+		if ($clip->prev_guid === NULL)
+		{
+			$s_guid		= $this->common_lib->obtain_prev_n_next_id($entity_guid, 'clips');
+			$prev_guid	= $s_guid['prev_guid'];
+		}
+		else
+		{
+			$prev_guid = $clip->prev_guid;
+		}
+
+		if ($next_guid > 0)
+		{
+			$link_rel = $next_guid;
+		}
+		else
+		{
+			$link_rel = 0;
+		}
+
+		if ($prev_guid > 0)
+		{
+			$link_rel .= '|'.$prev_guid;
+		}
+		else
+		{
+			$link_rel .= '|0';
+		}
+		$link_rel .= '|cast';
+		// 获取上一篇、下一篇内容 - end
+
+		// $keywords = substr($tags_str.$speakers_str, 0, -1);
+		$keywords		= $tags_str.lang('cast_keywords');
+		$description	= $this->clip_lib->obtain_clip_highlight($entity_guid);
+		$data['entity_guid']	= $entity_guid;
+		$data['speakers']		= $speakers;
+		$this->template->write('title', $title);
+		$this->template->write('keywords', $keywords);
+		$this->template->write('description', $description);
+		$this->template->write('prev_next',$link_rel);
+		$this->template->write('layout', 'w_s');
+		$this->template->write('css_type', 'cast');
+		$this->template->write('body_class', 'cast');
+		$this->template->write('breadcrumb', $title);
+		$this->template->write_view('main', 'clips/clips', $data);
+		$this->template->write('extra_scripts', $this->load->view('scripts/comment', $data, TRUE));
+		$this->template->write('extra_scripts1', $this->load->view('scripts/clips', '', TRUE));
+		$this->template->write('extra_scripts2', $this->load->view('scripts/clips_scrollable', $data2, TRUE));
+		$this->template->write_view('sidebar', 'reuse/comment');
+		$this->template->render();
+	}
+
+	function notification($page = '0')
+	{
+		if ( ! $this->global_lib->is_login())
+		{
+			redirect(LOGIN_URL);
+		}
+		$limit				= 10;
+		$user_guid			= $this->global_lib->get_user_guid();
+		$data['user_guid']	= $user_guid;
+
+		$config['base_url']		= '/pg/notification';
+		$config['uri_segment']	= 3;
+		$config['per_page']		= $limit;
+		$where = array('user_guid' => $user_guid);
+		$this->msg_lib->obtain_notifications('id', $where, NULL, NULL, NULL, TRUE);
+		$data['notification_num'] = $this->msg_lib->obtain_notifications('id', $where, NULL, NULL, NULL, TRUE);
+
+		if ($data['notification_num'] > 0)
+		{
+			$data['notifications'] = $this->msg_lib->obtain_notifications('*', $where, 'id DESC', $limit,$page);
+		}
+		else
+		{
+			$msg = '您暂无通知';
+			$this->msg_lib->setmsg($msg,ALERT);
+		}
+
+		$config['total_rows'] = $data['notification_num'];
+		$this->pagination->initialize($config);
+
+		$title='通知';
+		$this->template->write('title',$title);
+		$this->template->write('body_class','wsn');
+		$this->template->write('layout','w_s_n');
+
+		$this->template->write('breadcrumb',$title);
+		$this->template->write_view('main', 'notification/notify_list', $data);
+		$this->template->write('extra_scripts1',$this->load->view('scripts/notify_extra','',TRUE));
+		$this->template->render();
+	}
+
+	function show_404()
+	{
+		$this->load->view('show_404');
+	}
+}

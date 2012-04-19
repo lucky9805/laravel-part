@@ -1,0 +1,92 @@
+<div class="contentcontainer">
+            <div class="headings altheading">
+                <h2><?php echo site_lang('user_list');?></h2>
+            </div>
+            <div class="contentbox">
+				<div class = 'search'>
+					<form action = '/ctr/user_list' method = 'get'>
+						<p><?php echo site_lang('user_list_total');?><?php echo ':';?><?php echo $num_rows;?></p>
+						<p>
+							<?php echo site_lang('user_list_keyword');?>
+							<?php echo form_input('keyword', $search_parameter['keyword']);?>
+						</p>
+						<p>
+							<?php echo site_lang('user_list_group');?>
+							<?php 
+								$option['all'] = site_lang('user_list_all');
+								foreach($user_group as $cur_group)
+									$option[$cur_group->group_id] = $cur_group->group_name;
+								echo form_dropdown('user_group', $option, $search_parameter['group_id']);
+								unset($option);
+							?>
+							
+							<?php echo site_lang('user_list_filter');?>
+							<?php 
+								$option['all'] = site_lang('user_list_all');
+								$option['username'] = site_lang('user_list_username');
+								$option['screen_name'] = site_lang('user_list_screen_name');
+								$option['email'] = 'email';
+								echo form_dropdown('filter', $option, $search_parameter['filter']);
+							?>
+						</p>
+						<p>
+							<?php echo form_submit('search', site_lang('user_list_search'));?>
+						</p>
+					</form>
+				</div>
+				
+            	<table width="100%">
+                	<thead>
+                    	<tr>
+                        	<th><?php echo site_lang('user_list_real_name');?></th>
+                            <th><?php echo site_lang('user_list_screen_name');?></th>
+							<th><?php echo site_lang('user_list_email');?></th>
+							<th><?php echo site_lang('user_list_join_time');?></th>
+							<th><?php echo site_lang('user_list_latest_active_time');?></th>
+							<th><?php echo site_lang('edit_edit');?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+						<?php 
+							// if(!$rows)
+							// {
+								// echo site_lang('no_record');
+								// exit;
+							// }
+						?>
+						
+						<?php if(!$rows):?>
+							<?php echo site_lang('no_record');?>
+						<?php else:?>
+						<?php foreach($rows as $row):?>
+						<tr>
+							<td><?php echo $row->real_name;?></td>
+							<td><?php echo $row->screen_name;?></td>
+							<td><?php echo $row->email;?></td>
+							<?php
+								$where['guid'] = $row->guid;
+								$dates = $this->dbmanager_lib->obtain_a_row('entities', 'time_created, time_updated', $where);
+							?>
+							<td><?php echo date('Y.m.d H:i:s a', $dates->time_created);?></td>
+							<td><?php echo date('Y.m.d H:i:s a', $dates->time_updated);?></td>
+                            <td><a href='/ctr/edit_user/<?php echo $row->guid;?>'><?php echo site_lang('edit_update');?></a> <a href='#'><?php echo site_lang('edit_delete');?></a>
+								<?php if($row->status=="inactive"){?>
+								<a href="/user/activate/<?php echo $row->unique_id."/".$row->activation_key;?>">激活</a>
+								<?php } ?>
+							</td>
+							 
+						</tr>
+						<?php endforeach;?>
+						<?php endif;?>
+                    </tbody>
+                </table>
+						<div style="float:left">
+							<ul class="pagination">
+								<?php echo $this->pagination->create_links(); ?>
+							</ul>
+						</div>
+						<div style="clear: both;"></div>
+
+            </div>
+            
+        </div>

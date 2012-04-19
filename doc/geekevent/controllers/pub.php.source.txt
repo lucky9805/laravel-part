@@ -1,0 +1,47 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Pub extends CI_Controller {
+
+ 
+	 function index($type = 'about')	{
+	 	
+	 	
+	 		$this->load->add_package_path(APPPATH.'third_party/user/');
+            $this->load->library('tp_user');
+            $this->load->library('tp_privilege');
+            
+            
+		    if($type == 'about') $title = site_lang('about_us');
+			elseif($type == 'terms') $title = site_lang('agreement');
+			elseif($type == 'contact') $title = site_lang('contact');
+			elseif($type == 'privacy') $title = site_lang('privacy');
+			elseif($type == 'job') $title = site_lang('job');
+			elseif($type == 'diary') $title = site_lang('diary');
+			
+		 
+			$data['current_on']=$type;
+ 			$this->template->write('layout','w_s');
+         //   $this->template->write('body_class','account');
+            $this->template->write('breadcrumb',$title);
+			$this->template->write('title',$title);
+			$this->template->write_view('main','pub/pubarea',$data);
+			$this->template->write_view('sidebar','pub_right');
+			$this->template->render();
+	}
+	
+	public function about()
+	{
+		
+		
+	}
+	
+	public function error(){
+		$this->load->view("show_911");
+	}
+	public function test_view()
+	{
+	}
+}
+
+/* End of file pub.php */
+/* Location: ./application/controllers/pub.php */

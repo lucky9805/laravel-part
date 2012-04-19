@@ -1,0 +1,24 @@
+<?php
+    if($type == '' || $type == 'profile')
+    {
+        $info = lang('user_setting_right_info1');
+    }
+    elseif($type == 'password')
+    {
+        $info = lang('user_setting_right_info2');
+    }
+    elseif($type == 'sync')
+    {
+        $info = lang('user_setting_right_info3');
+    }
+    elseif($type == 'avatar')
+    {
+        $info = lang('user_setting_right_info4');
+    }
+?>
+<div class='notify'>
+    <div class="info">
+		<?php if(isset($info)) echo $info; ?>
+  
+    </div>
+</div>

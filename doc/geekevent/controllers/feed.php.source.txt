@@ -1,0 +1,34 @@
+<?php
+	class Feed extends My_Controller
+	{
+ 
+		function __construct()
+		{
+			parent::__construct(); 
+			$this->load->helper('form');
+		}
+
+        function index()
+        {
+        }
+
+        function read()
+        {
+            $data['num'] = 20;
+            $data['types'] = array(MODULE_EVENTS, MODULE_NEWS, MODULE_SEED, MODULE_FEED);
+            $this->load->view('feed/read', $data);
+        }
+
+        function seed()
+        {
+            $data['num'] = 20;
+            $data['types'] = array(MODULE_EVENTS, MODULE_SEED, MODULE_FEED);
+            $this->load->view('feed/read', $data);
+        }
+
+        function test()
+        {
+            $data['num'] = 200;
+            $this->load->view('feed/read', $data);
+        }
+    }

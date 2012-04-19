@@ -1,0 +1,39 @@
+<?php
+
+    class Seed_mod extends MY_Model
+    {
+        function __construct()
+        {
+            parent::__construct();
+        }
+
+        function get_seeds_by_tag($tag_id, $limit, $time, $forcount)
+        {
+            $this->db->select('seed.*');
+            $this->db->from(TABLE_SEED.' as seed');
+            $this->db->join(TABLE_TAG_RELATIONS.' as tr', 'tr.entity_guid=seed.guid');
+            $this->db->join(TABLE_ENTITY.' as e', 'e.guid=seed.guid');
+            $this->db->where('tr.tag_id', $tag_id);
+            $this->db->where('e.visibility', 'yes');
+            $this->db->where('seed.publish_time <', $time);
+            $this->db->limit($limit, 0);
+            $this->db->order_by('seed.guid', 'desc');
+            $result = ($forcount) ? $this->db->count_all_results() : $this->db->get();
+            return $result;
+        }
+
+        function get_seeds_by_time($limit, $time, $forcount)
+        {
+            $this->db->select('seed.*');
+            $this->db->from(TABLE_SEED.' as seed');
+            $this->db->join(TABLE_ENTITY.' as e', 'e.guid=seed.guid');
+            $this->db->where('e.visibility', 'yes');
+            $this->db->where('seed.publish_time <', $time);
+            $this->db->limit($limit, 0);
+            $this->db->order_by('seed.publish_time', 'desc');
+            $result = ($forcount) ? $this->db->count_all_results() : $this->db->get();
+            return $result;
+
+        }
+    }
+?>

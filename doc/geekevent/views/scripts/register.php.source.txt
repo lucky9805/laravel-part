@@ -1,0 +1,19 @@
+<script>
+$(function(){
+    function setSubmit(){
+        var $agree = $('#agree'), $submit = $('#register-form').find(':submit');
+        if($agree.is(':checked')){
+            $submit.removeAttr('disabled').removeClass('disabled')
+        }else{
+            $submit.attr('disabled','disabled').addClass('disabled')
+        }
+    }
+    
+    $('#agree').change(function(){
+        setSubmit()
+    });
+    setSubmit();
+    
+    FormValidateS.register($('#register-form'));
+})
+</script>

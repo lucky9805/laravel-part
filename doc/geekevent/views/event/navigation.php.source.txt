@@ -1,0 +1,30 @@
+<?php
+    $details = $sign_up = $weibo = $review = "";
+
+    if($current_on=="details") $details="on";
+    if($current_on=="sign_up") $sign_up="on";
+    if($current_on=="weibo") $weibo="on";
+    if($current_on=="review") $review="on";
+	$status=$event->status;
+	$enroll_end=($status ==1 AND time() >=$event->enroll_end_time)? TRUE: FALSE;
+	//var_dump(date('Ymd',$event->enroll_end_time));
+	//exit;
+
+    $sign_up_lang = ($status <=1 AND !$enroll_end ) ? lang('event_tab2_1') : lang('event_tab2_2');
+?>
+<nav class="menu">
+    <ul>
+        <li class='first <?=$details?>'>
+            <a href="<?=$this->web_router_lib->Get_event_details_url($entity_guid)?>"><?=lang('event_tab1')?></a>
+        </li><li class='<?=$sign_up?>'>
+            <a href="<?=$this->web_router_lib->Get_event_sign_up_url($entity_guid)?>"><?=$sign_up_lang?></a>
+        </li><?if($entity_guid!=150077){?><li class='<?=$weibo?>'> 
+            <a href="<?=$this->web_router_lib->Get_event_weibo_url($entity_guid)?>"><?=lang('event_tab3')?></a>
+        </li><li class='last <?=$review?>'>
+            <a href="<?=$this->web_router_lib->Get_event_review_url($entity_guid)?>"><?=lang('event_tab4')?></a>
+        </li><?}else{?><li class='<?=$weibo?> last'> 
+            <a href="<?=$this->web_router_lib->Get_event_weibo_url($entity_guid)?>"><?=lang('event_tab3')?></a>
+        </li> 
+        <?php } ?>
+    </ul>
+</nav>

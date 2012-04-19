@@ -1,0 +1,5 @@
+<script> 
+$(function(){
+    Comment.init(<?php echo $entity_guid;?>)
+})
+</script> 

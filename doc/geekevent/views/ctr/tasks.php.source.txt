@@ -1,0 +1,6 @@
+<?php
+//echo $show_data;
+$this->tp_privilege->setting_privilege(0);
+?>
+<?php
+//echo $this->module_url('task_list','task'); ?>

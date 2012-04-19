@@ -1,0 +1,56 @@
+<?php
+
+	/**
+	 * Model Name: Entity_mod
+	 * Description: entity model contains public methods used to reponse calls from entity_engine_lib
+	 * and conduct operations to intereact with databases mainly related to tables;
+	 * Author: LJC
+	 * Date: Sep 16, 2011
+	 */
+    class Entity_mod extends MY_Model
+    {
+        function __construct()
+        {
+            parent::__construct();
+        }
+
+        function get_entities_by_like($field, $like, $in_key, $in_value, $limit=NULL, $offset=NULL, $forcount=FALSE)
+        {
+            $this->db->select($field);
+            $this->db->from(TABLE_CORE_ENTITY);
+            $this->db->where_in($in_key, $in_value);
+            $this->db->like('title', $like);
+            $this->db->limit($limit, $offset);
+            $result = ($forcount) ? $this->db->count_all_results() : $this->db->get();
+            return $result;
+        }
+
+        function get_entities_by_where_in($field, $in_key, $in_value, $limit=NULL, $offset=NULL, $forcount=FALSE)
+        {
+            $this->db->select($field);
+            $this->db->from(TABLE_ENTITY);
+            $this->db->where_in($in_key, $in_value);
+            $this->db->where('visibility', 'yes');
+            $this->db->limit($limit, $offset);
+            $this->db->order_by('time_created', 'DESC');
+            $result = ($forcount) ? $this->db->count_all_results() : $this->db->get();
+            return $result;
+        }
+
+        function share_plus($guid, $items)
+        {
+            foreach($items as $row)
+            {
+                $values_arr[] = "`$row`=`$row`+1";
+            }
+            $values = implode(',',$values_arr);
+            $query = "UPDATE ".TABLE_CORE_EXTRA_ENTITY." SET ".$values." WHERE guid=$guid";
+            return $this->db->query($query);
+        }
+
+        function like_plus($guid)
+        {
+            $query = "UPDATE ".TABLE_CORE_EXTRA_ENTITY." SET `like`=`like`+1 WHERE guid=$guid";
+            return $this->db->query($query);
+        }
+    }

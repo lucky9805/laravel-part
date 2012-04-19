@@ -1,0 +1,58 @@
+<div class="contentcontainer">
+    <div class="headings alt">
+        <h2><?=lang('comment_list')?></h2>
+    </div>
+    <div class="contentbox">
+        <p>
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th><?=lang('ctr:username')?></th>
+                        <th><?=lang('ctr:content')?></th>
+                        <th><?=lang('ctr:time')?></th>
+                        <th><?=lang('ctr:operate')?></th>
+                    </tr>
+                </thead>
+                <tbody>
+<?php
+foreach($comments as $row)
+{
+    $guid = $row->guid;
+    $eid = $this->comment_lib->obtain_comment_eid($guid);
+    $e_subtype_id = $this->entity_engine_lib->obtain_subtype_id($eid);
+    $uid = $this->entity_engine_lib->obtain_uid($guid);
+    $screen_name = $this->user_lib->get_screen_name($uid);
+    $main = $row->main;
+    $time_created = date("Y-m-d H:i:s",$this->entity_engine_lib->obtain_time_created($guid));
+    if($e_subtype_id == MODULE_EVENTS)
+    {
+        $c_link = $this->web_router_lib->Get_event_details_url($eid);
+    }
+    elseif($e_subtype_id == MODULE_CLIPS)
+    {
+        $c_link = $this->web_router_lib->Get_clip_url($eid);
+    }
+    else
+    {
+        $c_link = "";
+    }
+?>
+    <tr>
+        <td><a href='<?=$this->web_router_lib->Get_home_url($uid,"index")?>'><?=$screen_name?></a></td>
+        <td><a href='<?=$c_link?>'><?=$main?></a></td>
+        <td><?=$time_created?></td>
+        <td><a href='/ctr/comment_edit/<?=$guid?>'><?=lang('ctr:edit')?></a></td>
+    </tr>
+<?php
+}
+?>
+                </tbody>
+            </table>
+        </p>
+    <div style="float:left">
+        <ul class="pagination">
+            <?=$this->pagination->create_links()?>
+        </ul>
+    </div>
+    </div>
+</div>

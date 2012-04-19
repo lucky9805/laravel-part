@@ -1,0 +1,120 @@
+<?php
+    $where = array('id'=>$cc_id);
+	$cc = $this->dbmanager_lib->obtain_a_row(TABLE_CLIPS_COLLECTION,'*',$where);
+    $event_id       = $cc->event_guid;
+    $cc_name         = $cc->collection_name;
+    $cc_first_clip   = $cc->first_clip;
+    $cc_record_time  = $cc->record_time;
+    $cc_desc         = $cc->collection_desc;
+    $cc_ppt_url      = $cc->ppt_url;
+    $cc_img2         = $cc->image2;
+    $event_title    = $this->entity_engine_lib->obtain_title($event_id);
+    $img_path = $this->img_lib->obtain_img_by_id($cc_img2);
+    $clips = $this->clip_lib->obtain_related_clips($cc_id);
+    $speakers = array();
+    foreach($clips as $row):
+        $c_id = $row->guid;
+        $speaker_where = array('father_id'=>$c_id,'type'=>'clip');
+        $clip_speakers = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_SPEAKERS,'user_guid',$speaker_where,NULL,NULL,NULL,NULL,NULL,'array');
+        $speakers = array_merge($speakers,$clip_speakers);
+    endforeach;
+
+    foreach($speakers as $row):
+        $speakers_arr[] = $row['user_guid'];
+    endforeach;
+
+    $speakers_arr = array_unique($speakers_arr);
+?>
+<div class="topVideo">
+    <img src="<?=$img_path?>"/>
+    <div class="backLaer"></div>
+    <article class="side"> 
+        <header> 
+            <a><?=$cc_name?></a>
+        </header> 
+        <div class="meta"> 
+            <span class="address"><?=lang('clip_record_time')?></span> 
+            <time pubtime="" datetime=""><?=date("Y.m.d H:i",$cc_record_time)?></time> 
+            
+        </div>
+        <div class="authorMeta meta"> 
+            <span class="address"><?=lang('cc_speakers')?>:</span>
+            <?php
+                foreach($speakers_arr as $row):
+                    $s_uid = $row;
+                    $screen_name = $this->user_lib->get_screen_name($s_uid);
+                    $s_url = $this->web_router_lib->Get_home_url($s_uid,"index");
+            ?>
+            <a href="<?=$s_url?>"><?=$screen_name?></a>
+            <?php
+                endforeach;
+            ?>
+        </div> 
+        <div class="main"> 
+            <?=$cc_desc?>
+            <div class="authorMeta meta return"> 
+                <span class="back"></span>
+                <a href="<?=$this->web_router_lib->Get_event_review_url($event_id)?>"><?=sprintf(lang('return_event_review'),$event_title)?></a>											 
+           </div> 
+        </div>
+        
+    </article>
+</div>
+
+<div class="info"> 
+    <span class="title"><?=lang('clips_collection')?></span>
+    <div class="wb-share">
+    <?php
+        $cc_url = substr($this->config->item('base_url'),0,-1).$this->web_router_lib->Get_event_collection_url($cc_id);
+        $share_data = array('url'=>$cc_url,'title'=>$cc_desc);
+       // $this->load->view('reuse/bshare',$share_data);
+    ?>
+    </div>
+</div>
+
+<div id="castlist-box" class="clearfix"> 
+    <div class="cast-wall isotope"></div> 
+    <div class="cast-list isotope">
+
+<?php
+    foreach($clips as $row):
+        $c_id       = $row->guid;
+        $where = array('guid'=>$c_id);
+        $clip       = $this->dbmanager_lib->obtain_a_row(TABLE_CLIPS,'*',$where);
+        $extra_data = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_EXTRA_ENTITY,'*',$where);
+        $clip_url   = $this->web_router_lib->Get_clip_url($c_id);
+        $clip_img   = $this->img_lib->clip($c_id);
+        $c_title    = $this->entity_engine_lib->obtain_title($c_id);
+        $c_date     = date("Y.m.d",$clip->record_time);
+        $len = 78;
+        $c_highlight = cn_substr($clip->highlight, 0, $len-1,false)."..."; 
+        ?>
+        <div class="item cast-item isotope-item">
+            <div class="photo loading"> 
+                <img src="<?=$clip_img?>" alt="<?=$c_title?>">
+                <a href="<?=$clip_url?>" class="play png_bg" title="<?=lang('view_cast')?>">Play</a>
+            </div>
+            <div class="entry cast-card">
+                <div class="header">
+                    <h1><a href="<?=$clip_url?>"><?=$c_title?></a></h1>
+                </div>
+                <!--<div class="meta">
+                    <time datetime="<?=$c_date?>" pubdate="<?=$c_date?>"><?=$c_date?></time>
+                </div>-->
+                <div class="main">
+                    <?=$c_highlight?>
+                </div>
+                <div class="footer">
+                    <div class="toolbar">
+                        <a class="visited png_bg" href="javascript:;" title="<?=lang('view_num')?>"><?=$extra_data->view?></a>
+                        <a class="comment png_bg" href="javascript:;" title="<?=lang('comment_num')?>"><?=$extra_data->comment?></a>
+                        <a class="play png_bg" href="<?=$clip_url?>" title="<?=lang('view_cast')?>"><?=lang('view_cast')?></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    endforeach;
+?>
+    </div> 
+</div>

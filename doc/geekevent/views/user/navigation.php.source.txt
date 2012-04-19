@@ -1,0 +1,30 @@
+<nav class='menu'>
+<?php
+$setting = $email = $password = $avatar = $sync = "";
+
+if($current_on == "setting")
+    $setting = "on";
+elseif($current_on == "email")
+    $email = "on";
+elseif($current_on == "password")
+    $password = "on";
+elseif($current_on == "sync")
+    $sync = "on";
+elseif($current_on == "avatar")
+    $avatar = "on";
+?>
+    <ul>
+    <li class='first <?=$setting?>'>
+        <a href="<?=$this->web_router_lib->Get_user_setting_url()?>"><?=lang('user_update_info')?></a>
+    </li><li  class='<?=$password?>'>
+        <a href="<?=$this->web_router_lib->Get_user_setting_password_url()?>"><?=lang('user_update_password')?></a>
+    </li><li  class='<?=$sync?>'>
+        <a href="<?=$this->web_router_lib->Get_user_setting_sync_url()?>"><?=lang('user_update_sync')?></a>
+    </li><li class='last <?=$avatar?>'>
+        <a href="<?=$this->web_router_lib->Get_user_setting_avatar_url()?>"><?=lang('user_update_avatar')?></a>
+    </li>
+    <!--<li class='<?php echo $email;?>'>
+    <a href="/user/setting/setting_email">修改邮箱</a>
+    </li>-->
+    </ul>
+</nav>

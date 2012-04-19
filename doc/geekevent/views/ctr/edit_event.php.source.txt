@@ -1,0 +1,719 @@
+<?php $this->load->view("scripts/include_auto_commplete");?>
+
+<link rel="stylesheet" href="/public/js/libs/timepicker/jquery-ui-1.8.16.custom.css">
+<script src="/public/js/libs/timepicker/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="/public/js/libs/timepicker/jquery-ui-timepicker-addon.js"></script>
+
+
+<div id="tabs" class="contentcontainer ui-tabs  ui-widget-content ui-corner-all">
+            <div class="headings">
+                <h2 class="left"><?php echo lang('event_list_edit_event');?></h2>
+					<ul class="smltabs ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all">
+						<li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#tabs-1"><?php echo lang('event_info');?></a></li>
+						<li class="ui-state-default ui-corner-top"><a href="#tabs-2"><?php echo lang('event_schedule');?></a></li>
+						<li class="ui-state-default ui-corner-top"><a href="#tabs-3"><?php echo lang('event_register');?></a></li>
+						<li class="ui-state-default ui-corner-top"><a href="#tabs-4"><?php echo lang('event_check_in');?></a></li>
+						<li class="ui-state-default ui-corner-top"><a href="#tabs-5"><?php echo lang('event_upload_pic');?></a></li>
+					</ul>
+            </div>
+
+			<div id="tabs-1" class="contentbox nopad ui-tabs-panel ui-widget-content ui-corner-bottom ui-tabs-hide">
+				<div class="contentbox">
+					<?php $event_id = $event_guid;?>
+					<?php //echo form_open($this->uri->uri_string());?>
+					<?php echo form_open("/ctr/events_do/update/$event_id");?>
+						<p>
+							<?php
+								$flag = style_choose('event_topic');
+								echo form_label(lang('event_topic'), 'event_topic');
+								$data = array('name' => 'event_topic', 'id' => 'event_topic', 'class' => 'inputbox'.$flag, 'value' => set_value('event_topic', $core['title']));
+								echo form_input($data);
+								if($flag)
+									echo form_error('event_topic');
+							?>
+						</p>
+
+						<p>
+							<?php
+								$flag = style_choose('event_date');
+								echo form_label(lang('event_time'));
+								$data = array('name' => 'event_date', 'id' => 'event_date1', 'class' => 'inputbox'.$flag, 'value' => set_value('event_date', date('Y-m-d H:i:s', $event['start_time'])), 'style' => 'width:150px');
+								echo form_input($data);
+								if($flag)
+									echo form_error('event_date');
+
+								$flag = style_choose('event_time');
+								$data = array('name' => 'event_time', 'id' => 'event_time1', 'class' => 'inputbox'.$flag, 'value' => set_value('event_time', date('H:i:s', $event['start_time'])), 'style' => 'width:60px');
+								//echo form_input($data);
+								//if($flag)
+									echo form_error('event_time');
+							?>
+						</p>
+
+						<p>
+							<?php
+								$flag = style_choose('event_date');
+								echo form_label(lang('e:enroll_deadline'));
+								$data = array('name' => 'enroll_deadline_date', 'id' => 'event_date2', 'class' => 'inputbox'.$flag, 'value' => set_value('enroll_deadline_date', date('Y-m-d H:i:s', $event['enroll_end_time'])), 'style' => 'width:150px');
+								echo form_input($data);
+								if($flag)
+									echo form_error('event_date');
+
+								$flag = style_choose('event_time');
+								$data = array('name' => 'enroll_deadline_time', 'id' => 'event_time2', 'class' => 'inputbox'.$flag, 'value' => set_value('enroll_deadline_time', date('H:i:s', $event['enroll_end_time'])), 'style' => 'width:60px');
+							//	echo form_input($data);
+							//	if($flag)
+							//		echo form_error('event_time');
+							?>
+						</p>
+
+
+						<p>
+							<?php
+								$flag = style_choose('event_term');
+								echo form_label(lang('event_term'), 'event_term');
+								$data = array('name' => 'event_term', 'id' => 'event_term', 'class' => 'inputbox'.$flag, 'value' => set_value('event_term', $event['term']));
+								echo form_input($data);
+								if($flag)
+									echo form_error('event_term');
+							?>
+						</p>
+
+						<p>
+							<?php
+								$flag = style_choose('event_people_count');
+								echo form_label(lang('event_people_count'), 'event_people_count');
+								$data = array('name' => 'event_people_count', 'id' => 'event_people_count', 'class' => 'inputbox'.$flag, 'value' => set_value('event_people_count', $event['people_count']));
+								echo form_input($data);
+								if($flag)
+									echo form_error('event_people_count');
+							?>
+						</p>
+
+						<p>
+							<?php
+								echo form_label(lang('event_location'), 'event_location');
+								$option = array('0'=>'选择活动地点');
+								if($venues)
+								{
+									foreach($venues as $venue)
+									{
+										$option[$venue['id']] = $venue['venue'];
+									}
+								}
+								echo form_dropdown('event_location', $option, $event['venue_Id']);
+							?>
+							<a href='/ctr/venue_do/add'><?php echo lang('event_add_location');?></a>
+						</p>
+
+						<p>
+							<?php
+								$flag = style_choose('event_outline');
+								echo form_label(lang('event_outline'), 'event_outline');
+								$data = array('name' => 'event_outline', 'id' => 'event_outline', 'class' => 'inputbox'.$flag, 'value' => set_value('event_outline', $event['highlight']), 'style' => 'width:600px');
+								echo form_textarea($data);
+								if($flag)
+									echo form_error('event_outline');
+							?>
+						</p>
+
+						<p>
+							<?php
+								$flag = style_choose('event_abstract');
+								echo form_label(lang('event_abstract'), 'event_abstract');
+								$data = array('name' => 'event_abstract', 'id' => 'event_abstract', 'class' => 'inputbox'.$flag, 'value' => set_value('event_abstract', $core['desc']), 'style' => 'width:600px');
+								echo form_textarea($data);
+								if($flag)
+									echo form_error('event_abstract');
+							?>
+						</p>
+
+						<p>
+							<?php
+								$flag = style_choose('event_detail');
+								echo form_label(lang('event_detail'), 'event_detail');
+								$data = array('name' => 'event_detail', 'id' => 'event_detail', 'class' => 'inputbox'.$flag, 'value' => set_value('event_detail', $core['main']), 'style' => 'width:600px');
+								echo form_textarea($data);
+								if($flag)
+									echo form_error('event_detail');
+							?>
+						</p>
+
+						<p>
+							<?php
+								echo form_label(lang('event_sponsor'));
+								if($sponsors)
+								{
+									foreach($sponsors as $sponsor)
+									{
+										$checkbox = array(
+															'name' => $sponsor['id'],
+															'value' => $sponsor['id'],
+															'style' => 'margin:10px',
+															'checked' => isset($added_sponsors)?is_checked($sponsor['id'], $added_sponsors):false,
+														);
+										echo form_checkbox($checkbox);
+										echo $sponsor['sponsor'];
+									}
+								}
+							?>
+						</p>
+
+						<p>
+							<?php
+								echo form_label(lang('event_status'), 'event_status');
+								$option = array(	'0'=>lang('event_status_0'),
+													'1'=>lang('event_status_1'),
+													'2'=>lang('event_status_2'),
+													'3'=>lang('event_status_3'),
+													'4'=>lang('event_status_4')
+												);
+								echo form_dropdown('event_status', $option, $event['status']);
+							?>
+						</p>
+
+						<p>
+							<?php
+								$data = array('name' => 'event_update', 'id' => 'event_update', 'value' => lang('edit_update'), 'class' => 'btn');
+								echo form_submit($data);
+							?>
+						</p>
+					</form>
+				</div>
+			</div>
+
+			<div id="tabs-2" class="contentbox ui-tabs-panel ui-widget-content ui-corner-bottom">
+            	  <div class="contentbox">
+
+						<?php if(isset($agendas)):?>
+							<br /><br />
+							<table width="100%">
+								<thead>
+									<tr>
+									<th><?php echo lang('agenda_start_time');?></th>
+									<th><?php echo lang('agenda_end_time');?></th>
+									<th><?php echo lang('agenda_content');?></th>
+									<th><?php echo lang('agenda_speaker');?></th>
+									<th><?php echo lang('edit_edit');?></th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach($agendas as $agenda):?>
+									<tr>
+										<td><?php echo date('Y-m-d H:i:s', $agenda['time_started']);?></td>
+										<td><?php echo date('Y-m-d H:i:s', $agenda['time_ended']);?></td>
+										<td><?php echo $agenda['activity'];?></td>
+										<td>
+											<?php
+												$speaker_where = array('father_id' => $agenda['id'], 'type' => 'agenda');
+												$speakers = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_SPEAKERS, 'user_guid', $speaker_where);
+												foreach($speakers as $speaker)
+												{
+													$user_where = array('guid' => $speaker->user_guid);
+													$user_name = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'real_name', $user_where);
+													echo $user_name." ";
+												}
+											?>
+										</td>
+										<td>
+											<a onclick="GPS.popLogin()" href="javascript:void(0)">登录</a>
+											<a href='/ctr/agenda_do/edit/<?php echo $event_id;?>/<?php echo $agenda['id'];?>' ><?php echo lang('edit_edit');?></a>
+
+											<a href='/ctr/agenda_do/delete/<?php echo $event_id;?>/<?php echo $agenda['id'];?>' onclick="if(!confirm('<?php echo lang('js_confirm_delete');?>')) return false;"><?php echo lang('edit_delete');?></a>
+										</td>
+									</tr>
+									<?php endforeach;?>
+								</tbody>
+							</table>
+
+						<?php endif;?>
+						<?php echo form_open("/ctr/agenda_do/add/$event_id#tabs-2");?>
+						<?php //echo form_open($this->uri->uri_string().'#tabs-2');?>
+						<p>
+							<?php
+								$flag = style_choose('agenda_start_time_date');
+								echo form_label(lang('agenda_start_time'));
+								$data = array('name' => 'agenda_start_time_date', 'id' => 'agenda_start_time_date', 'class' => 'inputbox'.$flag, 'value'=>set_value('agenda_start_time_date'), 'style' => 'width:150px');
+								echo form_input($data);
+								if($flag)
+									echo form_error('agenda_start_time_date');
+								//$flag = style_choose('agenda_start_time_time');
+								//$data = array('name' => 'agenda_start_time_time', 'id' => 'agenda_start_time_time', 'class' => 'inputbox'.$flag, 'value'=>set_value('agenda_start_time_time'), 'style' => 'width:60px');
+								//echo form_input($data);
+								//if($flag)
+								//	echo form_error('agenda_start_time_time');
+							?>
+						</p>
+
+						<p>
+							<?php
+								$flag = style_choose('agenda_end_time_date');
+								echo form_label(lang('agenda_end_time'));
+								$data = array('name' => 'agenda_end_time_date', 'id' => 'agenda_end_time_date', 'class' => 'inputbox'.$flag, 'value'=>set_value('agenda_end_time_date'), 'style' => 'width:150px');
+								echo form_input($data);
+								if($flag)
+									echo form_error('agenda_end_time_date');
+								//$flag = style_choose('agenda_end_time_time');
+								//$data = array('name' => 'agenda_end_time_time', 'id' => 'agenda_end_time_time', 'class' => 'inputbox'.$flag, 'value'=>set_value('agenda_end_time_time'), 'style' => 'width:60px');
+								//echo form_input($data);
+								//if($flag)
+								//	echo form_error('agenda_end_time_time');
+							?>
+						</p>
+
+						<p>
+							<?php
+								$flag = style_choose('agenda_content');
+								echo form_label(lang('agenda_content'), 'agenda_content');
+								$data = array('name' => 'agenda_content', 'id' => 'agenda_content', 'class' => 'inputbox'.$flag, 'value'=>set_value('agenda_content'));
+								echo form_input($data);
+								if($flag)
+									echo form_error('agenda_content');
+							?>
+						</p>
+
+						<p>
+							<?php
+								echo form_label(lang('agenda_speaker'), 'agenda_speaker');
+								$data = array('name' => 'agenda_speaker', 'id' => 'agenda_speaker', 'class' => 'inputbox');
+								echo form_input($data);
+							?>
+						</p>
+
+						<p>
+							<?php echo form_hidden('event_id', $event_id);?>
+						</p>
+
+						<p>
+							<?php
+								echo form_submit('add_agenda', lang('edit_insert'));
+							?>
+						</p>
+						</form>
+		           </div>
+		    </div>
+
+			<div id="tabs-3" class="contentbox nopad ui-tabs-panel ui-widget-content ui-corner-bottom ui-tabs-hide">
+            	<div class="newsitem">
+
+                      <div class="contentbox">
+					  <?php
+							$member_where = array('event_id' => $event_guid);
+							$rows = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, '*', $member_where, NULL, 'reg_time ASC');
+							$num = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, '*', $member_where, NULL, NULL, NULL, NULL, TRUE);
+					  ?>
+					  <br/>
+
+						<?php if(!$num):?>
+						<?php echo lang('no_record');?>
+						<?php else:?>
+							<?php
+								echo lang('event_sign_up_total');
+								echo $num;
+							?>
+							<?php
+								//导出excel
+								echo form_open('/ctr/export_sign_up_users');
+								echo form_hidden('event_guid', $event_guid);
+								echo form_submit('export', lang('ctr:export'));
+							?>
+							</form>
+						<table width="100%">
+							<thead>
+								<tr>
+								<th> </th>
+									<th><?php echo lang('event_sign_up_real_name');?></th>
+									<th>报名次数/通过次数/签到次数</th>
+									<th>综合评分指数</th>
+									<th><?php echo lang('event_sign_up_screen_name');?></th>
+									<th><?php echo lang('event_sign_up_email');?></th>
+									<th><?php echo lang('event_sign_up_status');?></th>
+									<th><?php echo lang('event_sign_up_action');?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<form name='sign_up_chang_status' method='post' action='/ctr/sign_up_update'>
+<?php
+	foreach ($rows as $k => $row)
+	{
+		$user_where = array('guid' => $row->userguid);
+		$user_names = $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'real_name, screen_name', $user_where);
+		// 报名次数/通过次数/签到次数
+		$total_counts = $this->dbmanager_lib->obtain_rows("events_member","*",array('userguid'=>$row->userguid, 'event_id >=' => 150577, 'event_id <=' => $event_guid),NULL,NULL,NULL,NULL,TRUE);
+
+		$pass_counts = $this->dbmanager_lib->obtain_rows("events_member","*",array('userguid'=>$row->userguid, 'event_id >=' => 150577, 'event_id <' => $event_guid, 'status'=>2),NULL,NULL,NULL,NULL,TRUE);
+
+		$came_count = $this->dbmanager_lib->obtain_rows("events_member","*",array('userguid'=>$row->userguid, 'event_id >=' => 150577, 'event_id <' => $event_guid, 'is_came'=>1),NULL,NULL,NULL,NULL,TRUE);
+		$show_counts=$total_counts."/".$pass_counts."/".$came_count;
+
+		$stat_a = $total_counts;
+		$stat_b = $pass_counts;
+		$stat_c = $stat_a - $stat_b;
+		$stat_d = $came_count;
+		$stat_e = 0;
+		$stat_f = $stat_b - $stat_d - $stat_e;
+		$stat_x =  (0.8 * $stat_d + 0.5*$stat_e - $stat_f) / ($stat_b + 1);
+		$stat_x = number_format($stat_x, 2, '.', '');
+		$stat_y = 1 - ($stat_b + 0.5 * $stat_e + $stat_f) / $stat_a + 0.01 * ($stat_a - 2);
+		$stat_y = number_format($stat_y, 2, '.', '');
+		$stat_g = 100 * ($stat_x + $stat_y);
+		$stat_g = number_format($stat_g, 2, '.', '');
+		$stat = $stat_x.'/'.$stat_y.'/'.$stat_g;
+
+		$rows_n[$stat_g][] = array(
+			'id' => $row->id,
+			'real_name' => $user_names->real_name,
+			'show_counts' => $show_counts,
+			//'stat_x' => $stat_x,
+			//'stat_y' => $stat_y,
+			'stat_g' => $stat_g,
+			'screen_name' => $user_names->screen_name,
+			'email' => $row->email,
+			'status' => $row->status,
+			'event_id' => $event_id
+		);
+		krsort($rows_n);
+	}
+?>
+<?php
+foreach ($rows_n as $row_n):
+	foreach($row_n as $row):
+?>
+							<tr>
+<?php
+								/*
+									$user_where = array('guid' => $row->userguid);
+									$user_names = $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'real_name, screen_name', $user_where);
+									// 报名次数/通过次数/签到次数
+									$total_counts = $this->dbmanager_lib->obtain_rows("events_member","*",array('userguid'=>$row->userguid),NULL,NULL,NULL,NULL,TRUE);
+									$pass_counts = $this->dbmanager_lib->obtain_rows("events_member","*",array('userguid'=>$row->userguid,'status'=>2),NULL,NULL,NULL,NULL,TRUE);
+									$came_count = $this->dbmanager_lib->obtain_rows("events_member","*",array('userguid'=>$row->userguid,'is_came'=>1),NULL,NULL,NULL,NULL,TRUE);
+									$show_counts=$total_counts."/".$pass_counts."/".$came_count;
+									*/
+?>
+								<td><input type="checkbox" name="ids[]" class="go_selected" value="<?php echo $row['id']; ?>"></td>
+								<td><?php echo $row['real_name']; ?></td>
+								<td><?php echo $row['show_counts']; ?></td>
+								<td><?php echo $row['stat_g']; ?></td>
+								<td><?php echo $row['screen_name']; ?></td>
+								<td><?php echo $row['email'] ;?></td>
+								<td><?php echo show_sign_up_status($row['status']); ?></td>
+								<?php echo form_hidden('id', $row['id']);?>
+								<?php echo form_hidden('event_id', $row['event_id']); ?>
+<?php
+/*
+								<td><input type="checkbox" name="ids[]" class="go_selected" value="<?=$row->id?>"></td>
+								<td><?php echo $user_names->real_name;?></td>
+								<td><?php echo $show_counts;?></td>
+								<td><?php echo $stat_x;?></td>
+								<td><?php echo $stat_y;?></td>
+								<td><?php echo $stat_g;?></td>
+								<td><?php echo $user_names->screen_name;?></td>
+								<td><?php echo $row->email;?></td>
+								<td><?php show_sign_up_status($row->status);?></td>
+								<?php echo form_hidden('id', $row->id);?>
+								<?php echo form_hidden('event_id', $event_id);?>
+*/
+?>
+							</tr>
+<?php
+	endforeach;
+endforeach;
+?>
+							<tr><td colspan="6">
+							<input type="checkbox" name="selectAll" id="selectall">全选
+							<div style="float:right">
+							<input type="submit" name="btn_third_submit" class="btn_third_submit" rel="tongguo"   value="通过">
+							<input type="submit" name="btn_third_submit" class="btn_third_submit" rel="jujue"  value="拒绝">
+							<input type="hidden" name="submit_third_content" id="submit_third_content" value="">
+							</div>
+							</td></tr>
+
+							</form>
+							</tbody>
+						</table>
+						<?php endif;?>
+		              </div>
+                </div>
+            </div>
+			<script type="text/javascript">
+			$("input#selectall").click(function(){
+
+				 if($("input#selectall").attr("checked")==true){
+				 	//alert("checked");
+				     $("input.go_selected").attr("checked",true);
+				 }else{
+				 	//alert("not checked");
+				 	 $("input.go_selected").attr("checked",false);
+				 }
+			});
+
+			 $("input.btn_third_submit").click(function(){
+			 		if(confirm("确实要进行改操作吗？")){
+			  			$("#submit_third_content").val($(this).attr("rel"));
+			  			return true;
+			 		}else{
+
+			 			return false;
+			 		}
+			 });
+			</script>
+			<div id="tabs-4" class="contentbox nopad ui-tabs-panel ui-widget-content ui-corner-bottom ui-tabs-hide">
+            	<div class="newsitem">
+                   <div class="contentbox">
+					<p>
+						<?php
+							echo form_open("/ctr/search_check_user#tabs-4");
+							echo lang('event_check_in_screen_name');
+							echo form_input('screen_name');
+							echo lang('event_check_in_email');
+							echo form_input('email');
+							echo form_hidden('key', $event_guid);
+							echo form_submit('search', lang('event_check_in_search'));
+						?>
+						</form>
+					</p>
+					<?php if(isset($find_check_users)):?>
+						<?php if(!$find_check_users):?>
+							<?php echo lang('no_record');?>
+						<?php else:?>
+							<?php
+								echo lang('event_sign_up_total');
+								echo $find_check_users_num;
+								//print_r($find_check_users);
+							?>
+							<table width="100%">
+								<thead>
+								<?php show_check_in_user_table();?>
+								</thead>
+								<tbody>
+									<?php
+										foreach($find_check_users as $find_check_user)
+										{
+											$user_where = array('guid' => $find_check_user->userguid);
+											$user_names = $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'real_name, screen_name, email', $user_where);
+											$checkin_where = array('userguid' => $find_check_user->userguid,'event_id'=>$event_id);
+											$checkin_details = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS_MEMBER, 'id, status, is_came', $checkin_where);
+											show_check_in_user_row($user_names, $checkin_details, $event_guid);
+										}
+									?>
+								</tbody>
+							</table>
+						<?php endif;?>
+					<?php else:?>
+					<?php
+						$member_where = array('event_id' => $event_guid, 'status' => 2);
+						$check_rows = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'userguid', $member_where, NULL, 'reg_time ASC');
+						$check_rows_num = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, '*', $member_where, NULL, NULL, NULL, NULL, TRUE);
+					?>
+					<?php if(!$check_rows_num):?>
+						<?php echo lang('no_record');?>
+						<?php else:?>
+							<?php
+								echo lang('event_sign_up_total');
+								echo $check_rows_num;
+								//导出excel
+								echo form_open('/ctr/export_check_in_users');
+								echo form_hidden('event_guid', $event_guid);
+								echo form_submit('export', lang('ctr:export'));
+							?>
+
+						<table width="100%">
+							<thead>
+							<?php show_check_in_user_table();?>
+							</thead>
+							<tbody>
+							<?php foreach($check_rows as $row):?>
+							<?php
+								$user_id=$row->userguid;
+								$user_where = array('guid' => $user_id);
+								$user_names = $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'real_name, screen_name, email', $user_where);
+								$checkin_where = array('userguid' => $user_id,'event_id' => $event_guid);
+								$checkin_details = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS_MEMBER, 'id, status, is_came', $checkin_where);
+
+							?>
+							<?php
+							if($checkin_details)
+							show_check_in_user_row($user_names, $checkin_details, $event_guid);?>
+							<?php endforeach;?>
+							</tbody>
+						</table>
+						<?php endif;?>
+					<?php endif;?>
+				   </div>
+                </div>
+            </div>
+
+			<div id="tabs-5" class="contentbox nopad ui-tabs-panel ui-widget-content ui-corner-bottom ui-tabs-hide">
+            	<div class="newsitem">
+
+                   <h3><?php echo lang('event_upload_pic');?></h3>
+                      <div class="contentbox">
+							<p>
+								<?php
+									echo form_open_multipart("/ctr/event_pic_do/upload/$event_guid");
+									echo form_upload('upload_pic');
+								?>
+							</p>
+							<p>
+								<?php
+									echo form_label(lang('event_pic_type'));
+									$option = array(	'event_banner' => lang('event_pic_banner'),
+														'event_standard' => lang('event_pic_standard'),
+														'event_small' => lang('event_pic_small')
+													);
+									echo form_dropdown('create_type', $option, 'event_banner');
+								?>
+							</p>
+							<p>
+								<?php
+									$data = array('name' => 'update_pic', 'value' => lang('edit_upload'), 'class' => 'btn');
+									echo form_submit($data);
+								?>
+							</p>
+			              </form>
+						  <table width="100%">
+							<thead>
+								<tr>
+									<th><?php echo lang('event_pic');?></th>
+									<th><?php echo lang('event_pic_type');?></th>
+									<th><?php echo lang('edit_edit');?></th>
+								</tr>
+							</thead>
+						  <?php if(!$pics):?>
+							<p><?php echo lang('event_no_pic');?></p>
+						  <?php else:?>
+							<?php
+								function get_pic_size($type)
+								{
+									$pic_size = '';
+									switch($type)
+									{
+										case 'event_small':
+											$pic_size = 'width=260px height=160px';
+											break;
+										case 'event_standard':
+											$pic_size = 'width=320px height=220px';
+											break;
+										case 'event_banner':
+											$pic_size = 'width=445px height=135px';
+											break;
+									}
+									return $pic_size;
+								}
+							?>
+                            <?php
+                                foreach($pics as $pic):
+                                    $img = $this->img_lib->obtain_img_by_id($pic->id);
+                            ?>
+							  <tr>
+							  <td><img src='<?=$img?>' <?=get_pic_size($pic->create_type)?>/></td>
+							  <td><?=$pic->create_type?></td>
+							  <td><a href='/ctr/event_pic_do/delete/<?php echo $event_guid;?>/<?php echo $pic->id;?>'onclick="if(!confirm('<?php echo lang('js_confirm_delete');?>')) return false;"><?php echo lang('edit_delete');?></a></td>
+							  </tr>
+							  <?php endforeach;?>
+						  <?php endif;?>
+						  </table>
+		              </div>
+                </div>
+            </div>
+
+        </div>
+<?php
+	function show_sign_up_status($status_id)
+	{
+		switch($status_id)
+		{
+			case 0:
+				echo lang('event_sign_up_status_0');
+				break;
+			case 1:
+				echo lang('event_sign_up_status_1');
+				break;
+			case 2:
+				echo lang('event_sign_up_status_2');
+				break;
+		}
+	}
+
+	function show_check_in_status($status_id)
+	{
+		switch($status_id)
+		{
+			case 0:
+				echo lang('event_check_in_status_0');
+				break;
+			case 1:
+				echo lang('event_check_in_status_1');
+				break;
+		}
+	}
+
+	function compare_status($status, $id)
+	{
+		if($status === $id)
+			return 'selected = ""';
+		else
+			return '';
+	}
+
+?>
+
+<?php
+	function show_check_in_user_table()
+	{
+	?>
+			<tr>
+				<th><?php echo lang('event_sign_up_real_name');?></th>
+				<th><?php echo lang('event_sign_up_screen_name');?></th>
+				<th><?php echo lang('event_sign_up_email');?></th>
+				<th><?php echo lang('event_sign_up_status');?></th>
+				<th><?php echo lang('event_check_in_status');?></th>
+				<th><?php echo lang('event_sign_up_action');?></th>
+			</tr>
+
+	<?php
+	}
+	function show_check_in_user_row($user_names, $checkin_details, $event_id)
+	{
+	?>
+		<tr>
+			<form name='check_in_<?php echo $checkin_details->id;?>' method='post' action='/ctr/check_in_update'>
+			<td><?php echo $user_names->real_name;?></td>
+			<td><?php echo $user_names->screen_name;?></td>
+			<td><?php echo $user_names->email;?></td>
+			<td><?php show_sign_up_status($checkin_details->status);?></td>
+			<td class="show_check_in_status"><?php show_check_in_status($checkin_details->is_came);?></td>
+			<td>
+				<select name='is_came'>
+					<option value=0 <?php echo compare_status($checkin_details->is_came, '0');?>><?php echo lang('event_check_in_status_0');?></option>
+					<option value=1 <?php echo compare_status($checkin_details->is_came, '1');?>><?php echo lang('event_check_in_status_1');?></option>
+				</select>
+				<?php
+				echo form_hidden('id', $checkin_details->id);?>
+				<?php echo form_hidden('event_id', $event_id);?>
+			</td>
+			</form>
+		</tr>
+
+	<?php
+	}
+
+?>
+
+<?php
+    $this->load->view("scripts/admin_time_selected",array("date"=>"event_date1","time"=>'event_time1'));
+    $this->load->view("scripts/admin_time_selected",array("date"=>"event_date2","time"=>'event_time2'));
+    $this->load->view("scripts/admin_time_selected",array("date"=>"agenda_start_time_date","time"=>'agenda_start_time_time'));
+    $this->load->view("scripts/admin_time_selected",array("date"=>"agenda_end_time_date","time"=>'agenda_end_time_time'));
+?>
+<script>
+
+$(function(){
+$('#agenda_speaker').TagDynamic({
+	"container_class":"tag_dynamic_box",
+	"button_str": "添加",
+	autocomplete_service: '/ajax/auto_tag/user'
+	})
+})
+</script>

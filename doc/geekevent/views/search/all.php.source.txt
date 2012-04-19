@@ -1,0 +1,99 @@
+<?php
+    $data = array(
+        'key_word'  => $key_word,
+        'type'      => $type
+    );
+    $this->load->view('search/header', $data);
+?>
+<div class="search-list">
+<?php
+    if($is_null || $all_num == 0)
+    {
+        $this->msg_lib->setmsg("没有你要找的，你可以换个关键词再试试", "alert");
+        $this->msg_lib->showmsg();
+    }
+    else
+    {
+        if(count($users) > 0)
+        {
+			echo '<div class="search-relust-box"><div class="item-title"><h2>搜索<span class="search_highlight">'.$key_word.'</span>的社区用户</h2><span class="count-total">( '.$users_num.' )</span>';
+            if($users_more)
+            {
+                $diff = $users_num-$user_limit;
+                echo '<span class="count-left"><a href="/search/users/'.$key_word.'">还有'.$diff.'个社区用户与搜索结果相符</a></span>';
+            }
+            echo '</div><div class="item-body">';
+			foreach($users as $row)
+            {
+                $data = array(
+                    'uid'   => $row->guid
+                );
+                $this->load->view('search/user',$data);
+            }
+			echo '</div></div>';
+
+        }
+
+        if(count($seeds) > 0)
+        {
+			echo '<div class="search-relust-box"><div class="item-title"><h2>搜索<span class="search_highlight">'.$key_word.'</span>的极客观察</h2><span class="count-total">( '.$seeds_num.' )</span>';
+            if($seeds_more)
+            {
+                $diff = $seeds_num-$limit;
+                echo '<span class="count-left"><a href="/search/seeds/'.$key_word.'">还有'.$diff.'篇极客观察与搜索结果相符</a></span>';
+            }
+			echo '</div><div class="item-body">';
+            foreach($seeds as $row)
+            {
+                $data = array(
+                    'cid'   => $row->guid,
+                    'title' => $row->title
+                );
+                $this->load->view('search/seed',$data);
+            }
+			echo '</div></div>';
+        }
+
+
+        if(count($clips) > 0)
+        {
+			echo '<div class="search-relust-box"><div class="item-title"><h2>搜索<span class="search_highlight">'.$key_word.'</span>的演讲视频</h2><span class="count-total">( '.$clips_num.' )</span>';
+            if($clips_more)
+            {
+                $diff = $clips_num-$limit;
+                echo '<span class="count-left"><a href="/search/clips/'.$key_word.'">还有'.$diff.'个演讲视频与搜索结果相符</a></span>';
+            }
+			echo '</div><div class="item-body">';
+            foreach($clips as $row)
+            {
+                $data = array(
+                    'cid'   => $row->guid,
+                    'title' => $row->title
+                );
+                $this->load->view('search/clip',$data);
+            }
+			echo '</div></div>';
+        }
+
+        if(count($events) > 0)
+        {
+			echo '<div class="search-relust-box"><div class="item-title"><h2>搜索<span class="search_highlight">'.$key_word.'</span>的活动</h2><span class="count-total">( '.$events_num.' )</span>';
+            if($events_more)
+            {
+                $diff = $events_num-$limit;
+                echo '<span class="count-left"><a href="/search/events/'.$key_word.'">还有'.$diff.'个活动与搜索结果相符</a></span>';
+            }
+			echo '</div><div class="item-body">';
+            foreach($events as $row)
+            {
+                $data = array(
+                    'eid'   => $row->guid,
+                    'title' => $row->title
+                );
+                $this->load->view('search/event',$data);
+            }
+			echo '</div></div>';
+        }
+    }
+?>
+</div>

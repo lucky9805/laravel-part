@@ -1,0 +1,12 @@
+<?php
+	if($layout == 'm') $this->load->view('layout/m');
+	elseif($layout == "m_s") $this->load->view('layout/m_s');
+	elseif($layout == "s_m") $this->load->view('layout/s_m');
+ 	elseif($layout == "a_l_m") $this->load->view('layout/a_l_m');
+ 	elseif($layout == "w_s") $this->load->view('layout/w_s');
+ 	elseif($layout == "w_s_n") $this->load->view('layout/w_s_n');
+ 	elseif($layout == "home-list") $this->load->view('layout/home-list');
+ 	elseif($layout == "filter-box") $this->load->view('layout/filter-box');
+ 	elseif($layout == "news") $this->load->view('layout/news');
+ 	elseif($layout == "n_m") $this->load->view('layout/n_m');
+?>

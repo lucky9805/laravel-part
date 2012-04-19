@@ -1,0 +1,18 @@
+<?php 
+	 $this->load->view("user/navigation",array("current_on"=>"email"));
+?>
+<form id='profile-email-form' class='format account' action='' method='post'>
+    <div class="result-info result-alert">
+        <div class="message">
+            您输入的邮箱不正确，重新输入
+        </div>
+    </div>
+    <div>
+        <label for='email'>邮箱</label>
+
+        <input id='email' name='email' type='email' class='text'>
+    </div>
+    <div class="act">
+        <input type="submit" class='submit update' value='修改'>
+    </div>
+</form>

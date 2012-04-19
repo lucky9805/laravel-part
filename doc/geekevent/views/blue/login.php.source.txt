@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html style='overflow-y:auto'>
+  <?php $this->load->view('frame/header'); ?>
+	<body id='itvalue' class='login'>
+    <div id="container">
+        <div class='inner'><?php echo $main;?></div>
+    </div>
+    <footer class='g'>
+      <a href='/pub/register/' class='join'><?php echo site_lang('blue_login_register');?></a>
+      <span class='sep'></span>
+      <span class='cr'>
+        <?php echo site_lang('blue_login_copyright');?>
+      </span>
+    </footer>
+    <script>
+  	  if(!('autofocus' in document.createElement('input'))){
+        $('#email').focus()
+      }
+      $('form.login').validator({
+        position: 'top center', 
+        offset: [-12, 0],
+        message: '<div><em /></div>',
+        lang: 'zh'
+      })
+  	</script>
+  </body>
+</html>

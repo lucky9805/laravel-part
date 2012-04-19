@@ -1,0 +1,3 @@
+<div id="location">
+	<a href="/" class="home"><?php echo geek_lang('home');?></a><?php echo $breadcrumb; ?>
+</div>

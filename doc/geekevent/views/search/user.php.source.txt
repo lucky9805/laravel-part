@@ -1,0 +1,16 @@
+<?php
+    $screen_name = $this->user_lib->get_screen_name($uid);
+    $u_info = $this->user_lib->get_user_info($uid, 'company,position');
+?>
+<div class="search-user-item">
+    <div class="avatar">
+        <img src="<?=$this->img_lib->get_avatar($uid)?>" alt="<?=$screen_name?>">
+    </div>
+    <div class="entry">
+            <a href="<?=$this->web_router_lib->Get_home_url($uid, 'index')?>" class="user"><?=$screen_name?></a>
+			<div class="info">
+            	<span class="company"><?=$u_info->company?></span>
+           		<span class="job-title"><?=$u_info->position?></span>
+			</div>
+    </div>
+</div>

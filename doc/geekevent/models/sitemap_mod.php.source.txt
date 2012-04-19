@@ -1,0 +1,40 @@
+<?php
+
+class Sitemap_mod extends MY_Model
+{
+	function __construct()
+	{
+		parent::__construct();
+	}
+
+	function get_sitemap_by_subtype_id($operate = '')
+	{
+		$subtype_id = array(4, 5, 8);
+		$this->db->select('guid, subtype_id, time_updated');
+		$this->db->from(TABLE_ENTITY);
+		$this->db->where_in('subtype_id', $subtype_id);
+		$date_time = strtotime('2012-03-01');
+		if ($operate == 'm')
+		{
+			$this->db->where('time_updated <', $date_time);
+		}
+		else if ($operate == 'd')
+		{
+			$this->db->where('time_updated >=', $date_time);
+		}
+		$this->db->order_by('time_created', 'desc');
+		$result = $this->db->get();
+		return $result;
+	}
+
+	function get_last_event_updated_time()
+	{
+		$this->db->select('time_updated');
+		$this->db->from(TABLE_ENTITY);
+		$this->db->where('subtype_id', 4);
+		$this->db->order_by('time_updated', 'desc');
+		$this->db->limit(1);
+		$result = $this->db->get();
+		return $result;
+	}
+}

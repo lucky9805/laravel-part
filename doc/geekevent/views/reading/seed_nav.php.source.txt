@@ -1,0 +1,31 @@
+<nav id='view-mode'> 
+    <h3><?php echo lang('filter_box_title'); ?></h3> 
+<?php
+    $show_type = $this->input->cookie('switchover');
+    if ( !$show_type)
+    {
+        $show_type="thumbs";
+    } 
+?>
+    <ul> 
+        <li class="thumbs <?php echo ($show_type == 'thumbs') ? 'on' : ''; ?>" rel="thumbs"> 
+            <a href="javascript:void(0)"><?php echo lang('filter_box_thumb'); ?></a> 
+        </li><li class="list <?php echo ($show_type == 'list') ? 'on' : ''; ?>" rel="list"> 
+            <a href="javascript:void(0)"><?php echo lang('filter_box_list'); ?></a> 
+        </li> 
+    </ul> 
+</nav> 
+
+<ul id="view-tags" class="clearfix tags">
+<li class="v-line"><ul id="special-tags"><li class="specialOn-new"><a href='javascript:;' class='button small black' rel=''><?=lang('common:read:seed')?></a></li><li><a href='/read/news' class='button small black' rel=''><?=lang('common:read:news')?></a></li></ul></li>
+<?php
+    $tags = $this->tag_lib->obtain_seeds_tags(9, 0);
+    foreach($tags as $tag):
+        $tag_id = $tag->tag_id;
+        $tag_name = $this->entity_engine_lib->obtain_title($tag_id);
+?>
+        <li><a href="javascript:;" title="" class="<?php echo $tag_id; ?>"><?php echo $tag_name; ?></a></li>
+<?php
+    endforeach;
+?>
+</ul>

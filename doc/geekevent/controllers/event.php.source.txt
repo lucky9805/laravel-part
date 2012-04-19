@@ -1,0 +1,315 @@
+<?php
+	class Event extends My_Controller
+	{
+
+		function __construct()
+		{
+			parent::__construct();
+			$this->load->helper('form');
+		    $this->load->library('form_validation');
+            $this->load->library('event_lib');
+            $this->load->library('clip_lib');
+			$this->lang->load('event', 'chinese');
+		}
+
+
+        function view($view_type="details", $entity_guid='')
+        {
+            $this->load->library('sys_lib');
+            $sys_data["entity_guid"] = $entity_guid;
+
+			$data["entity_guid"] = $entity_guid;
+			$data["is_event"] = true;
+            $where = array('guid'=>$entity_guid);
+            $core_entity    = $this->dbmanager_lib->obtain_a_row(TABLE_CORE_ENTITIES, '*', $where);
+	        $event          = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS, '*', $where);
+
+			if(!$core_entity or !$event)
+				show_404();
+
+	        $sponsors       = $this->dbmanager_lib->obtain_rows(TABLE_EVENT_SPONSORS, 'sponsor_id', array('event_guid'=>$entity_guid));
+	        $agendas        = $this->dbmanager_lib->obtain_rows(TABLE_AGENDA, '*', array('event_id'=>$entity_guid), NULL, 'time_started ASC');
+	        $venue          = $this->dbmanager_lib->obtain_a_row(TABLE_VENUE, '*', array('id'=>$event->venue_Id));
+            $data['core_entity']    = $core_entity;
+            $data['event']          = $event;
+            $data['sponsors']       = $sponsors;
+            $data['agendas']        = $agendas;
+            $data['venue']          = $venue;
+            $sponsors_str = $speakers_str = "";
+
+
+
+            foreach($sponsors as $row)
+            {
+                $sid = $row->sponsor_id;
+                $sname = $this->dbmanager_lib->obtain_a_row_field(TABLE_SPONSORS, 'sponsor', array('id'=>$sid));
+                $sponsors_str = $sponsors_str.$sname.',';
+            }
+            foreach($agendas as $row)
+            {
+                $speakers = $this->event_lib->obtain_event_speakers($row->id, 'agenda');
+                if($speakers){
+	                $speaker = $speakers[0];
+	                $real_name = $this->user_lib->get_real_name($speaker->user_guid);
+	                $speakers_str = $speakers_str.$real_name.',';
+                }
+            }
+            $title = $core_entity->title;
+            $keywords = $speakers_str.$venue->venue.','.$sponsors_str;
+            $keywords = substr($keywords,0,-1);
+            $description = strip_tags($core_entity->desc);
+
+            if($view_type=="details")
+            {
+                $sys_data["operate"] = "v_e_details";
+				$where['guid'] = $entity_guid;
+				$start_time = $this->dbmanager_lib->obtain_a_row_field(TABLE_EVENTS, 'start_time', $where);
+				$this->template->write('extra_scripts1',$this->load->view("scripts/counter",array("start_time"=>date('M d, Y H:i', $start_time)),TRUE));
+				$this->template->write_view('main',"event/details", $data);
+            }
+            elseif($view_type=="review")
+            {
+                $sys_data["operate"] = "v_e_review";
+                $title = lang('event_tab4')." | ".$title;
+				$this->template->write_view('main',"event/review", $data);
+            }
+            elseif($view_type=="sign_up")
+			{
+                $sys_data["operate"] = "v_e_sign_up";
+				$title = lang('event_tab2_2')." | ".$title;
+
+				$user_guid = $this->global_lib->get_user_guid();
+				$search_row = array('event_id'=>$data['entity_guid'], 'userguid'=>$user_guid);
+				$data['find_row'] = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS_MEMBER, 'id, status', $search_row);
+				$search_row = array('user_guid'=>$user_guid);
+				$products= $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER_PRODUCTS, 'product_name', $search_row);
+				$datalist=null;
+				if(count($products)>0){
+					foreach($products as $p){
+						$datalist[]=array("value"=>$p->product_name,"label"=>$p->product_name);
+						//$datalist[]["label"]=$p->product_name;
+					}
+				}
+
+				////////演讲嘉宾
+					$clips = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS, 'guid', array('event_guid'=>$entity_guid));
+					$speakers_id = NULl;
+					foreach($clips as $clip)
+					{
+						$rows = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_SPEAKERS, 'user_guid', array('father_id'=>$clip->guid, 'type'=>'clip'));
+						foreach($rows as $row)
+						{
+							$speakers_id[] = $row->user_guid;
+						}
+					}
+					if(is_array($speakers_id))
+						$speakers_id = array_unique($speakers_id);
+
+				///////报名参与活动的人
+					$member_where['event_id'] = $entity_guid;
+
+					$member_where['status >= '] = 0;
+					$msg = site_lang('signed_up_member_msg2');
+
+					$rows = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'userguid', $member_where);
+					$row_num = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'userguid', $member_where, NULL, NULL, NULL, NULL, TRUE);
+					if($data['find_row'])
+						$title = "有$row_num 人报名参加";
+
+					$data['speakers_id'] = $speakers_id;
+					$data['rows'] = $rows;
+					$data['row_num'] = $row_num;
+
+					//$this->_sign_up_render($data);
+					$scripts_data=array("tagname"=>"app","datalist"=>$datalist);
+					$this->template->write('extra_scripts',$this->load->view("scripts/tags",$scripts_data,TRUE));
+					$this->template->write_view('main',"event/sign_up", $data);
+			}
+            elseif($view_type=="weibo")
+			{
+                $sys_data["operate"] = "v_e_weibo";
+                $title = lang('event_tab3')." | ".$title;
+				$this->_weibo_render($data);
+			}
+			else
+            {
+				show_404();
+            }
+            $this->sys_lib->create_system_logs($sys_data);
+			$this->template->write('title',$title);
+			$this->template->write('keywords',$keywords);
+			$this->template->write('description',$description);
+            $this->template->write('layout','w_s');
+            $this->template->write('css_type','event');
+            $this->template->write('body_class','event');
+            $this->template->write('breadcrumb',$title);
+			$this->template->write('extra_scripts',$this->load->view("scripts/comment",$data,TRUE));
+            $this->template->write_view('sidebar','reuse/comment', $data);
+		    $this->template->render();
+		}
+
+		function index()
+		{
+			$cur_where = array('status >' => 0);
+			$latest_events = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS, '*', $cur_where, NULL, 'start_time DESC');
+			list($key, $value) = each($latest_events);
+			$result['latest_event'] = $value;
+
+			$where['status > '] = 2;
+			$where['guid !='] = $value->guid;
+			$result['events'] = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS, '*', $where, NULL, 'start_time DESC');
+			$title          = lang('common:event');
+            $keywords       = lang('event:keywords');
+            $description    = lang('event:description');
+			$this->template->write('extra_scripts',$this->load->view("scripts/event_list",'',TRUE));
+			$this->template->write('title',$title);
+			$this->template->write('keywords',$keywords);
+			$this->template->write('description',$description);
+            $this->template->write('layout','home-list');
+            $this->template->write('css_type','event');
+            $this->template->write('body_class','event');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"event/index", $result);
+		    $this->template->render();
+		}
+
+		private function _weibo_render($data)
+		{
+			if($this->input->post('submit') and trim($this->input->post('tweet')))
+			{
+                $weibo_imgs = $this->session_lib->userdata('weibo_imgs');
+                $row['thumb_id'] = empty($weibo_imgs['thumb_id']) ? NULL : $weibo_imgs['thumb_id'];
+                $row['orig_id'] = empty($weibo_imgs['orig_id']) ? NULL : $weibo_imgs['orig_id'];
+				$row['event_guid'] = $data['entity_guid'];
+				$row['content'] = $this->input->post('tweet');
+				$row['time_created'] = time();
+				$row['user_guid'] = $this->global_lib->get_user_guid();
+				$weibo_id = $this->dbmanager_lib->create_a_row(TABLE_EVENTS_WEIBO, $row);
+			}
+			$this->template->write_view('main',"event/weibo", $data);
+            if(!empty($weibo_imgs['thumb_id']) AND !empty($weibo_imgs['orig_id']))
+            {
+                $data = array('table_id' => $weibo_id);
+                $where = array('id' => $weibo_imgs['orig_id']);
+                $this->dbmanager_lib->update_rows(TABLE_IMAGES, $where, $data);
+                $where = array('id' => $weibo_imgs['thumb_id']);
+                $this->dbmanager_lib->update_rows(TABLE_IMAGES, $where, $data);
+            }
+		}
+
+		function sign_up($event_guid=0)
+		{
+			$this->load->library('river_lib');
+			if(!$this->global_lib->is_login()) redirect(LOGIN_URL);
+			$var = $this->form_validation;
+			$required = '|required';
+			$var->set_rules('real_name',	'姓名',	'trim|xss_clean'.$required);
+			$var->set_rules('company',		'公司',	'trim|xss_clean'.$required);
+			$var->set_rules('position',		'职位',	'trim|xss_clean'.$required);
+			$var->set_rules('phone',		'电话',	'trim|xss_clean'.$required);
+			$var->set_rules('is_recommend',	'',		'trim|xss_clean');
+
+			if($var->run())
+			{
+				$user_guid = $this->global_lib->get_user_guid();
+				$row['event_id'] = $event_guid;
+				$row['username'] = $this->input->post('real_name');
+				$row['userguid'] = $user_guid;
+
+				$num = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER, 'id', array('event_id'=>$event_guid, 'userguid'=>$row['userguid']), NULL, NULL, NULL, NULL, TRUE);
+				if ($num > 0)
+				{
+					redirect("/event/view/sign_up/$event_guid");
+				}
+
+				$row['position']		= $this->input->post('position');
+				$row['mobile']			= $this->input->post('phone');
+				$row['company_name']	= $this->input->post('company');
+				$user_where['guid']		= $row['userguid'];
+				$user_info				= $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'email', $user_where);
+				$row['email']			= $user_info->email;
+				$row['topics']			= $this->input->post('reason');
+				$row['reg_time']		= time();
+				$this->dbmanager_lib->create_a_row(TABLE_EVENTS_MEMBER, $row);
+
+				//记录river
+				$this->river_lib->enroll($user_guid,$event_guid);
+
+				//更新个人信息
+				$user['real_name']		= $row['username'];
+				$user['company']		= $row['company_name'];
+				$user['position']		= $row['position'];
+				$user['tel']			= $row['mobile'];
+				if ($this->input->post('is_recommend') == 1)
+				{
+					$user['is_recommend']	= $this->input->post('is_recommend');
+				}
+				$user_guid				= $this->global_lib->get_user_guid();
+				$this->dbmanager_lib->update_rows(TABLE_USER, array('guid'=>$user_guid), $user);
+
+				//更新报名用户产品
+				$products						= $this->input->post('app');
+				$products_where['user_guid']	= $row['userguid'];
+				$this->dbmanager_lib->delete_rows(TABLE_EVENTS_MEMBER_PRODUCTS, $products_where);
+				if ( ! empty($products) && is_array($products))
+				{
+					foreach ($products as $product)
+					{
+						$add_data = array(
+							'user_guid'		=> $row['userguid'],
+							'product_name'	=> $product
+						);
+						$this->dbmanager_lib->create_a_row(TABLE_EVENTS_MEMBER_PRODUCTS,$add_data);
+					}
+				}
+			}
+			else
+			{
+				$this->msg_lib->setmsg(validation_errors(),ERROR);
+			}
+			$this->view('sign_up', $event_guid);
+		}
+
+        function delete_event_weibo($event_id,$weibo_id)
+        {
+            $this->load->add_package_path(APPPATH.'third_party/image/');
+            $this->load->library('tp_image');
+            $where = array('id' => $weibo_id);
+            $weibo = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS_WEIBO, 'thumb_id,orig_id', $where);
+            $thumb_id = $weibo->thumb_id;
+            $orig_id = $weibo->orig_id;
+            if( !empty($thumb_id) AND !empty($orig_id))
+            {
+                $this->tp_image->delete_image($thumb_id);
+                $this->tp_image->delete_image($orig_id);
+            }
+            $this->dbmanager_lib->delete_rows(TABLE_EVENTS_WEIBO, $where);
+            $url = $this->web_router_lib->Get_event_weibo_url($event_id);
+            redirect($url);
+        }
+
+        function collection($collection_id=0)
+        {
+            $clips_num = $this->clip_lib->obtain_related_clips($collection_id,TRUE);
+            if($clips_num <= 1)
+            {
+				show_404();
+            }
+            $data['cc_id']  = $collection_id;
+            $c_name = $this->dbmanager_lib->obtain_a_row_field(TABLE_CLIPS_COLLECTION,'collection_name',array('id'=>$collection_id));
+			$title          = $c_name." | ".lang('clips_collection');
+            $keywords       = lang('event:keywords');
+            $description    = lang('event:description');
+			$this->template->write('title',$title);
+			$this->template->write('keywords',$keywords);
+			$this->template->write('description',$description);
+            $this->template->write('layout','m');
+            $this->template->write('css_type','cast');
+            $this->template->write('body_class','album');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"event/collection",$data);
+		    $this->template->render();
+        }
+
+	}
+?>

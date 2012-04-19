@@ -1,0 +1,97 @@
+<div class="contentcontainer">
+            <div class="headings alt">
+                <h2><?php echo $this->lang->line('add_venue_title');?></h2>
+            </div>
+            <div class="contentbox">
+            	<?php echo form_open_multipart($this->uri->uri_string());?>
+            		<p>
+                        <?php 
+							$flag = style_choose('add_venue_name');
+							echo form_label($this->lang->line('add_venue_name'), 'add_venue_name');
+							$data = array('name' => 'add_venue_name', 'id' => 'add_venue_name', 'class' => 'inputbox'.$flag, 'value' => set_value('add_venue_name'));
+							echo form_input($data);
+							if($flag)
+								echo form_error('add_venue_name');
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							$flag = style_choose('add_venue_location');
+							echo form_label($this->lang->line('add_venue_location'), 'add_venue_location');
+							$data = array('name' => 'add_venue_location', 'id' => 'add_venue_location', 'class' => 'inputbox'.$flag, 'value' => set_value('add_venue_location'), 'style' => 'width:600px');
+							echo form_textarea($data);
+							if($flag)
+								echo form_error('add_venue_location');
+						?> 
+                    </p>
+					
+					<p>
+                        <?php
+							$flag = style_choose('add_venue_map_lat_lng');
+							echo form_label($this->lang->line('add_venue_map_lat_lng'), 'add_venue_map_lat_lng');
+							$data = array('name' => 'add_venue_map_lat_lng', 'id' => 'add_venue_map_lat_lng', 'class' => 'inputbox'.$flag, 'value' => set_value('add_venue_map_lat_lng'), 'style' => 'width:600px');
+							echo form_textarea($data);
+							if($flag)
+								echo form_error('add_venue_map_lat_lng');
+						?> 
+                    </p>
+					
+					<p>
+                        <?php
+							$flag = style_choose('add_venue_website');
+							echo form_label($this->lang->line('add_venue_website'), 'add_venue_website');
+							$data = array('name' => 'add_venue_website', 'id' => 'add_venue_website', 'class' => 'inputbox'.$flag, 'value' => set_value('add_venue_website', 'http://'));
+							echo form_input($data);
+							if($flag)
+								echo form_error('add_venue_website');
+						?> 
+                    </p>
+					
+					
+					
+					<p>
+                        <?php
+							$flag = style_choose('add_venue_phone');
+							echo form_label($this->lang->line('add_venue_phone'), 'add_venue_phone');
+							$data = array('name' => 'add_venue_phone', 'id' => 'add_venue_phone', 'class' => 'inputbox'.$flag, 'value' => set_value('add_venue_phone'));
+							echo form_input($data);
+							if($flag)
+								echo form_error('add_venue_phone');
+						?> 
+                    </p>
+					
+					<p>
+                        <?php
+							echo form_label($this->lang->line('venue_descp'), 'venue_descp');
+							$data = array('name' => 'venue_descp', 'id' => 'venue_descp', 'class' => 'inputbox', 'style' => 'width:600px');
+							echo form_textarea($data);
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label(site_lang('venue_map'), 'venue_map');
+							$data = array('name' => 'venue_map', 'id' => 'venue_map', 'value' => 'upload');
+							echo form_upload($data);
+							if(form_error('venue_map'))
+								echo form_error('venue_map');
+						?>
+                    </p>
+
+					
+                    
+                    <p>
+						<?php 
+							$data = array('name' => 'add_venue_add_venue', 'id' => 'add_venue_add_venue', 'value' => $this->lang->line('add_venue_add_venue'), 'class' => 'btn');
+							echo form_submit($data);
+						?>
+					</p>
+					
+					
+					
+      
+                </form>         
+				
+            </div>
+        </div>

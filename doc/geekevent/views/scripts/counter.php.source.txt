@@ -1,0 +1,48 @@
+<script src='/public/js/libs/countdown/jquery.jcountdown.js'></script>
+<script>
+$(function(){
+    $("#countdown").countdown({
+       date: "<?php echo $start_time?>",
+        //date: "Sept 17, 2011 19:24", //"2011-10-10 23:00",
+        htmlTemplate: ' \
+            <div class="cuntDigit">%{d}</div> \
+            <div class="cntSep">天</div>\
+            <div class="cuntDigit">%{h}</div> \
+            <div class="cntSep">时</div> \
+            <div class="cuntDigit">%{m}</div> \
+            <div class="cntSep">分</div> \
+            <div class="cuntDigit">%{s}</div> \
+            <div class="cntSep">秒</div>',
+        onComplete: function( event ){
+            //$(this).html("Completed");
+        },
+        leadingZero: true,
+        direction: "down"
+    });
+    
+    AjaxTooltip.bind($('table.event-shedule a.guest'), function($anchor, $container){
+        $.get('/ajax/get_user_avatar/'+$anchor.attr('rel'), {}, function(response){
+            var data = eval('('+ response +')');
+            if(!data || typeof data != 'object' || !data.user_name){
+                $container.html('Error')
+            }else{
+               var html = '<div class="avatar"><img src="'+data.avatar+'" alt="'+data.screen_name+'"></div>';
+               html += '<div class="content"><p>'+data.screen_name+'</p>';
+               if(data.company){
+                   html += '<p class="company">'+data.company+'</p>';
+               }
+               html += '<p class="title">'+data.job_title+'</p></div>';
+               $container.html(html)
+            }
+        })
+    });
+      
+      $("#event-152042 dt").each(function(){
+          var txt = $(this).text();          
+          if(txt == "活动摘要" || txt == "活动流程"){
+              $(this).append("<div class='mini1'></div>");
+          }
+      })
+    
+})
+</script>

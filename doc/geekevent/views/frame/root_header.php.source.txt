@@ -1,0 +1,64 @@
+<?php
+$user_guid = $this->global_lib->get_user_guid();
+$where = array(
+    'is_read'   => 0,
+    'user_guid' => $user_guid
+);
+$notification_num = $this->msg_lib->obtain_notifications('id',$where,NULL,NULL,NULL,TRUE);
+$key_word = (isset($key_word)) ? htmlspecialchars($key_word) : "搜索";
+?>
+ <div class='container'>
+    <h1><a class="png_bg" href='/'>GeekPark</a><sup>2011</sup></h1>
+    <nav class='global'>
+        <ul>
+            <li class='<?php if ($this->uri->segment(1)=="read"  or $this->uri->segment(1)=="" ) echo "on";?>'>
+                <a href='/read/seed' title="<?=lang('common:read')?>"><?=lang('common:read')?></a>
+            </li>
+            <li class='<?php if ($this->uri->segment(1)=="cast") echo "on";?>'>
+                <a href='/cast/' title="<?=lang('common:cast')?>"><?=lang('common:cast')?></a>
+            </li>
+        
+            <li class='<?php if ($this->uri->segment(1)=="event") echo "on";?>'>
+                <a href='/event/' title="<?=lang('common:event')?>"><?=lang('common:event')?></a>
+            </li>
+          
+        </ul>
+    </nav>
+    <div id='searchbox'>
+        <form id='search-form' name='global-search' action="/search/all" method="post">
+            <input type='search' id='search' name='search' placeholder='<?=$key_word?>' />
+            <input type='submit' class='submit' value=''>
+        </form>
+    </div>
+    <div class='tool-box'>
+        <ul>
+        <?php if($this->global_lib->is_login()){?>
+       		 <li class="first">
+                <a href="/user/home/"  title="个人首页">
+                <img src="<?=$this->img_lib->get_avatar($user_guid,'small')?>" alt="<?=$this->global_lib->get_user_screen_name($user_guid)?>" class="avatar"></a>
+            </li>
+            <li>
+                <a href="/pg/notification" title="通知"   class="info <?php if($notification_num > 0) echo "on";?>"><span><?=$notification_num?></span></a>
+            </li>
+            <li>
+                <a href="<?=$this->web_router_lib->Get_user_setting_url()?>" class="setting png_bg" title="设置"><span>设置</span></a>              
+            </li><?php
+           // if($this->load->module("user/privilege/check_group_privilege",array("admin"),TRUE)){
+            if($this->tp_privilege->check_group_privilege("admin")){
+            	echo '<li><a href="/ctr" title="后台管理" class="contral"><span>后台管理</span></a></li>';
+            }
+            ?><li class="last"><a href='/user/logout'  title="退出" class="loginOut png_bg"><span>退出</span></a>
+
+
+            </li><?php }else{?>
+            <li class="first">
+                <a href='/user/login' title="登录">登录</a>
+            </li><li>
+                <a href='/user/register' title="注册">注册</a>
+            </li>
+        <?php }?>
+        </ul>
+    </div>
+    <div id="ajaxing" style="display: none;"></div>
+</div>
+<a class="jump_new" href="http://www.geekpark.net/network" target="_blank">极客社区</a>

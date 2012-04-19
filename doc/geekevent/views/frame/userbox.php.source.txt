@@ -1,0 +1,174 @@
+<script src="/public/js/lib/j.tipsy.js"></script>
+<?php 
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+header("Last-Modified: " . gmdate("D, d M Y H:i:s") . "GMT");
+header("Cache-Control: no-cache, must-revalidate");
+header("Pragma: no-cache");
+
+	$url = "/".$this->router->class."/".$this->router->method;
+	$login_on=false;
+	if(isset($is_login)) 
+	{
+		if($is_login)$login_on=true;
+	}else{
+		$login_on=$this->global_lib->is_login();
+	}
+	
+	if($login_on)
+	{
+		if(!isset($user_guid)) $user_guid=$this->global_lib->get_user_guid();
+	?>
+	<div class="extra">
+		<a href="/user/logout" class="btn" title="<?php echo geek_lang('logout'); ?>">
+			<img src="/public/images/common/header_exit.gif" alt="<?php echo geek_lang('logout'); ?>" />
+		</a>
+		<a href="/help" class="btn" title="<?php echo geek_lang('help'); ?>">
+			<img src="/public/images/common/header_help.gif" alt="<?php echo geek_lang('help'); ?>" />
+		</a>
+		<?php if($this->user_engine_lib->isadmin()){?>
+			<a href="/ctr"><?php echo geek_lang('super_admin'); ?></a>
+		<?php }?>
+	</div>
+	<div class="actions">
+		<a href="/member/profile" class="btn" title="<?php echo geek_lang('account_setting'); ?>">
+			<img src="/public/images/common/header_set.gif" alt="<?php echo geek_lang('account_setting'); ?>" />
+		</a>
+		<span style="position:relative;">
+			<a href="/message/box" class="btn pmailbox"
+			 	title="<?php echo geek_lang('mailbox'); ?>">
+				<img src="/public/images/common/header_mail.gif" alt="<?php echo geek_lang('mailbox'); ?>" />
+			</a>
+			<span class="tipnum tipgreen" style='display:none'></span>
+		</span>
+
+		<a href="/member/be/comment" class="onlook btn" title="<?php echo geek_lang('me:be'); ?>">
+			<img src="/public/images/common/header_be.gif" alt="<?php echo geek_lang('me:be'); ?>" />
+		</a>
+		<span class="tipnum tipblue" style='display:none'></span>
+
+		<a href="<?php echo $this->gpk_router_lib->Get_bank_url()?>" class="btn" 
+			title="<?php echo geek_lang('bank_center'); ?>">
+			<img src="/public/images/common/header_bank.gif" alt="<?php echo geek_lang('bank_center'); ?>" />
+		</a>
+		<a href="/member/relation/friend/<?php echo $this->global_lib->get_user_guid();?>" class="btn"
+			title="<?php echo geek_lang('relations'); ?>">
+			<img src="/public/images/common/header_relation.gif" alt="<?php echo geek_lang('relations'); ?>" />
+		</a>
+		</div>
+		
+		<span class="box">
+			<a href="/member/home/<?php echo $user_guid;?>">
+				<?php echo $this->global_lib->get_username();?>
+			</a>
+		</span>
+		
+		<script>
+			tip_listener_count = {
+				'pmailbox':{
+					'total':0,
+					'私信': {
+						'num':0,
+						'link':''
+					},
+					'系统消息':{
+						'num':0,
+						'link':''
+					}
+				},
+				'onlook' : {
+					'total':0,
+					'被评论': {
+						'num':0,
+						'link':''
+					},
+					'被转发': {
+						'num':0,
+						'link':''
+					}
+				}
+			}
+			/*
+			tip_listener_count = {"pmailbox":{"total":1,"\u79c1\u4fe1":{"num":"1","link":"\/message\/box"},"\u7cfb\u7edf\u6d88\u606f":{"num":"0","link":"\/message\/box\/system"},"\u516c\u56ed\u901a\u77e5":{"num":"0","link":"\/message\/box\/notify"}},"onlook":{"total":5,"\u63d0\u53ca":{"num":"0","link":"\/member\/be\/atme"},"\u8bc4\u8bba":{"num":"2","link":"\/member\/be\/comment"},"\u8f6c\u53d1":{"num":"1","link":"\/member\/be\/share"},"\u6536\u85cf":{"num":"2","link":"\/member\/be\/bookmark"}}};*/
+			
+			function bindTip($obj,title){
+				$obj.attr('orgin-tip', title);
+				$obj.tipsy(
+					{
+						gravity: 'nw',
+						html:true,
+						delayIn: 500, 
+						delayOut: 3000,
+						fade: true,
+						live:true,
+						title:'orgin-tip'
+					}
+				)
+			}
+			function hackTip($obj, key){
+				$obj.hover(
+					function(){
+						for(key2 in tip_listener_count){
+							if(key2 != key ){
+								$('a.'+key2).tipsy("hide")
+							}
+						}
+					},function(){}
+				)
+			}
+			function chkListener_core(){
+				if(!tip_listener_count) return;
+				for(key in tip_listener_count){
+					var $anchor = $('a.'+key);
+					var $anchor_num = $anchor.next();
+					var total = tip_listener_count[key].total;
+
+					if(parseInt(total) > 0){
+						$anchor_num.html(total).show();
+						var msg = '';
+						for(var detail in tip_listener_count[key]){
+							var detail_value = tip_listener_count[key][detail];
+							if(detail_value.num){
+								var detail_num = parseInt(detail_value.num);
+								if(detail_num > 0){
+									msg += '<a href="'+ detail_value.link +'">'
+									msg += '有'+detail_num+'条'+detail+'</a><br />'
+								}
+							}
+						}
+						bindTip($anchor, msg);
+						hackTip($anchor, key);
+					}else{
+						$anchor_num.html('').hide()
+						//clearTip($anchor);
+					}
+				}
+				window.setTimeout(function(){
+					chkListener()
+				}, 60000)
+			}
+			function chkListener(){
+				$.get('/ajax/notify/', function(response) {
+					tip_listener_count = eval('(' + response + ')');
+					chkListener_core()
+				});
+			}
+			chkListener()
+		</script>
+	<?php
+		}
+		elseif($url != "/user/login" && $url != "/user/register")
+		{
+	?>
+		<div class="extra">
+			<a href="/help" class="btn" title="<?php echo geek_lang('help'); ?>">
+				<img src="/public/images/common/header_help.gif" alt="<?php echo geek_lang('help'); ?>" />
+			</a>
+		</div>
+		<span class="box">
+			<a href="javascript:void(0)" onclick="GPS.popLogin()"><?php echo  geek_lang('login');?></a> | 
+			<a href="/user/register"><?php echo geek_lang('user:register'); ?></a>
+		</span>	
+	<?php
+		}
+	?>
+		

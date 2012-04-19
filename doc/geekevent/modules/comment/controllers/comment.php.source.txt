@@ -1,0 +1,59 @@
+<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
+
+class Comment_Comment_module extends CI_Module {
+
+        /**
+        * 构造函数
+        *
+        * @return void
+        * @author
+        **/
+        function __construct()
+        {
+            parent::__construct();
+            $this->load->model("comment_mod");
+        }
+
+        function add_comment($entity_guid,$fid=0,$content,$user_guid,$source='web')
+        {
+            //对 entity|core_entity|comments 三张表插入数据
+            $time	=time();	
+            $e_data = array(
+                'type'              => 'object',
+                'subtype_id'        => MODULE_COMMENT,
+                'user_guid'         => $user_guid,
+                'father_guid'       => $fid,
+                'time_created'      => $time,
+                'time_updated'      => $time,
+                'deadline'          => 0,
+                'visibility'        => 'yes',
+                'source'            => $source,
+                'second_type'       => 0,
+                'ip_address'        => $this->input->ip_address()
+            );
+            $guid = $this->comment_mod->insert_a_row(TABLE_ENTITY,$e_data);
+            
+            //插入comment的core_entity数据
+            $ce_data = array(
+                'guid'          => $guid,
+                'subtype_id'    => MODULE_COMMENT,
+                'title'         => 'comment',
+                'main'          => $content
+            );
+            $this->comment_mod->insert_a_row(TABLE_CORE_ENTITY,$ce_data);
+
+            //插入comments表数据
+            $c_data = array(
+                'guid'          => $guid,
+                'entity_guid'   => $entity_guid,
+                'fid'           => $fid,
+                'vote'          => 0,
+                'user_guid'     => $user_guid,
+                'time_created'  => $time
+            );
+            $this->comment_mod->insert_a_row(TABLE_COMMENT,$c_data);
+            return $guid;
+        }
+
+}
+?>

@@ -1,0 +1,56 @@
+<?php 
+    class Clip_lib extends Dbmanager_lib
+    {
+        var $ci;
+        function __construct()
+        {
+            $this->ci = &get_instance();
+            $this->ci->load->model('clip_mod');
+            $this->ci->load->model('entity_mod');
+        }
+
+        function obtain_clips_by_ajax($tag=NULL,$order="the_latested",$limit=10,$offset=0)
+        {
+            return $this->ci->clip_mod->get_clips_by_ajax($tag,$order,$limit,$offset);
+        }
+
+        function obtain_user_clips($user_guid,$limit=10,$offset=0,$forcount=FALSE)
+        {
+            $where = array(
+                'user_guid' => $user_guid,
+                'type'      => 'clip'
+            );
+            return $this->obtain_rows(TABLE_EVENTS_SPEAKERS,'id,father_id',$where,NULL,'id DESC',$limit,$offset,$forcount);
+        }
+
+        function obtain_clip_highlight($clip_guid)
+        {
+            return $this->obtain_a_row_field(TABLE_CLIPS,'highlight',array('guid'=>$clip_guid));
+        }
+
+        function obtain_related_clips($collection_id,$forcount=FALSE)
+        {
+            $where = array('collection_related_id'=>$collection_id);
+            if($forcount)
+            {
+                return $this->obtain_rows(TABLE_CLIPS,'guid',$where,NULL,'record_time ASC',NULL,NULL,TRUE);
+            }
+            else
+            {
+                return $this->obtain_rows(TABLE_CLIPS,'guid',$where,NULL,'record_time ASC');
+            }
+        }
+
+        function obtain_recommended_clips()
+        {
+            $where = array('type'=>'cast');
+            return $this->obtain_a_row_field(TABLE_RECOMMENDATION,'data',$where);
+        }
+
+        function obtain_a_clip($guid)
+        {
+            $where = array('guid'=>$guid);
+            return $this->obtain_a_row(TABLE_CLIPS,'*',$where);
+        }
+    }
+?>

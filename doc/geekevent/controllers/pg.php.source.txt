@@ -1,0 +1,120 @@
+<?php
+	class Pg extends CI_Controller
+	{
+ 
+		function __construct()
+		{
+			parent::__construct(); 
+            $this->load->library('tag_lib');
+			$this->load->library('pagination');
+            $this->load->library('clip_lib');
+            $this->load->library('event_lib');
+			$this->lang->load('clip', 'chinese');
+			$this->load->add_package_path(APPPATH.'third_party/user/');
+            $this->load->library('tp_user');
+            $this->load->library('tp_privilege');
+            
+		}
+		
+		
+	  	function index(){
+	  		$title          = lang('common:pg');
+            $keywords       = "";
+            $description    = "";
+			$this->template->write('title',$title); 
+			$this->template->write('keywords',$keywords); 
+			$this->template->write('description',$description); 
+            $this->template->write('layout','filter-box');
+            $this->template->write('css_type','cast');
+            $this->template->write('body_class','cast');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write('extra_scripts',$this->load->view("scripts/cast_load",'',TRUE));
+		    $this->template->render();
+		}
+		
+		function view($entity_guid=''){
+
+            $where = array(
+                'guid'  => $entity_guid
+            );
+            $view_num = $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_EXTRA_ENTITY,'view',$where);
+            $e_data = array(
+                'view'   => $view_num+1
+            );
+            $this->dbmanager_lib->update_rows(TABLE_CORE_EXTRA_ENTITY,$where,$e_data);
+            $title = $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_ENTITY,'title',$where);
+            $keywords = "";
+            $tags_str = $speakers_str = "";
+            $tags = $this->tag_lib->obtain_clip_tags($entity_guid);
+            foreach($tags as $row)
+            {
+                $tags_str = $tags_str.$row->title." ";
+            }
+            $speakers = $this->event_lib->obtain_event_speakers($entity_guid,'clip');
+            foreach($speakers as $row)
+            {
+                $real_name = $this->user_lib->get_real_name($row->user_guid);
+                $speakers_str = $speakers_str.$real_name." ";
+            }
+            $keywords = $tags_str.$speakers_str;
+            $description = $this->clip_lib->obtain_clip_highlight($entity_guid);
+			$data['entity_guid']    = $entity_guid;
+            $data['speakers']       = $speakers;
+			$this->template->write('title',$title); 
+            $this->template->write('keywords',$keywords);
+            $this->template->write('description',$description);
+            $this->template->write('layout','w_s');
+            $this->template->write('css_type','cast');
+            $this->template->write('body_class','cast');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"clips/clips", $data);
+            $this->template->write('extra_scripts',$this->load->view("scripts/comment",$data,TRUE));	
+            $this->template->write('extra_scripts1',$this->load->view("scripts/clips",'',TRUE));	
+            $this->template->write_view('sidebar','reuse/comment');
+		    $this->template->render();
+		}
+		
+		function notification($page = '0')
+		{
+			if(!$this->global_lib->is_login()){ 
+				 redirect(LOGIN_URL);
+			}
+            $limit = 10;
+			$user_guid = $this->global_lib->get_user_guid();
+			$data['user_guid'] = $user_guid;
+			
+			$config['base_url'] = "/pg/notification";
+			$config['uri_segment'] = 3;
+			$config['per_page'] = $limit;
+			$where = array('user_guid' => $user_guid);
+            $this->msg_lib->obtain_notifications('id',$where,NULL,NULL,NULL,TRUE);
+			$data['notification_num'] = $this->msg_lib->obtain_notifications('id',$where,NULL,NULL,NULL,TRUE);
+			if($data['notification_num'] > 0) 
+			{
+				$data['notifications'] = $this->msg_lib->obtain_notifications('*',$where,"id DESC",$limit,$page);
+			}
+			else
+			{
+				$msg = "您暂无通知";
+				$this->msg_lib->setmsg($msg,ALERT);
+			}
+			
+			$config['total_rows'] = $data['notification_num'];
+			$this->pagination->initialize($config);
+			
+			$title="通知";
+			$this->template->write('title',$title); 
+			$this->template->write('body_class','wsn');
+            $this->template->write('layout','w_s_n');
+ 
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main', "notification/notify_list", $data);
+            $this->template->write('extra_scripts1',$this->load->view("scripts/notify_extra",'',TRUE));	
+            //$this->template->write_view('sidebar','notification/notify_right');
+		    $this->template->render();
+			
+		}
+
+	 
+	}
+?>

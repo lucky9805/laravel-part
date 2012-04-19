@@ -1,0 +1,135 @@
+<?php
+class Sitemap extends My_Controller
+{
+	function __construct()
+	{
+		parent::__construct();
+		$this->load->helper('form');
+		$this->load->helper('url');
+		$this->load->helper('file');
+		$this->load->library('sys_lib');
+		$this->load->library('sitemap_lib');
+	}
+
+	function index($operate = 'all')
+	{
+		$data = $this->sitemap_lib->get_sitemap_by_subtype_id($operate);
+		/*
+		<?xml version="1.0" encoding="UTF-8"?>
+		<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+		   <url>
+			  <loc>http://www.example.com/</loc>
+			  <lastmod>2005-01-01</lastmod>
+			  <changefreq>monthly</changefreq>
+			  <priority>0.8</priority>
+		   </url>
+		</urlset>
+		*/
+		header('Content-Type: text/xml; charset=utf-8');
+		$xml = '<?xml version="1.0" encoding="utf-8"?>'.PHP_EOL;
+		if ($operate != 'all')
+		{
+			$xml .= '<?xml-stylesheet type="text/xsl" href="'.base_url().'sitemap.xsl"?>'.PHP_EOL;
+		}
+		$xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'.PHP_EOL;
+		if (!empty($data))
+		{
+			if ($operate == 'd')
+			{
+				// 网站首页 - 0.8 - daily - 今日
+				$xml .= '  <url>'.PHP_EOL;
+				$xml .= '    <loc>'.base_url().'</loc>'.PHP_EOL;
+				$xml .= '    <lastmod>'.date('Y-m-d').'</lastmod>'.PHP_EOL;
+				$xml .= '    <changefreq>daily</changefreq>'.PHP_EOL;
+				$xml .= '    <priority>0.8</priority>'.PHP_EOL;
+				$xml .= '  </url>'.PHP_EOL;
+
+				// 极客阅读 首页 - 0.6 - daily - 今日
+				$xml .= '  <url>'.PHP_EOL;
+				$xml .= '    <loc>'.base_url().'read/seed</loc>'.PHP_EOL;
+				$xml .= '    <lastmod>'.date('Y-m-d').'</lastmod>'.PHP_EOL;
+				$xml .= '    <changefreq>daily</changefreq>'.PHP_EOL;
+				$xml .= '    <priority>0.6</priority>'.PHP_EOL;
+				$xml .= '  </url>'.PHP_EOL;
+
+				// 极客活动 首页 - 0.6 - weekly - 最新活动更新日
+				$xml .= '  <url>'.PHP_EOL;
+				$xml .= '    <loc>'.base_url().'event/</loc>'.PHP_EOL;
+				$xml .= '    <lastmod>'.date('Y-m-d', $this->sitemap_lib->get_last_event_updated_time()).'</lastmod>'.PHP_EOL;
+				$xml .= '    <changefreq>weekly</changefreq>'.PHP_EOL;
+				$xml .= '    <priority>0.6</priority>'.PHP_EOL;
+				$xml .= '  </url>'.PHP_EOL;
+
+				// 极客广播 首页 - 0.6 - weekly - 本周一
+				$xml .= '  <url>'.PHP_EOL;
+				$xml .= '    <loc>'.base_url().'cast/</loc>'.PHP_EOL;
+				$xml .= '    <lastmod>'.date('Y-m-d', time() - 86400 * (date('N') - 1)).'</lastmod>'.PHP_EOL;
+				$xml .= '    <changefreq>weekly</changefreq>'.PHP_EOL;
+				$xml .= '    <priority>0.6</priority>'.PHP_EOL;
+				$xml .= '  </url>'.PHP_EOL;
+
+				$changefreq = 'weekly';
+				$file_suffix = 'daily';
+			}
+			else
+			{
+				$changefreq = $file_suffix = 'monthly';
+			}
+
+			foreach ($data as $api_data)
+			{
+				$xml .= '  <url>'.PHP_EOL;
+			/*
+			8.seed  : /read/view/{guid} 0.4
+			5.cast  : /cast/view/{guid} 0.4
+			4.event : /event/view/details/{guid} 0.3
+			*/
+				switch($api_data->subtype_id)
+				{
+					case 4:
+						$xml .= '    <loc>'.base_url().'event/view/details/'.$api_data->guid.'</loc>'.PHP_EOL;
+						$xml .= '    <lastmod>'.date('Y-m-d', $api_data->time_updated).'</lastmod>'.PHP_EOL;
+						$xml .= '    <changefreq>'.$changefreq.'</changefreq>'.PHP_EOL;
+						$xml .= '    <priority>0.3</priority>'.PHP_EOL;
+						break;
+					case 5:
+						$xml .= '    <loc>'.base_url().'cast/view/'.$api_data->guid.'</loc>'.PHP_EOL;
+						$xml .= '    <lastmod>'.date('Y-m-d', $api_data->time_updated).'</lastmod>'.PHP_EOL;
+						$xml .= '    <changefreq>'.$changefreq.'</changefreq>'.PHP_EOL;
+						$xml .= '    <priority>0.4</priority>'.PHP_EOL;
+						break;
+					case 8:
+						$xml .= '    <loc>'.base_url().'read/view/'.$api_data->guid.'</loc>'.PHP_EOL;
+						$xml .= '    <lastmod>'.date('Y-m-d', $api_data->time_updated).'</lastmod>'.PHP_EOL;
+						$xml .= '    <changefreq>'.$changefreq.'</changefreq>'.PHP_EOL;
+						$xml .= '    <priority>0.4</priority>'.PHP_EOL;
+						break;
+				}
+				$xml .= '  </url>'.PHP_EOL;
+			}
+		}
+		$xml .= '</urlset>'.PHP_EOL;
+
+		if ($operate != 'all')
+		{
+			echo $xml;
+			write_file('sitemap_'.$file_suffix.'.xml', $xml);
+		}
+		else
+		{
+			$sitemapIndex = '<?xml version="1.0" encoding="UTF-8"?>'.PHP_EOL;
+			$sitemapIndex .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'.PHP_EOL;
+			$sitemapIndex .= '   <sitemap>'.PHP_EOL;
+			$sitemapIndex .= '      <loc>'.base_url().'sitemap_daily.xml</loc>'.PHP_EOL;
+			$sitemapIndex .= '      <lastmod>'.date('Y-m-d').'</lastmod>'.PHP_EOL;
+			$sitemapIndex .= '   </sitemap>'.PHP_EOL;
+			$sitemapIndex .= '   <sitemap>'.PHP_EOL;
+			$sitemapIndex .= '      <loc>'.base_url().'sitemap_monthly.xml</loc>'.PHP_EOL;
+			$sitemapIndex .= '      <lastmod>'.date('Y-m-').'01</lastmod>'.PHP_EOL;
+			$sitemapIndex .= '   </sitemap>'.PHP_EOL;
+			$sitemapIndex .= '</sitemapindex>'.PHP_EOL;
+			echo $sitemapIndex;
+			write_file('sitemap_index.xml', $sitemapIndex);
+		}
+	}
+}

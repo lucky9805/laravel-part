@@ -1,0 +1,10 @@
+<article class='comment'>
+    <time pubtime="<?=$r_date?>" datetime='<?=$r_date?>'><?=$r_date?></time>
+    <div class='entry join'>
+         <div class='toolbar'>                                    
+            <span class='from'>
+                <?=$action?><a href='<?=$e_link?>'><?=$e_title?></a>
+            </span>
+        </div>
+    </div>
+</article>

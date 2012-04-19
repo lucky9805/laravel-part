@@ -1,0 +1,4 @@
+<?php
+	if($column == '2') $this->load->view('layout/2/switch');
+	elseif($column == '1') $this->load->view('layout/1/switch');
+?>

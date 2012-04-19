@@ -1,0 +1,76 @@
+<?php
+if (! defined ( 'BASEPATH' )) exit ( 'No direct script access allowed' );
+
+    class Seed_lib extends Dbmanager_lib
+    {
+        function __construct()
+        {
+            $this->ci = & get_instance();
+            $this->ci->load->model('seed_mod');
+        }
+
+        function obtain_seeds_by_time($limit, $time, $forcount=FALSE)
+        {
+            $query =  $this->ci->seed_mod->get_seeds_by_time($limit, $time, $forcount);
+            if($forcount)
+            {
+                $result = $query;
+            }
+            else
+            {
+                if($query->num_rows() > 0)
+                {
+                    $result = $query->result();
+                }
+                else
+                {
+                    $result = array();
+                }
+            }
+			if(!$forcount)
+				$query->free_result();
+            return $result;
+
+        }
+
+        function obtain_seeds_by_tag($tag_id, $limit, $time, $forcount=FALSE)
+        {
+            $query =  $this->ci->seed_mod->get_seeds_by_tag($tag_id, $limit, $time, $forcount);
+            if($forcount)
+            {
+                $result = $query;
+            }
+            else
+            {
+                if($query->num_rows() > 0)
+                {
+                    $result = $query->result();
+                }
+                else
+                {
+                    $result = array();
+                }
+            }
+			if(!$forcount)
+				$query->free_result();
+            return $result;
+        }
+
+        function get_last_seeds_num($time)
+        {
+            $where = "publish_time < $time";
+            return $this->obtain_rows(TABLE_SEED, '*', $where, NULL, NULL, NULL, NULL, TRUE);
+        }
+
+        function obtain_seed_by_guid($guid)
+        {
+            $where = array('guid' => $guid);
+            return $this->obtain_a_row(TABLE_SEED, '*', $where);
+        }
+
+        function obtain_user_seeds($user_guid, $limit, $offset, $forcount=FALSE)
+        {
+            $where = array('author' => $user_guid);
+            return $this->obtain_rows(TABLE_SEED, 'guid, author, publish_time', $where, NULL, 'publish_time DESC', $limit, $offset, $forcount);
+        }
+    }

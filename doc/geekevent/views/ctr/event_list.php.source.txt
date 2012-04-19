@@ -1,0 +1,62 @@
+<div class="contentcontainer">
+            <div class="headings">
+                <h2 class="left"><?php echo site_lang('event_list');?></h2>
+            </div>
+               <div class="contentbox">
+				   <div class = 'search'>
+						<form action='/ctr/events_list' method='get'>
+							<p><?php echo site_lang('event_list_total');?><?php echo ':';?><?php echo $num_rows;?></p>
+							<p>
+								<?php echo site_lang('event_list_keyword');?>
+								<?php echo form_input('keyword', $search_parameter);?>
+								<?php echo form_submit('search', site_lang('event_list_search'));?>
+							</p>
+						</form>
+				   </div>
+			   
+				 <table width="100%">
+							<thead>
+								<tr>
+									<th><?php echo site_lang('event_topic');?></th>
+									<th><?php echo site_lang('event_status');?></th>
+									<th><?php echo site_lang('event_time');?></th>									
+									<th><?php echo site_lang('edit_edit');?></th>
+								</tr>
+							</thead>
+							<tbody>
+							<?php if(!isset($search_rows)):?>
+								<?php echo site_lang('no_record');?>
+							<?php else:?>
+								<?php foreach($search_rows as $search_row):?>
+								<tr>
+									<?php 
+										$where['guid'] = $search_row['guid'];
+										$detail = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS, '*', $where, NULL, 'array');
+									?>
+									<td><?php echo $search_row['title'];?></td>
+									<td><?php echo show_event_status($detail['status']);?></td>
+									<td><?php echo date('Y-m-d', $detail['start_time']);?></td>
+									
+									<td>
+									<a href='/ctr/events_do/update/<?php echo $search_row['guid'];?>#tabs-3'><?php echo site_lang('event_sign_up');?></a>
+									<a href='/ctr/events_do/update/<?php echo $search_row['guid'];?>#tabs-4'><?php echo site_lang('event_check_in');?></a>
+									<a href='/ctr/events_do/update/<?php echo $search_row['guid'];?>'><?php echo site_lang('edit_update');?></a>
+									<a href='/ctr/events_do/delete/<?php echo $search_row['guid'];?>' onclick="if(!confirm('<?php echo site_lang('js_confirm_delete');?>')) return false;"><?php echo site_lang('edit_delete');?></a>
+									</td>
+								</tr>
+								<?php endforeach;?>
+							<?php endif;?>
+							</tbody>
+						</table>
+						<div style="float:left">
+							<ul class="pagination">
+								<?php
+									echo $this->pagination->create_links(); 
+								?>
+							</ul>
+						</div>
+						<div style="clear: both;"></div>
+					
+		           </div> 
+
+        </div>

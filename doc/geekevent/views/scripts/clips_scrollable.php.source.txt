@@ -1,0 +1,68 @@
+<script> 
+$(function() {     
+    var num=<?=$num?>;
+    var current=<?=$current?>;
+	if(current > 4){
+	    $(".items").css("left",-(current-1)*131+"px");
+    }
+    if(num-current <= 3 && num > 4){
+        $(".items").css("left",-(num-4)*131+"px");
+        $(".scrollable .next").addClass("disabled");
+    }    
+	var leftSpace=$(".scrollable .items").css("left");	
+		leftSpace = parseInt(leftSpace);	
+	var contentWidth=num*131+10;
+	$(".scrollable .items").css("width",contentWidth+"px");
+	$(".items li[id="+current+"]").addClass("active").find(".numId").find("img").attr("src","/public/img/icons/<?=$current?>on.png");		
+	function judgeButton(){
+		var leftSpace=$(".scrollable .items").css("left");	
+		leftSpace = parseInt(leftSpace);	
+		var contentWidth=num*131+10;
+		$(".scrollable .items").css("width",contentWidth+"px");	
+        if(num<=4){
+        $(".scrollable .prev").addClass("disabled");
+        $(".scrollable .next").addClass("disabled");
+        }else if( leftSpace >= 0){		   
+			$(".scrollable .prev").addClass("disabled");
+			$(".scrollable .next").removeClass("disabled");			
+	    }else if(leftSpace <= 524-contentWidth+10){
+		    $(".scrollable .next").addClass("disabled");            
+			$(".scrollable .prev").removeClass("disabled");
+		}else{
+		    $(".scrollable .next").removeClass("disabled");	
+			$(".scrollable .prev").removeClass("disabled");
+		}
+	} 
+	setInterval(judgeButton,100);
+
+	
+	$(".scrollable .prev").click(function(){ 
+	    var leftSpace=$(".scrollable .items").css("left");
+		leftSpace = parseInt(leftSpace);
+	    if($(this).hasClass("disabled")){
+			return;
+		}else{ 
+			$(".scrollable .items").animate({'left':'+=131px'},100);;
+		}
+	});
+	$(".scrollable .next").click(function(){
+	    var leftSpace=$(".scrollable .items").css("left");
+		leftSpace = parseInt(leftSpace);
+	   
+	    if($(this).hasClass("disabled")){
+			return;
+		}else{
+		    $(".scrollable .items").animate({'left':'-=131px'},100);
+	    
+	    }
+	});
+	$(".items li").click(function() {	    
+	    if ($(this).hasClass("active")) { return; }
+		
+		$(".items li").removeClass("active");
+		$(this).addClass("active");
+		
+ 
+	});
+});
+</script>

@@ -1,0 +1,6 @@
+ <div id='newslist-box' class="clearfix">
+	    <div class="newsL" id="newsL">
+		</div>
+		<div class="newsR" id="newsR">
+		</div>
+ </div>

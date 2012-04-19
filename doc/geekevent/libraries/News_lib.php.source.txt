@@ -1,0 +1,10 @@
+<?php
+if (! defined ( 'BASEPATH' )) exit ( 'No direct script access allowed' );
+
+    class News_lib extends Dbmanager_lib
+    {
+        function __construct()
+        {
+            $this->ci = & get_instance();
+        }
+    }

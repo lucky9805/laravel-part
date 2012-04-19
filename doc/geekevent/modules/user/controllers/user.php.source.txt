@@ -1,0 +1,375 @@
+<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
+
+class User_User_module extends CI_Module {
+
+        /**
+        * 构造函数
+        *
+        * @return void
+        * @author
+        **/
+        function __construct()
+        {
+            parent::__construct();
+            $this->load->model("user_mod");
+      
+        }
+        
+        //用户登陆
+        function login($username='',$password='',$remember=true){
+            //get logoin data
+            if($username=='')
+            return 'no_user_name';
+            $user = $this->user_mod->get_user_by_username($username);
+            if($user->num_rows()>0){
+                $array_user = $user->result_array();
+                $password	= md5(md5($password).$array_user[0]["salt"]);
+			    $status		= $array_user[0]["status"];
+                if($status =="active"){
+                
+                }elseif($status =="inactive"){
+                	return "inactive";
+                }else{
+                    //被禁止的用户
+                    return "banned";
+                }
+
+                
+                if($password == $array_user[0]["password"]){
+                    //用户登陆che成功，开始设置session  ;       
+                    //
+                $user = array(
+                    'guid'=>$array_user[0]["guid"],
+                    'username'=>$array_user[0]["username"],
+                    'screen_name'=>$array_user[0]["screen_name"],
+				    'group_id'=>$array_user[0]["group_id"],
+                    'unique_id'=>$array_user[0]["unique_id"],
+				    'is_logged_in'=>TRUE
+				   );
+			    
+                $this->session_lib->set_userdata($user);
+                //记住我
+         		if($remember)$this->create_autologin($array_user[0]["guid"],$array_user[0]["salt"]);
+         		//清除尝试次数计数器
+         		$this->clear_login_attempts();
+				return "ok";
+                
+                }else{
+                    //密码不正确
+                
+                  return "password";
+                }
+            }else{
+            //用户不存在
+                      return "no_user";
+            }
+
+            //check user is in the system
+            //check user's password is validate
+            //check user's status is avalibale
+            //set sessions
+            
+        }
+
+
+        //用户退出
+        function logout(){
+            //destory user's session
+            //destory user's cookies
+            if($this->input->cookie('autologin'))
+			{
+				$this->delete_autologin();
+			}
+ 
+            $this->session_lib->sess_destroy();//Destroy session
+        }
+
+        //用户注册
+        function register(){
+            //get user register data 
+            //check username is in used
+            //check user email is in used
+            //create a user
+            //send user a welcome email
+            //
+        }
+
+		function update_user_password($user_guid="",$rand_str=''){
+			if($user_guid=="")
+			return "error";
+			
+			$user = $this->user_mod->get_user_by_guid($user_guid);
+ 
+            if($user->num_rows()>0){
+                $array_user = $user->result_array();
+    			$unique_id = $array_user[0]["unique_id"];
+    			$salt = $array_user[0]["salt"];
+				$tempass = md5(md5($rand_str).$salt);
+				
+ 				$this->user_mod->update_password_by_unique_id($tempass,$unique_id);
+ 			 	return "ok";
+            }
+		}
+
+        //忘记密码
+        function forget_password($username="renbaoyong@gmail.com"){
+
+            //get user's email
+ 
+            $user = $this->user_mod->get_user_by_username($username);
+ 
+            if($user->num_rows()>0){
+                $array_user = $user->result_array();
+    
+               	$rand_str = strtolower(rand_str(6));
+				$salt = $array_user[0]["salt"];
+				$data['tempass'] = md5(md5($rand_str).$salt);
+				$data['salt'] = $salt;
+				$user_guid = $array_user[0]["guid"]; 
+				$unique_id = $array_user[0]["unique_id"]; 		
+	 
+			 	$this->user_mod->update_user_by_guid($data,$user_guid);
+		 
+				$data_m['username']	= $array_user[0]["username"];
+				$data_m['new_password'] = $rand_str;
+				$data_m['reset_password_uri'] = base_url()."user/pwd_reset/".$data['tempass']."/".$unique_id;
+			 
+				
+				//send a forget_password's eamil
+				$from = $this->config->item('wm_webmaster_email');
+				$subject = $this->lang->line('auth_forgot_password_subject');
+				$email = $array_user[0]["email"];
+				//$email = "lucky9805@163.com";
+			    $this->_sending_forgot_password_email($data_m,$message);
+			  
+				$this->_email($email,$from,$subject,$message);
+				/* */
+			 
+				return "ok";
+            }else{
+            	 return "no_user";
+            }
+            
+            
+            
+        }
+
+        //确认要重制密码
+        function confirm_reset_password($tempass,$unique_id){
+            //get user guid
+           $user= $this->user_mod->check_password_reset($tempass,$unique_id);
+          if($user->num_rows()>0){
+           		$this->user_mod->update_password_by_unique_id($tempass,$unique_id);
+           		return "ok";
+           }else{
+           		return "no";
+           }
+            //generate password
+            //send password to the user's email     
+        }
+        
+        //判断此用户是否在系统中
+        function check_user_in_system($user_unique_id){
+           $user =$this->user_mod->check_user_in_system($user_unique_id); 
+            if($user->num_rows()>0){
+            	echo "yes";
+            }else{
+         
+              $user =$this->user_mod->check_user_name_censor($user_unique_id); 
+              if($user->num_rows()>0)
+              	echo "censor";
+              else
+              	echo "no";
+            }
+          
+           
+        }
+        
+        function check_email_in_system($email){
+           $user = $this->user_mod->check_email_in_system($email); 
+            if($user->num_rows()>0){
+            	echo "yes";
+            }else{
+            	echo "no";
+            }
+        }
+        
+         //判断此用户是否在系统中
+        function test_view(){
+        	$this->load->view("test");
+        }
+
+
+		function _sending_forgot_password_email($data,&$content)
+		{
+			//Create content
+		 
+			$content = sprintf(
+				$this->lang->line('auth_forgot_password_content'),
+				$data['username'],
+				$data['reset_password_uri'],
+				$data['new_password'],
+				$this->config->item('wm_webmaster_email'),
+				$this->config->item('wm_website_name')
+			);
+			 
+		}
+		
+		function _email($to,$from,$subject,$message){
+			/**/
+ 
+			$email = $this->email;
+			
+			$email->mailtype='html';
+			$email->from($from);
+			$email->to($to);
+			$email->subject($subject);
+			$email->message($message);
+			return $email->send();
+			 
+		}
+		
+		private function clear_login_attempts()
+		{
+			return $this->dbmanager_lib->delete_rows('login_attempts',array('ip_address'=>$this->input->ip_address()));
+		}
+		
+		//用户自动登录
+		function autologin()
+		{
+			$result = false;
+			$data = $this->input->cookie('autologin');
+			if(is_string($data))
+			{
+				$data = unserialize($data);
+				if(isset($data['unique_key']) AND isset($data['guid']))
+				{
+					$query = $this->user_mod->get_rows('autologins',array('guid'),array('unique_key'=>$data['unique_key'],'guid'=>$data['guid']));
+					if($query->num_rows()==1)
+					{
+						//更新cookie, 更新autologins表
+						$this->auto_cookie($data);
+						$condition = array(
+							'guid'=>$data['guid'],
+							'unique_key'=>$data['unique_key']
+						);
+						
+						$this->user_mod->update_rows('autologins',array('last_ip'=>$this->input->ip_address(),'last_login'=>time()),$condition);		 	
+						
+						//向用户的session中赋值
+						$query = $this->user_mod->get_rows('users',"*",array('guid'=>$data['guid']));
+			 
+						if($query->num_rows()>0){
+							$array_user = $query->result_array();
+										$user = array(
+					                    'guid'=>$data['guid'],
+					                    'username'=>$array_user[0]["username"],
+					                    'screen_name'=>$array_user[0]["screen_name"],
+									    'group_id'=>$array_user[0]["group_id"],
+					                    'unique_id'=>$array_user[0]["unique_id"],
+									    'is_logged_in'=>TRUE
+									   );
+									$this->session_lib->set_userdata($user);//写入sesssion中
+									$result = true;
+						}
+					}
+				}
+			}
+			return $result;
+		}
+		
+		//将用户的登录数据写入cookie
+		private function create_autologin($guid,$salt)
+		{
+			$result = false;
+			$user = array(
+				'unique_key' => md5(uniqid(rand().$this->input->cookie($this->config->item('sess_cookie_name')))),
+				'guid' => $guid,
+				'salt' => $salt
+			);
+			
+			$this->prune_key($user['guid'],$user['unique_key']);//将数据库中autologins的某用户的最近一次登录信息删除
+			if(!$this->store_key($user['unique_key'],$user['guid'])) $result = $this->auto_cookie($user);
+			return $result;
+		}
+			//删除autologins中的自动登录数据
+		private function prune_key($guid,$unique_key)
+		{
+			$condition = array(
+				'guid'=>$guid
+			);
+			return $this->dbmanager_lib->delete_rows('autologins',$condition);
+		}
+		
+		//添加一条autologins中自动登录的用户数据
+		private function store_key($unique_key,$guid)
+		{
+			$user = array(
+				'unique_key'=>$unique_key,
+				'guid'=>$guid,
+				'user_agent'=>substr($this->input->user_agent(),0,49),
+				'last_ip'=> $this->input->ip_address(),
+				'last_login'=>time()
+			);
+			return $this->dbmanager_lib->create_a_row('autologins',$user);
+		}
+		
+		//将cookie写入
+		private function auto_cookie($data)
+		{
+			$cookie = array(
+				'name'=>'autologin',
+				'value'=>serialize($data),
+                'expire'=>60*60*24*31*2,
+			);
+			return $this->input->set_cookie($cookie);
+		}
+		
+		//将cookie设置失效
+		private function delete_autologin()
+		{
+			$result = false;
+			if($data = $this->input->cookie('autologin'))
+			{
+				$data = unserialize($data);
+				$condition = array(
+					'guid'=>$data['guid'],
+					'unique_key'=>$data['unique_key']
+				);
+				if($this->dbmanager_lib->delete_rows('autologins',$condition))
+				{
+					$this->input->set_cookie('autologin','',-1);
+					$result = true;
+				}
+			}
+			return $result;
+		}
+		
+		function activate($unique_id,$key)
+		{
+			$where=array("unique_id"=>$unique_id,"activation_key"=>$key);
+			$user = $this->user_mod->get_rows('users',"*",$where);
+			
+			if($user->num_rows()>0){
+				$array_user = $user->result_array();
+				if($array_user[0]["status"]=="inactive"){
+					 $this->user_mod->update_rows('users',$where,array('status'=>'active'));
+					 //如果系统上线，则需要同步新的用户到旧的系统中
+					 if(USER_SYC)
+					  $user = $this->user_mod->create_new_user_to_old_system($unique_id);
+					 return "yes";
+				}else{
+					 
+					 return "no";
+				}
+			}else{
+				return "error";
+			}
+			
+		}
+		function create_new_user_to_old_system($unique_id){
+			 if(USER_SYC)
+		     $user = $this->user_mod->create_new_user_to_old_system($unique_id);
+		}
+}
+?>

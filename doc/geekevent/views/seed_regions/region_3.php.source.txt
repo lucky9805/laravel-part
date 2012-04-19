@@ -1,0 +1,38 @@
+<?php
+    $seed_0_img = (SEED_TMP_FLAG) ? '/public/html/impotNews/img/img2-3.jpg' : $this->img_lib->seed($seed[0]['guid'],'seed_img_2');
+?>
+<div id="range_3">
+    <dl class="item_3 line_R pad_R">
+        <dt>
+            <a href="<?=$seed[0]['link']?>"><?=$seed[0]['title']?></a>
+            <div class="meta"><?=$seed[0]['source']?> | <?=$seed[0]['time']?></div>
+        </dt>
+        <dd>
+            <div class="cont_meta"><img src="<?=$seed_0_img?>"></div>
+            <div class="content">
+                <p><?=$seed[0]['abstract']?></p>
+            </div>
+            <div class="clear"></div>
+        </dd>
+    </dl>
+
+    <?php 
+        if(isset($seed[1])):
+        $seed_1_img = (SEED_TMP_FLAG) ? '/public/html/impotNews/img/img2-4.jpg' : $this->img_lib->seed($seed[1]['guid'],'seed_img_2');
+    ?>
+    <dl class="item_3 pad_L">
+        <dt>
+            <a href="<?=$seed[1]['link']?>"><?=$seed[1]['title']?></a>
+            <div class="meta"><?=$seed[1]['source']?> | <?=$seed[1]['time']?></div>
+        </dt>
+        <dd>
+            <div class="cont_meta"><img src="<?=$seed_1_img?>"></div>
+            <div class="content">
+                <p><?=$seed[1]['abstract']?></p>
+            </div>	
+            <div class="clear"></div>
+        </dd>
+    </dl>
+    <div class="clear"></div>
+    <?php endif;?>
+</div>

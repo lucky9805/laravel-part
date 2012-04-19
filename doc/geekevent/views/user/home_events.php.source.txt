@@ -1,0 +1,66 @@
+<?php 
+	 $this->load->view($this->web_router_lib->Get_user_navigation_url(),array("current_on"=>"events"));
+?>
+<?php
+	$user_name = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'screen_name', array('guid'=>$user_guid));
+	$member_event_where = array('userguid'=>$user_guid);
+	
+	$speaker_events = array();
+	$clips_guid = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_SPEAKERS, 'father_id', array('user_guid'=>$user_guid, 'type'=>'clip'));
+	foreach($clips_guid as $clip_guid)
+	{
+		$speaker_events[] = $this->dbmanager_lib->obtain_a_row_field(TABLE_CLIPS, 'event_guid', array('guid'=>$clip_guid->father_id));
+	}
+	
+	$speaker_events = array_unique($speaker_events);
+	$speaker_event_num = count($speaker_events);
+?>
+<dl class='user-timeline'>
+
+<?php if($event_num>0 or $speaker_event_num>0):?>
+    <dt><a href="<?php echo $this->web_router_lib->Get_home_url($user_guid,"index");?>"><?php echo $user_name?></a><?php echo site_lang('user_event');?><span class='num'> (<?php echo ($event_num+$speaker_event_num);?>)</span></dt>
+    <dd>		
+        <table width='100%' cellspacing='0' class='datalist'>
+		<?php 
+			//演讲嘉宾参加的活动
+			foreach($speaker_events as $speaker_event):
+		?>
+		<?php
+			$event_info_where = array('guid'=>$speaker_event);
+			$time = $this->dbmanager_lib->obtain_a_row_field(TABLE_EVENTS, 'start_time', $event_info_where);
+			$title = $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_ENTITIES, 'title', $event_info_where);
+		?>
+		
+		<tr>
+			<td><a href='<?php echo $this->web_router_lib->Get_event_details_url($speaker_event);?>'><?php echo $title;?></a></td>
+			<td width='80'><time datetime=''><?php echo date('Y.m.d', $time);?></time></td>
+		</tr>
+		<?php endforeach;?>
+		
+		<?php 
+			//普通用户参加的活动
+			foreach($events_object as $event_object):
+		?>
+		<?php
+			$event_info_where = array('guid'=>$event_object->event_id);
+			$time = $this->dbmanager_lib->obtain_a_row_field(TABLE_EVENTS, 'start_time', $event_info_where);
+			$title = $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_ENTITIES, 'title', $event_info_where);
+		?>
+		<tr>
+			<td><a href='<?php echo $this->web_router_lib->Get_event_details_url($event_object->event_id);?>'><?php echo $title;?></a></td>
+			<td width='80'><time datetime=''><?php echo date('Y.m.d', $time);?></time></td>
+		</tr>
+		
+		<?php endforeach;?>
+        </table>
+		<div class="pagination">
+        <?php echo $this->pagination->create_links(); ?>
+		 </div>
+    </dd>
+<?php else:?>
+<dt></dt>
+<div class="result-info result-alert">
+	<div class="message"><?php echo site_lang('user_no_event_msg');?></div>
+</div>
+<?php endif;?>
+</dl>

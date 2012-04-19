@@ -1,0 +1,5 @@
+<script>
+$(function(){
+	Notification.init()
+})
+</script>

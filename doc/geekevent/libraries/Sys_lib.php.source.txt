@@ -1,0 +1,47 @@
+<?php if(!defined('BASEPATH')) exit('No direct script access allowed');
+
+    class Sys_lib extends Dbmanager_lib
+    {
+        function __construct()
+        {
+			$this->ci =& get_instance();
+    
+        }
+
+        function create_system_logs($data)
+        {
+            $data['uid'] = $this->ci->global_lib->get_user_guid();
+            if($data['uid'] != 0)
+            {
+                $data['time_created'] = time();
+                return $this->create_a_row(TABLE_SYSTEM_LOGS,$data);
+            }
+            else
+            {
+                return ;
+            }
+        }
+
+        function obtain_system_logs($limit=NULL,$offset=NULL,$forcount=FALSE)
+        {
+            return $this->obtain_rows(TABLE_SYSTEM_LOGS,'*',NULL,NULL,"id DESC",$limit,$offset,$forcount);
+        }
+
+        function obtain_login_logs($limit=NULL,$offset=NULL,$forcount=FALSE)
+        {
+        
+        }
+
+        function obtain_login_logs_by_time($start_time,$end_time,$limit=NULL,$offset=NULL,$forcount=FALSE)
+        { 
+        }
+
+        function obtain_login_users_by_time($start_time,$end_time)
+        {
+        	
+        }
+
+        function obtain_user_logs($user_guid,$limit=NULL,$offset=NULL,$forcount=FALSE)
+        {
+        }
+    }

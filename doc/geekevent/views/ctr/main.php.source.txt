@@ -1,0 +1,222 @@
+<!-- Status Bar Start -->
+        <div class="status warning">
+        	<p class="closestatus"><a href="" title="Close">x</a></p>
+        	<p><img src="img/icons/icon_warning.png" alt="Warning" /><span>Attention!</span> Lorem ipsum dolor sit amet, consectetuer, sed diam nonummy nibh.</p>
+        </div>
+        <!-- Status Bar End -->
+        
+         <!-- Red Status Bar Start -->
+        <div class="status success">
+        	<p class="closestatus"><a href="" title="Close">x</a></p>
+        	<p><img src="img/icons/icon_success.png" alt="Success" /><span>Success!</span> Lorem ipsum dolor sit amet, consectetuer adipiscing, sed diam nonummy nibh.</p>
+        </div>
+        <!-- Red Status Bar End -->
+        
+        <!-- Green Status Bar Start -->
+        <div class="status error">
+        	<p class="closestatus"><a href="" title="Close">x</a></p>
+        	<p><img src="img/icons/icon_error.png" alt="Error" /><span>Error!</span> Lorem ipsum dolor sit amet, consectetuer adipiscing, sed diam nonummy nibh.</p>
+        </div>
+        <!-- Green Status Bar End -->
+        
+        <!-- Blue Status Bar Start -->
+        <div class="status info">
+        	<p class="closestatus"><a href="" title="Close">x</a></p>
+        	<p><img src="img/icons/icon_info.png" alt="Information" /><span>Information:</span> Lorem ipsum dolor sit amet, consectetuer adipiscing, sed diam nonummy nibh.</p>
+        </div>
+        <!-- Blue Status Bar End -->   
+    
+        <!-- Content Box Start -->
+        <div class="contentcontainer">
+            <div class="headings alt">
+                <h2>Usage bar exmaples</h2>
+            </div>
+            <div class="contentbox">
+            	<table>
+                	<tr>
+                    	<td width="150"><strong><span class="usagetxt redtxt">Red</span> usage bar:</strong></td>
+                        <td width="500">
+                        	<div class="usagebox">
+                				<div class="highbar" style="width: 85%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                    	<td><strong><span class="usagetxt orangetxt">Orange</span> usage bar:</strong></td>
+                        <td>
+                        	<div class="usagebox">
+                				<div class="midbar" style="width: 50%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                    	<td><strong><span class="usagetxt greentxt">Green</span> usage bar:</strong></td>
+                        <td>
+                        	<div class="usagebox">
+                				<div class="lowbar" style="width: 25%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <!-- Content Box End -->
+        
+         <!-- Graphs Box Start -->
+        <div class="contentcontainer" id="graphs">
+            <div class="headings alt">
+                <h2 class="left">Dynamic graph types</h2>
+                <ul class="smltabs">
+                	<li><a href="#graphs-1">Area chart</a></li>
+                    <li><a href="#graphs-2">Pie chart</a></li>
+                    <li><a href="#graphs-3">Line graph</a></li>
+                    <li><a href="#graphs-4">Bar graph</a></li>
+                </ul>
+            </div>
+            <div class="contentbox" id="graphs-1">
+					<table style="display: none;" class="area">
+                        <caption> Registered Members</caption>
+                        <thead>
+                            <tr>
+                                <td></td>
+                                <th scope="col">Jan</th>
+                                <th scope="col">Feb</th>
+                                <th scope="col">March</th>
+                                <th scope="col">April</th>
+                                <th scope="col">May</th>
+                                <th scope="col">June</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2010</th>
+                                <td>190</td>
+                                <td>160</td>
+                                <td>40</td>
+                                <td>120</td>
+                                <td>30</td>
+                                <td>70</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2009</th>
+                                <td>3</td>
+                                <td>40</td>
+                                <td>30</td>
+                                <td>45</td>
+                                <td>35</td>
+                                <td>49</td>
+                            </tr>	
+                        </tbody>
+                    </table>
+            </div>
+            <div class="contentbox" id="graphs-2">
+            	<table style="display: none;" class="pie">
+                    <caption> Registered Members</caption>
+                        <thead>
+                            <tr>
+                                <td></td>
+                                <th scope="col">Jan</th>
+                                <th scope="col">Feb</th>
+                                <th scope="col">March</th>
+                                <th scope="col">April</th>
+                                <th scope="col">May</th>
+                                <th scope="col">June</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2010</th>
+                                <td>190</td>
+                                <td>160</td>
+                                <td>40</td>
+                                <td>120</td>
+                                <td>30</td>
+                                <td>70</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2009</th>
+                                <td>3</td>
+                                <td>40</td>
+                                <td>30</td>
+                                <td>45</td>
+                                <td>35</td>
+                                <td>49</td>
+                            </tr>	
+                        </tbody>
+                    </table>
+            </div>
+            <div class="contentbox" id="graphs-3">
+					<table style="display: none;" class="line">
+                        <caption> Registered Members</caption>
+                        <thead>
+                            <tr>
+                                <td></td>
+                                <th scope="col">Jan</th>
+                                <th scope="col">Feb</th>
+                                <th scope="col">March</th>
+                                <th scope="col">April</th>
+                                <th scope="col">May</th>
+                                <th scope="col">June</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2010</th>
+                                <td>190</td>
+                                <td>160</td>
+                                <td>40</td>
+                                <td>120</td>
+                                <td>30</td>
+                                <td>70</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2009</th>
+                                <td>3</td>
+                                <td>40</td>
+                                <td>30</td>
+                                <td>45</td>
+                                <td>35</td>
+                                <td>49</td>
+                            </tr>	
+                        </tbody>
+                    </table>
+            </div>
+            <div class="contentbox" id="graphs-4">
+					<table style="display: none;" class="bar">
+                       <caption> Registered Members</caption>
+                        <thead>
+                            <tr>
+                                <td></td>
+                                <th scope="col">Jan</th>
+                                <th scope="col">Feb</th>
+                                <th scope="col">March</th>
+                                <th scope="col">April</th>
+                                <th scope="col">May</th>
+                                <th scope="col">June</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">2010</th>
+                                <td>190</td>
+                                <td>160</td>
+                                <td>40</td>
+                                <td>120</td>
+                                <td>30</td>
+                                <td>70</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2009</th>
+                                <td>3</td>
+                                <td>40</td>
+                                <td>30</td>
+                                <td>45</td>
+                                <td>35</td>
+                                <td>49</td>
+                            </tr>	
+                        </tbody>
+                    </table>
+            </div>
+        </div>
+        <!-- Graphs Box End -->
+        

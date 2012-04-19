@@ -1,0 +1,127 @@
+<?php if(!defined('BASEPATH')) exit('No direct script access allowed');
+
+    class Entity_engine_lib extends Dbmanager_lib
+    {
+        function __construct(){
+        	$this->ci =& get_instance();
+     		$this->ci->load->model('entity_mod');
+        }
+
+        function obtain_entities_by_like($field,$like,$in_key,$in_value,$limit=NULL,$offset=NULL,$forcount=FALSE)
+        {
+            $result = NULL;
+            $query = $this->ci->entity_mod->get_entities_by_like($field,$like,$in_key,$in_value,$limit,$offset,$forcount);
+            if($forcount)
+            {
+                $result = $query;
+            }
+            else
+            {
+                if($query->num_rows() > 0)
+                {
+                    $result = $query->result();
+                }
+                else
+                {
+                    $result = array();
+                }
+               
+            }
+            return $result;
+        }
+
+        function obtain_entities_by_where_in($field, $in_key, $in_value, $limit=NULL, $offset=NULL, $forcount=FALSE)
+        {
+            $result = NULL;
+            $query = $this->ci->entity_mod->get_entities_by_where_in($field, $in_key, $in_value, $limit, $offset, $forcount);
+            if($forcount)
+            {
+                $result = $query;
+            }
+            else
+            {
+                if($query->num_rows() > 0)
+                {
+                    $result = $query->result();
+                }
+                else
+                {
+                    $result = array();
+                }
+               
+            }
+            return $result;
+
+        }
+
+        function obtain_title($guid)
+        {
+            return $this->obtain_a_row_field(TABLE_CORE_ENTITY,'title',array('guid'=>$guid));
+        }
+
+        function obtain_main($guid)
+        {
+            return $this->obtain_a_row_field(TABLE_CORE_ENTITY,'main',array('guid'=>$guid));
+        }
+
+        function obtain_time_created($guid)
+        {
+            return $this->obtain_a_row_field(TABLE_ENTITY,'time_created',array('guid'=>$guid));
+        }
+
+        function obtain_subtype_id($guid)
+        {
+            return $this->obtain_a_row_field(TABLE_ENTITY,'subtype_id',array('guid'=>$guid));
+        }
+
+        function obtain_uid($guid)
+        {
+            return $this->obtain_a_row_field(TABLE_ENTITY,'user_guid',array('guid'=>$guid));
+        }
+
+        function obtain_like_num($guid)
+        {
+            return $this->obtain_a_row_field(TABLE_CORE_EXTRA_ENTITY,'like',array('guid'=>$guid));
+        }
+
+        function obtain_visibility($guid)
+        {
+            return $this->obtain_a_row_field(TABLE_ENTITY,'visibility',array('guid'=>$guid));
+        }
+
+        //items为数组，存储需要+1的微博
+        function share_plus($guid, $items)
+        {
+            return $this->ci->entity_mod->share_plus($guid, $items);
+        }
+
+        function share_log($data)
+        {
+            $data['time_created'] = time();
+            return $this->create_a_row(TABLE_SHARE_LOGS,$data);
+        }
+
+        function does_user_like($user_guid, $guid)
+        {
+            $where = array('user_guid'=>$user_guid, 'guid'=>$guid);
+            $num = $this->obtain_rows(TABLE_ENTITIES_LIKE, '*', $where, NULL, NULL, NULL, NULL, TRUE);
+            $like_flag = ($num > 0) ? TRUE : FALSE;
+            return $like_flag;
+        }
+
+        function like($user_guid, $guid)
+        {
+            $result = $this->ci->entity_mod->like_plus($guid);
+            if($user_guid != 0)
+            {
+                $data = array(
+                    'guid'      => $guid,
+                    'user_guid' => $user_guid,
+                    'like_time' => time()
+                );
+                $this->create_a_row(TABLE_ENTITIES_LIKE,$data);
+            }
+            return $result;
+        }
+
+    }

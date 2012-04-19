@@ -1,0 +1,5 @@
+<script>
+    $(function(){
+        $('.star-g').tipsy({gravity: 'sw'})
+    })
+</script>

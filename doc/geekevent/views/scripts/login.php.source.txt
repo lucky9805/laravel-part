@@ -1,0 +1,5 @@
+<script>
+$(function(){
+    Cast.wall.init();
+})
+</script>

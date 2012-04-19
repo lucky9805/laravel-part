@@ -1,0 +1,38 @@
+<?php
+    $all_style = $users_style = $clips_style = $events_style = $seeds_style = '';
+    switch($type)
+    {
+    case 'all':
+        $all_style = "class='on'";break;
+    case 'users':
+        $users_style = "class='on'";break;
+    case 'clips':
+        $clips_style = "class='on'";break;
+    case 'events':
+        $events_style = "class='on'";break;
+    case 'seeds':
+        $seeds_style = "class='on'";break;
+    }
+?>
+
+<div class="clearfix">
+    <?php if(isset($all_num)):?>
+    <ul class='search-tags'>
+    <?php if($all_num > 0):?>
+        <li <?=$all_style?>><a href="/search/all/<?=$key_word?>">全部 (<?=$all_num?>)</a></li>
+    <?php endif;?>
+    <?php if($users_num > 0):?>
+        <li <?=$users_style?>><a href="/search/users/<?=$key_word?>">社区用户 (<?=$users_num?>)</a></li>
+    <?php endif;?>
+    <?php if($seeds_num > 0):?>
+        <li <?=$seeds_style?>><a href="/search/seeds/<?=$key_word?>">极客观察 (<?=$seeds_num?>)</a></li>
+    <?php endif;?>
+    <?php if($clips_num > 0):?>
+        <li <?=$clips_style?>><a href="/search/clips/<?=$key_word?>">演讲视频 (<?=$clips_num?>)</a></li>
+    <?php endif;?>
+    <?php if($events_num > 0):?>
+        <li <?=$events_style?>><a href="/search/events/<?=$key_word?>">活动 (<?=$events_num?>)</a></li>
+    <?php endif;?>
+    </ul>
+    <?php endif;?>
+</div>

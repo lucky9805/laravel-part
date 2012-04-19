@@ -1,0 +1,52 @@
+<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+
+class Welcome extends CI_Controller {
+
+	/**
+	 * Index Page for this controller.
+	 *
+	 * Maps to the following URL
+	 * 		http://example.com/index.php/welcome
+	 *	- or -  
+	 * 		http://example.com/index.php/welcome/index
+	 *	- or -
+	 * Since this controller is set as the default controller in 
+	 * config/routes.php, it's displayed at http://example.com/
+	 *
+	 * So any other public methods not prefixed with an underscore will
+	 * map to /index.php/welcome/<method_name>
+	 * @see http://codeigniter.com/user_guide/general/urls.html
+	 */
+	public function index()
+	{
+		$this->load->view('welcome_message');
+	}
+	
+	public function test()
+	{
+		// 直接在控制器里使用 Module
+		//$this->load->module('test2/home_made',);
+		
+	//	$is_in = $this->load->module('user/user/check_user_in_system',array("listen1999111"),TRUE);
+		$is_in = $this->load->module('user/user/logout',array("listen1999222"),TRUE);
+ 
+		if($is_in){
+			echo "yes";
+		}else{
+			echo "no";
+		}
+	}
+	
+	public function test_view()
+	{
+		// 直接在控制器里使用 Module
+		//$this->load->module('test2/home_made',);
+		
+	//	$is_in = $this->load->module('user/user/check_user_in_system',array("listen1999111"),TRUE);
+		
+  
+	}
+}
+
+/* End of file welcome.php */
+/* Location: ./application/controllers/welcome.php */

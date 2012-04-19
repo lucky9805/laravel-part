@@ -1,0 +1,4 @@
+<script src="/public/js/libs/datepicker/datepicker.js"></script>
+<link rel="stylesheet" href="/public/js/libs/datepicker/datepicker.css">
+<link rel="stylesheet" href="/public/js/libs/timepicker/timepicker.css">
+<script src="/public/js/libs/timepicker/timepicker.js"></script>

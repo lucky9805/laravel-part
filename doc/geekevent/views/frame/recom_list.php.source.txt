@@ -1,0 +1,23 @@
+<?php if ( ! empty($recom_list_title)): ?>
+    <div class="ui-recommend-list fn-clips-recommend">
+        <dl class="format">
+<?php if ($type == 'clips'): ?>
+        <dt>推荐视频</dt>
+<?php elseif ($type == 'seed'): ?>
+        <dt>推荐文章</dt>
+<?php endif; ?>
+            <dd>
+                <ul class="ui-about-list">
+<?php foreach ($recom_list_title as $l_k => $l_v): ?>
+<?php if ($type == 'clips'): ?>
+                    <li><a href="<?php echo base_url().'cast/view/'.$l_v['guid'] ?>" title="<?php echo $recom_list[$l_v['guid']]; ?>"><?php echo $l_v['title']; ?></a><span title="极客广播"></span></li>
+<?php elseif ($type == 'seed'): ?>
+                    <li><a href="<?php echo base_url().'read/view/'.$l_v['guid'] ?>" title="<?php echo $recom_list[$l_v['guid']]; ?>"><?php echo $l_v['title']; ?></a></li>
+<?php endif; ?>
+
+<?php endforeach; ?>
+                </ul>
+            </dd>
+        </dl>
+    </div>
+<?php endif; ?>

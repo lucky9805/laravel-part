@@ -1,0 +1,18 @@
+<?php
+$prev_next = explode('|', $prev_next);
+if ($prev_next[0] > 0)
+{
+	$next_title = $this->common_lib->obtain_title_by_guid($prev_next[0]);
+	echo "\r\n";
+?>
+    <link rel="next" title="<?php echo $next_title;?>" href="<?php echo base_url().$prev_next[2].'/view/'.$prev_next[0]; ?>" />
+<?php
+}
+if ($prev_next[1] > 0)
+{
+	$prev_title = $this->common_lib->obtain_title_by_guid($prev_next[1]);
+?>
+    <link rel="prev" title="<?php echo $prev_title;?>" href="<?php echo base_url().$prev_next[2].'/view/'.$prev_next[1]; ?>" />
+<?php
+}
+?>

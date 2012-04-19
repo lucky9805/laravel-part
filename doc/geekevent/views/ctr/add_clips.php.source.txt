@@ -1,0 +1,226 @@
+<?php $this->load->view("scripts/include_auto_commplete");?>
+
+<link rel="stylesheet" href="/public/js/libs/timepicker/jquery-ui-1.8.16.custom.css">
+<script src="/public/js/libs/timepicker/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="/public/js/libs/timepicker/jquery-ui-timepicker-addon.js"></script>
+
+
+
+
+<div class="contentcontainer">
+    <div class="headings alt">
+        <h2><?php echo site_lang('clips_add_title');?></h2>
+    </div>
+    <div class="contentbox">
+    	<?php echo form_open($this->uri->uri_string());?>
+    		<p>
+                <?php 
+					$flag = style_choose('clips_speech_title');
+					echo form_label(site_lang('clips_speech_title'), 'clips_speech_title');
+					$data = array('name' => 'clips_speech_title', 'id' => 'clips_speech_title', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_speech_title'));
+					echo form_input($data);
+					if($flag)
+						echo form_error('clips_speech_title');
+				?> 
+            </p>
+			
+			<p>
+                <?php 
+					$flag = style_choose('clips_respective_activity');
+					echo form_label(site_lang('clips_respective_activity'), 'clips_respective_activity');
+					$option[''] = site_lang('dropdown');
+					if($events)
+					{
+						foreach($events as $event)
+						{
+							$option[$event['guid']] = $event['title'];
+						}
+					}
+					echo form_dropdown('clips_respective_activity', $option, '0');
+					if($flag)
+						echo form_error('clips_respective_activity');
+				?>  
+            </p>
+			
+			<p>
+                <?php 
+					$flag = style_choose('clips_respective_series');
+					echo form_label(site_lang('clips_respective_series'), 'clips_respective_series');
+					unset($option);
+					$option[''] = site_lang('dropdown');
+					if($clips_collection)
+					{
+						foreach($clips_collection as $clip_collection)
+							$option[$clip_collection['id']] = $clip_collection['collection_name'];
+					}
+					echo form_dropdown('clips_respective_series', $option, '0');
+					if($flag)
+						echo form_error('clips_respective_series');
+				?> 
+            </p>
+			
+			<p>
+                <?php
+					$flag = style_choose('clips_speaker');
+					echo form_label(site_lang('clips_speaker'), 'clips_speaker');
+					$data = array('name' => 'clips_speaker', 'id' => 'clips_speaker', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_speaker', ''));
+					echo form_input($data);
+					if($flag)
+						echo form_error('clips_speaker');
+				?>
+            </p>
+			
+			<p>
+                <?php 
+					$flag = style_choose('clips_record_time_date');
+					echo form_label(site_lang('clips_record_time'), 'clips_record_time');
+					$data = array('name' => 'clips_record_time_date', 'id' => 'clips_record_time_date', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_record_time_date'), 'style' => 'width:150px');
+					echo form_input($data);
+					if($flag)
+						echo form_error('clips_record_time_date');
+			//		$flag = style_choose('clips_record_time_time');
+			//		$data = array('name' => 'clips_record_time_time', 'id' => 'clips_record_time_time', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_record_time_time'), 'style' => 'width:60px');
+			//		echo form_input($data);
+			//		if($flag)
+			//			echo form_error('clips_record_time_time');
+				?> 
+            </p>
+			
+			<p>
+                <?php 
+					$flag = style_choose('clips_publish_date_date');
+					echo form_label(site_lang('clips_publish_date'));
+					$data = array('name' => 'clips_publish_date_date', 'id' => 'clips_publish_date_date', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_publish_date_date'), 'style' => 'width:150px');
+					echo form_input($data);
+					if($flag)
+						echo form_error('clips_publish_date_date');
+				//	$flag = style_choose('clips_publish_date_time');
+				//	$data = array('name' => 'clips_publish_date_time', 'id' => 'clips_publish_date_time', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_publish_date_time'), 'style' => 'width:60px');
+				//	echo form_input($data);
+				//	if($flag)
+				//		echo form_error('clips_publish_date_time');
+				?> 
+            </p>
+			
+			<p>
+                <?php 
+					$flag = style_choose('clips_cc_url');
+					echo form_label(site_lang('clips_cc_url'), 'clips_cc_url');
+					$data = array('name' => 'clips_cc_url', 'id' => 'clips_cc_url', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_cc_url'));
+					echo form_input($data);
+					if($flag)
+						echo form_error('clips_cc_url');
+				?> 
+            </p>
+			
+			<p>
+                <?php 
+					$flag = style_choose('clips_youku_url');
+					echo form_label(site_lang('clips_youku_url'), 'clips_youku_url');
+					$data = array('name' => 'clips_youku_url', 'id' => 'clips_youku_url', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_youku_url'));
+					echo form_input($data);
+					if($flag)
+						echo form_error('clips_youku_url');
+				?> 
+            </p>
+			
+			<p>
+                <?php 
+					$flag = style_choose('clips_tags');
+					echo form_label(site_lang('clips_tags'), 'clips_tags');
+					$data = array('name' => 'clips_tags', 'id' => 'clips_tags', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_tags'));
+					echo form_input($data);
+					if($flag)
+						echo form_error('clips_tags');
+				?>
+		 
+            </p>
+			
+			<p>
+                <?php 
+					$flag = style_choose('clips_speech_abstract');
+					echo form_label(site_lang('clips_speech_abstract'), 'clips_speech_abstract');
+					$data = array('name' => 'clips_speech_abstract', 'id' => 'clips_speech_abstract', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_speech_abstract'), 'style' => 'width:600px');
+					echo form_textarea($data);
+					if($flag)
+						echo form_error('clips_speech_abstract');
+				?> 
+            </p>
+			
+			<p>
+                <?php 
+					$flag = style_choose('clips_speech_intruduction');
+					echo form_label(site_lang('clips_speech_intruduction'), 'clips_speech_intruduction');
+					$data = array('name' => 'clips_speech_intruduction', 'id' => 'clips_speech_intruduction', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_speech_intruduction'), 'style' => 'width:600px');
+					echo form_textarea($data);
+					if($flag)
+						echo form_error('clips_speech_intruduction');
+				?> 
+            </p>
+			
+			<p>
+                <?php 
+					$flag = style_choose('clips_speech_caption');
+					echo form_label(site_lang('clips_speech_caption'), 'clips_speech_caption');
+					$data = array('name' => 'clips_speech_caption', 'id' => 'clips_speech_caption', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_speech_caption'), 'style' => 'width:600px');
+					echo form_textarea($data);
+					if($flag)
+						echo form_error('clips_speech_caption');
+				?> 
+            </p>
+			
+			<p>
+				<?php
+					$data = array('name' => 'is_public', 'value' => '1', 'checked' => TRUE);
+						echo form_radio($data);
+						echo site_lang('clips_is_public');
+					$data = array('name' => 'is_public', 'value' => '0', 'checked' => FALSE);
+						echo form_radio($data);
+						echo site_lang('clips_is_not_public');
+				?>
+			</p>
+			
+			<p>
+				<?php 
+					$data = array('name' => 'clips_add', 'id' => 'clips_add', 'value' => site_lang('clips_add'), 'class' => 'btn');
+					echo form_submit($data);
+				?>
+			</p>
+
+        </form>         
+		
+    </div>
+</div>
+<?php $this->load->view("scripts/admin_time_selected",array("date"=>"clips_record_time_date","time"=>'clips_record_time_time'));?>
+<?php $this->load->view("scripts/admin_time_selected",array("date"=>"clips_publish_date_date","time"=>'clips_publish_date_time'));?>
+<script>
+	$(function(){
+		$('#clips_tags').TagDynamic({
+        	"container_class":"tag_dynamic_box",
+        	"button_str": "添加标签",
+        	 autocomplete_service: '/ajax/auto_tag/tag/'
+        //	autocomplete_service: [{label:'aaa', value:'aaaaaa'}]
+    	});
+    	
+    	$('#clips_speaker').TagDynamic({
+        	"container_class":"tag_dynamic_box",
+        	"button_str": "添加演讲人",
+        	 autocomplete_service: '/ajax/auto_tag/user/'
+    	})
+    	
+    	$('select[name=clips_respective_activity]').change(function(){
+    	    var $target = $('select[name=clips_respective_series]');
+    	    $target.html('<option value="">--请选择--</option>');
+    	    var event_id = $(this).val();
+	        $.get('/ajax/get_collection_by_event_id/', {event_id: event_id}, function(response){
+	            var data = eval('('+response+')');
+	            if(!data || typeof data != 'object' || !data.length){
+	                return
+	            }
+	            for(i=0; i<data.length; i++){
+	                $target.append('<option value="'+data[i].value+'">'+data[i].label+'</option>')
+	            }
+	        })
+    	})
+	})
+</script>

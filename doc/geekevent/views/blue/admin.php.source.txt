@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<?php $this->load->view('frame/admin_head'); ?> 	
+	<body id="homepage">
+		<div id="header">
+			<?php $this->load->view('frame/admin_header'); ?>
+		</div>
+		
+		<!-- Top Breadcrumb Start 
+	    <div id="breadcrumb">
+	    <?php echo $breadcrumb;?>
+	     <?php //$this->load->view('frame/admin_breadcrumb'); ?>
+	    </div>-->
+        <!-- Top Breadcrumb End -->
+        <?php $this->load->view('layout/switch'); ?>
+       
+</body>
+</html>

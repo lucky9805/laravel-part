@@ -1,0 +1,108 @@
+<link rel="stylesheet" href="/public/js/libs/timepicker/jquery-ui-1.8.16.custom.css">
+<script src="/public/js/libs/timepicker/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="/public/js/libs/timepicker/jquery-ui-timepicker-addon.js"></script>
+
+
+
+
+
+<div class="contentcontainer">
+            <div class="headings alt">
+                <h2><?=lang('clips_collection_page_title')?></h2>
+            </div>
+            <div class="contentbox">
+            	<?php echo form_open($this->uri->uri_string());?>
+            		<p>
+                        <?php 
+							$flag = style_choose('clips_collection_title');
+							echo form_label(lang('clips_collection_title'), 'clips_collection_title');
+							$data = array('name' => 'clips_collection_title', 'id' => 'clips_collection_title', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_collection_title'));
+							echo form_input($data);
+							if($flag)
+								echo form_error('clips_collection_title');
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label(lang('clips_respective_activity'), 'clips_respective_activity');
+							$option[' '] = lang('dropdown');
+							if($events)
+							{
+								foreach($events as $event)
+								{
+									$option[$event['guid']] = $event['title'];
+								}
+							}
+							echo form_dropdown('clips_respective_activity', $option, '0');
+						?>  
+                    </p>
+					
+					<p>
+						<?php
+							$flag = style_choose('record_time_date');
+							echo form_label(lang('clips_collection_record_time'));
+							$data = array('name' => 'record_time_date', 'id' => 'record_time_date', 'class' => 'inputbox'.$flag, 'value' => set_value('record_time_date'), 'style' => 'width:150px');
+							echo form_input($data);
+							if($flag)
+								echo form_error('record_time_date');
+							//$flag = style_choose('record_time_time');
+							//$data = array('name' => 'record_time_time', 'id' => 'record_time_time', 'class' => 'inputbox'.$flag, 'value' => set_value('record_time_time'), 'style' => 'width:60px');
+							//echo form_input($data);
+							//if($flag)
+							//	echo form_error('record_time_time');
+						?>
+					</p>
+					
+					<p>
+						<?php
+							$flag = style_choose('publish_time_date');
+							echo form_label(lang('clips_collection_publish_time'));
+							$data = array('name' => 'publish_time_date', 'id' => 'publish_time_date', 'class' => 'inputbox'.$flag, 'value' => set_value('publish_time_date'), 'style' => 'width:150px');
+							echo form_input($data);
+							if($flag)
+								echo form_error('publish_time_date');
+							//$flag = style_choose('publish_time_time');
+							//$data = array('name' => 'publish_time_time', 'id' => 'publish_time_time', 'class' => 'inputbox'.$flag, 'value' => set_value('publish_time_time'), 'style' => 'width:60px');
+							//echo form_input($data);
+							//if($flag)
+							//	echo form_error('publish_time_time');
+						?>
+					</p>
+					
+					<p>
+                        <?php 
+							$flag = style_choose('clips_collection_description');
+							echo form_label(lang('clips_collection_description'), 'clips_collection_description');
+							$data = array('name' => 'clips_collection_description', 'id' => 'clips_collection_description', 'class' => 'inputbox'.$flag, 'value' => set_value('clips_collection_description'), 'style' => 'width:600px');
+							echo form_textarea($data);
+							if($flag)
+								echo form_error('clips_collection_description');
+						?> 
+                    </p>
+					
+            		<p>
+                        <?php 
+							$flag = style_choose('cc_ppt_url');
+							echo form_label(lang('cc_ppt_url'), 'cc_ppt_url');
+							$data = array('name' => 'ppt_url', 'id' => 'cc_ppt_url', 'class' => 'inputbox'.$flag, 'value' => set_value('ppt_url'));
+							echo form_input($data);
+							if($flag)
+								echo form_error('ppt_url');
+						?> 
+                    </p>
+
+
+                    <p>
+						<?php 
+							$data = array('name' => 'clips_collection_add_button', 'id' => 'clips_collection_add_button', 'value' => lang('clips_collection_add_button'), 'class' => 'btn');
+							echo form_submit($data);
+						?>
+					</p>
+      
+                </form>         
+				
+            </div>
+        </div>
+<?php $this->load->view("scripts/admin_time_selected",array("date"=>"record_time_date","time"=>'record_time_time'));?>
+<?php $this->load->view("scripts/admin_time_selected",array("date"=>"publish_time_date","time"=>'publish_time_time'));?>

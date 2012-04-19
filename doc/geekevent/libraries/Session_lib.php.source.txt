@@ -1,0 +1,56 @@
+<?php
+if (! defined ( 'BASEPATH' )) exit ( 'No direct script access allowed' );
+
+    class Session_lib
+    {
+        var $sess_type = '';
+        function __construct()
+        {
+            $this->ci = & get_instance();
+            $type = $this->ci->config->item('sess_type');
+            if($type == 'Session')
+            {
+                $this->sess_type = 'session';
+            }
+            elseif($type == 'M_Session')
+            {
+                $this->sess_type = 'm_session';
+            }
+        }
+
+        function userdata($item)
+        {
+            return $this->ci->{$this->sess_type}->userdata($item);
+        }
+
+        function set_userdata($newdata = array(), $newval = '')
+        {
+            return $this->ci->{$this->sess_type}->set_userdata($newdata,$newval);
+        }
+
+        function unset_userdata($newdata)
+        {
+            return $this->ci->{$this->sess_type}->unset_userdata($newdata);
+        }
+
+        function sess_destroy()
+        {
+            return $this->ci->{$this->sess_type}->sess_destroy();
+        }
+
+        function set_flashdata($newdata = array(), $newval = '')
+        {
+            return $this->ci->{$this->sess_type}->set_flashdata($newdata,$newval);
+        }
+
+        function flashdata($key)
+        {
+            return $this->ci->{$this->sess_type}->flashdata($key);
+        }
+
+        function keep_flashdata($key)
+        {
+            return $this->ci->{$this->sess_type}->keep_flashdata($key);
+        }
+    }
+?>

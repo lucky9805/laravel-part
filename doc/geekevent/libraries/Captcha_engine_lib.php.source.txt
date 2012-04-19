@@ -1,0 +1,109 @@
+<?php if(!defined('BASEPATH')) exit('No direct script access allowed');
+
+	class Captcha_engine_lib
+	{
+		var $_captcha_image;
+		
+		function Captcha_engine_lib()
+		{
+			$this->ci =& get_instance();
+			$this->ci->load->helper('url');
+			$this->ci->load->helper('captcha');
+			$this->ci->load->config('engine/captcha_config');
+		}
+		
+		function captcha()
+		{
+			$captcha_dir = trim($this->ci->config->item('wm_captcha_path'), './');
+			$vals = array(
+				'word'			=> rand_str(4,'23456789ABCDEFGHJKLMNPQRSTUVWXYZ'),
+				'img_path'		=> './'.$captcha_dir.'/',
+				'img_url'		=> base_url().$captcha_dir.'/',
+				'font_path'		=> $this->ci->config->item('wm_captcha_fonts_path'),
+				'font_size'		=> $this->ci->config->item('wm_captcha_font_size'),
+				'img_width'		=> $this->ci->config->item('wm_captcha_width'),
+				'img_height'	=> $this->ci->config->item('wm_captcha_height'),
+				'show_grid'		=> $this->ci->config->item('wm_captcha_grid'),
+				'expiration'	=> $this->ci->config->item('wm_captcha_expire')
+			);
+			$cap = create_captcha($vals);
+			//将验证码程序写入到数据库
+    		$data = array(
+    			'captcha' => $vals['word'],
+    			'ip_address' => $this->ci->input->ip_address(),
+    			'captcha_time' => time(),
+    			'session_id' =>$this->ci->session_lib->userdata('session_id')
+    		);
+    		$this->create_a_captcha_record($data);
+ 
+			
+			//$this->ci->session->set_flashdata($store);//Plain, simple but effective
+			$this->_captcha_image = $cap['image'];//Set our captcha
+		}
+		
+		
+		
+				//判断一个输入的验证码是否有效
+		function check_captcha($captcha='')
+		{
+			$this->delete_expired_captcha();
+			$condition = array(
+				'session_id'=>$this->ci->session->userdata('session_id'),
+				'ip_address'=>$this->ci->input->ip_address(),
+				'captcha'=>$captcha
+			);
+			$result=$this->ci->dbmanager_lib->obtain_a_row('captcha',"*",$condition);
+			//print_r($result);
+			return count($result);
+			
+		}
+		
+		//将验证码写入数据库
+		private function create_a_captcha_record($data)
+		{
+			return $this->ci->dbmanager_lib->create_a_row('captcha',$data);
+		}
+		
+		//删除失效的验证码
+		private function delete_expired_captcha()
+		{
+			$expiration = time() - 720;
+			return $this->ci->dbmanager_lib->delete_rows('captcha', array('captcha_time <'=> $expiration));	
+		}
+		
+		
+		function get_captcha_image()
+		{
+			return $this->_captcha_image;
+		}
+		
+		// Check if captcha already expired
+		// Use this in callback function in your form validation
+		function is_captcha_expired()
+		{
+			list($usec,$sec) = explode(" ",microtime());//Captcha Expired
+			$now = ((float)$usec + (float)$sec);
+			//echo $now.' | '.($this->ci->session->flashdata('captcha_time') + $this->ci->config->item('wm_captcha_expire'));
+			
+			
+			
+			return (($this->ci->session->flashdata('captcha_time') + $this->ci->config->item('wm_captcha_expire'))<$now);//Check if captcha already expired						
+		}
+		
+		//Check is captcha match with code
+		//Use this in callback function in your form validation
+		function is_captcha_match($code)
+		{
+			if($this->ci->config->item('wm_captcha_case_sensitive'))
+			{
+				//Just check if code is the same value with flash data captcha_word which created in captcha() function		
+				$result = ($code == $this->ci->session->flashdata('captcha_word'));
+			}
+			else
+			{
+				$result = strtolower($code) == strtolower($this->ci->session->flashdata('captcha_word'));
+			}
+			return $result;
+		}
+	}
+?>

@@ -1,0 +1,86 @@
+<?php
+
+	/**
+	 * Model Name: Clip_mod
+	 * Description: clip model contains public methods used to reponse calls from clip_lib
+	 * and conduct operations to intereact with databases mainly related to tables;
+	 * Author: LJC
+	 * Date: Sep 6, 2011
+	 */
+    class Clip_mod extends MY_Model
+    {
+        function __construct()
+        {
+            parent::__construct();
+            $this->load->driver('cache');
+        }
+
+        function get_clips_by_ajax($tag=NULL,$order="the_latested",$limit=10,$offset=0)
+        {
+            if($tag != NULL)
+            {
+                if($order == "the_latested")
+                {
+                    $sql = "SELECT c.* FROM clips AS c JOIN entities AS e ON c.guid=e.guid JOIN tag_relations AS t ON c.guid=t.entity_guid WHERE t.tag_id={$tag} AND c.is_public=1 ORDER BY c.record_time DESC LIMIT {$offset},{$limit}";
+                }
+                else
+                {
+                    $order_arr = array(
+                        'the_most_commented'    => 'ce.comment',
+                        'the_most_viewed'       => 'ce.view',
+                        'the_most_rated'        => 'ce.vote'
+                    );
+                    $sql = "SELECT c.* FROM clips AS c JOIN core_extra_entities AS ce ON c.guid=ce.guid JOIN tag_relations AS t ON c.guid=t.entity_guid WHERE t.tag_id={$tag} AND c.is_public=1 ORDER BY ".$order_arr[$order]." DESC LIMIT {$offset},{$limit}";
+                }
+            }
+            else
+            {
+                if($order == "the_latested")
+                {
+                    $sql = "SELECT c.* FROM clips AS c JOIN entities AS e ON c.guid=e.guid WHERE c.is_public=1 ORDER BY c.record_time DESC LIMIT {$offset},{$limit}";
+                }
+                else
+                {
+                    $order_arr = array(
+                        'the_most_commented'    => 'ce.comment',
+                        'the_most_viewed'       => 'ce.view',
+                        'the_most_rated'        => 'ce.vote'
+                    );
+                    $sql = "SELECT c.* FROM clips AS c JOIN core_extra_entities AS ce ON c.guid=ce.guid WHERE c.is_public=1 ORDER BY ".$order_arr[$order]." DESC LIMIT {$offset},{$limit}";
+                }
+            }
+            /*$mem = $this->cache->memcached;
+            $md5sql = md5($sql);
+            //$result = $mem->get_metadata($md5sql);
+            $result = $mem->get($md5sql);
+            if(!$result)
+            {
+                $result = $this->db->query($sql);
+                if($result->num_rows() > 0)
+                {
+                    $mem_data = $result->result();
+                }
+                else
+                {
+                    $mem_data = array();
+                }
+                $mem->save($md5sql,$mem_data,5);
+                $data = array(
+                    'result'    => $result->result(),
+                    'type'      => 'database'
+                );
+            }
+            else
+            {
+                $data = array(
+                    'result'    => $result,
+                    'type'      => 'memcached'
+                );
+            }*/
+            $data = array(
+                'result'    => $this->db->query($sql)->result(),
+                'type'      => 'database'
+            );
+            return $data;
+        }
+    }

@@ -1,0 +1,141 @@
+<?php $this->load->view("scripts/include_auto_commplete");?>
+<div id="tabs" class="contentcontainer ui-tabs  ui-widget-content ui-corner-all">
+            <div class="headings">
+                <h2 class="left">修改用户信息</h2>
+                <ul class="smltabs ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all">
+                	<li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#tabs-1">基本信息修改</a></li>
+                    <li class="ui-state-default ui-corner-top"><a href="#tabs-2">修改密码</a></li>
+                     <li class="ui-state-default ui-corner-top"><a href="#tabs-3">修改头像</a></li>
+                </ul>
+            </div>
+            <div id="tabs-1" class="contentbox ui-tabs-panel ui-widget-content ui-corner-bottom">
+            	  <div class="contentbox">
+		            		<form action="/ctr/user_do/update" method="post">
+			            		<p>
+			                        <label for="textfield"><strong>注册邮箱</strong></label>
+                                    <input type="text" class="inputbox" name="email" value="<?php echo $email;?>">
+			                    </p>
+			                    <p>
+			                        <label for="textfield"><strong>昵称</strong></label>
+                                    <input type="text" class="inputbox" name="screen_name" value="<?php echo $screen_name;?>">
+			                    </p>
+			                    <p>
+			                        <label for="textfield"><strong>真实姓名</strong></label>
+                                    <input type="text" class="inputbox" name="real_name" value="<?php echo $real_name;?>">
+			                    </p>
+			                    <p>
+			                        <label for="textfield"><strong>公司</strong></label>
+                                    <input type="text" class="inputbox" name="company" value="<?php echo $company;?>">
+			                    </p>
+			                    <p>
+			                        <label for="textfield"><strong>职位</strong></label>
+                                    <input type="text" class="inputbox" name="position" value="<?php echo $position;?>">
+			                    </p>
+			                    <p>
+			                        <label for="textfield"><strong>联系电话</strong></label>
+                                    <input type="text" class="inputbox" name="mobilephone" value="<?php echo $mobilephone;?>">
+			                    </p>
+			                    <p>
+			                        <label for="textfield"><strong>个人简介</strong></label>
+                                    <textarea class="inputbox" name="bio"><?php echo $bio;?></textarea>
+			                    </p>
+			                    <p>
+			                        <label for="textfield"><strong>参与的项目</strong></label>
+			                        <input type="text" class="inputbox" name="product" id="product">
+			                    </p>
+					 <p>
+                        所属用户组:
+                         <select name="group_id">
+                         <?php
+                        $groups= $this->dbmanager_lib->obtain_rows(TABLE_PRIVILEGE_GROUP, '*',NULL,NULL,"group_id desc");
+  
+                         foreach($groups as $g){
+ 							$checked="";
+ 							if($group_id==$g->group_id) $checked="selected='selected'";
+                         	echo "<option value='{$g->group_id}' $checked>{$g->group_name}</option>";
+                         }
+                         ?>
+                        </select>
+						 
+                    </p>
+                                <input type="hidden" name="user_guid" value="<?php echo $guid;?>" />
+			                    <input type="submit" class="btn" value="修改"> 
+		                  </form>         
+		           </div>
+		     </div>
+             <div id="tabs-2" class="contentbox nopad ui-tabs-panel ui-widget-content ui-corner-bottom ui-tabs-hide">
+                 <div class="contentbox">
+		            	<form action="/ctr/user_do/update_password" method="post"> 
+		            		<p>
+		                        <label for="textfield"><strong>新密码:</strong></label>
+		                        <input type="password" class="inputbox" id="password" name="password">
+		                       
+		                    </p>
+		                    <p>
+		                        <label for="textfield"><strong>再输入一遍:</strong></label>
+		                        <input type="password" class="inputbox" id="password_confirm" name="password_confirm">
+		                         
+		                    </p>
+                            <input type="hidden" name="user_guid" value="<?php echo $guid;?>" />
+		                    <input type="submit" class="btn" value="修改"> 
+		                 </form>         
+		           </div> 
+              </div>
+              <div id="tabs-3" class="contentbox nopad ui-tabs-panel ui-widget-content ui-corner-bottom ui-tabs-hide">
+            	<div class="newsitem">
+                   
+                   <h3>修改头像</h3>
+                      <div class="contentbox">
+                            <?php echo form_open_multipart('/ctr/user_do/upload_avatar');?>
+		            		<p style="height:160px;">
+		                        <label for="textfield"><strong>上传头像:</strong></label>
+                                <input type="file" name="avatar" id="uploader">
+                                <input type="hidden" name="user_guid" value="<?php echo $guid;?>" />
+                                <!--<img alt="Loading" src="img/loading.gif"> Uploading...-->
+		                        <span class="smltxt">上传图片要求：图片大小在2M以内，必须是jpg、gif、png格式</span><br />
+                                <img style="margin-top:10px;" src="<?php echo $this->img_lib->get_avatar($guid,'medium')."?".time();?>" />
+		                    </p>
+                            <input type="submit" class="btn" value="修改"> 
+			                </form>         
+		              </div>
+                </div>
+            </div>
+        </div>
+<script> 
+
+	$(function(){
+		$('#product').TagDynamic({
+        	"container_class":"tag_dynamic_box",
+        	"button_str": "添加项目",
+        	autocomplete_service: 'aaaa',
+        <?php 
+            if($products)
+            {
+        	    $count=count($products);
+       	    ?>
+        	
+	       	data_list: [
+	       	<?php  
+                $i=0;
+                foreach($products as $row)
+                {
+                    $i++;
+                    if($count==$i)
+                    echo  "{ value:'{$row["value"]}',label:'{$row["label"]}' }";
+                    else
+                    echo  "{ value:'{$row["value"]}',label:'{$row["label"]}' },";
+                }
+	    	?>
+	    	
+	        ]
+        
+            <?php 
+            }
+        ?>
+
+    	})
+	})
+
+ 
+</script> 
+

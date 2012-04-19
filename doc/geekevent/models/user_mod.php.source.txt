@@ -1,0 +1,17 @@
+<?php
+
+	/**
+	 * Model Name: User_mod
+	 * Description: user model contains public methods used to reponse calls from User_lib
+	 * and conduct operations to intereact with databases mainly related to tables;
+	 * Author: LJC
+	 * Date: Sep 16, 2011
+	 */
+    class User_mod extends MY_Model
+    {
+        function __construct()
+        {
+            parent::__construct();
+			$this->_prefix 			= $this->config->item('wm_table_prefix');
+        }
+    }

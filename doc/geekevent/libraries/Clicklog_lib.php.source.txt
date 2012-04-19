@@ -1,0 +1,71 @@
+<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+class Clicklog_lib extends Dbmanager_lib
+{
+	function __construct()
+	{
+		$this->ci = &get_instance();
+		$this->ci->load->model('clicklog_mod');
+	}
+
+	function insert_clicklog($user_guid, $tag_type, $tag)
+	{
+		$this->ci->load->library('user_agent');
+		$data = array(
+			'user_guid' => $user_guid,
+			'tag_type' => $tag_type,
+			'time_created' => time(),
+			'tag' => $tag,
+			'ip' => $this->ci->input->ip_address(),
+			'user_agent' => $this->ci->agent->agent_string()
+			);
+		$this->ci->clicklog_mod->insert_clicklog($data);
+	}
+
+	function get_stat_seed_list()
+	{
+		$query = $this->ci->clicklog_mod->get_stat_seed_list();
+		$result = array();
+		if($query->num_rows() > 0)
+		{
+			$result = $query->result_array();
+		}
+		return $result;
+	}
+
+	function get_stat_cast_list()
+	{
+		$query = $this->ci->clicklog_mod->get_stat_cast_list();
+		$result = array();
+		if($query->num_rows() > 0)
+		{
+			$result = $query->result_array();
+		}
+		return $result;
+	}
+
+	function get_stat_news_list()
+	{
+		$query = $this->ci->clicklog_mod->get_stat_news_list();
+		$result = array();
+		if($query->num_rows() > 0)
+		{
+			$result = $query->result_array();
+		}
+		return $result;
+	}
+
+	function get_stat_seed_count()
+	{
+		return $this->ci->clicklog_mod->get_stat_seed_count();
+	}
+
+	function get_stat_cast_count()
+	{
+		return $this->ci->clicklog_mod->get_stat_cast_count();
+	}
+
+	function get_stat_news_count()
+	{
+		return $this->ci->clicklog_mod->get_stat_news_count();
+	}
+}

@@ -1,0 +1,60 @@
+<div class="contentcontainer">
+            <div class="headings alt">
+                <h2><?php echo site_lang('edit_agenda_title');?></h2>
+            </div>
+            <div class="contentbox">
+			<?php echo form_open($this->uri->uri_string());?>
+						<p>
+							<?php
+								echo form_label(site_lang('agenda_start_time'), 'agenda_start_time');
+								$data = array('name' => 'agenda_start_time', 'id' => 'agenda_start_time', 'class' => 'inputbox', 'value' => date('Y-m-d H:i:s', $row->time_started));
+								echo form_input($data);
+							?> 
+						</p>
+						
+						<p>
+							<?php
+								echo form_label(site_lang('agenda_end_time'), 'agenda_end_time');
+								$data = array('name' => 'agenda_end_time', 'id' => 'agenda_end_time', 'class' => 'inputbox', 'value' => date('Y-m-d H:i:s', $row->time_ended));
+								echo form_input($data);
+							?> 
+						</p>
+						
+						<p>
+							<?php
+								echo form_label(site_lang('agenda_content'), 'agenda_content');
+								$data = array('name' => 'agenda_content', 'id' => 'agenda_content', 'class' => 'inputbox', 'value' => $row->activity);
+								echo form_input($data);
+							?> 
+						</p>
+						
+						<p>
+							<?php
+								echo form_label(site_lang('agenda_speaker'), 'agenda_speaker');
+								$data = array('name' => 'agenda_speaker', 'id' => 'agenda_speaker', 'class' => 'inputbox', 'value' => $row->speechers);
+								echo form_input($data);
+							?>
+						</p>
+						
+						<p>
+							<?php echo form_hidden('event_id', $row->event_id);?>
+						</p>
+						
+						<p>
+							<?php
+								echo form_submit('update_agenda', site_lang('edit_update'));
+							?>
+						</p>
+				</form>
+			</div>
+</div>
+<script>
+
+$(function(){
+$('#agenda_speaker').TagDynamic({
+	"container_class":"tag_dynamic_box",
+	"button_str": "添加"
+	autocomplete_service: '/ajax/auto_tag/user'
+	})
+})
+</script>

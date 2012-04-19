@@ -1,0 +1,14 @@
+<script type="text/javascript">
+$(document).ready(function(){
+	<?php $this->msg_lib->showmsg(); ?>
+})
+
+
+</script>
+ 
+		
+<div id="globle_msg">
+	<div class="close">X</div>
+	<div class="main error"></div>
+</div>
+

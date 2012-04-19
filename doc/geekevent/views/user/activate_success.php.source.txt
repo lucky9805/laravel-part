@@ -1,0 +1,6 @@
+<div class="confirm-email">
+                    <h1><?php echo site_lang('user_confirm_email');?></h1>
+                    <div class="meta">
+                      <?php $this->msg_lib->showmsg();?> 
+                    </div>
+ </div>

@@ -1,0 +1,15 @@
+<script src="/public/js/libs/jquery.highlight.js"></script>
+<script type="text/javascript" charset="utf-8">
+$(document).ready(function(){
+	$(".wide .title,.wide .entry").highlight($('.keyword').text(),{ className: 'search_highlight' })
+});
+	
+</script>
+
+<h1 class="page_title_l">搜索结果: <span class="keyword"><?=$key_word?></span></h1>
+	<div class="searchbox-inside">
+        <form method="post" action="/search/all" name="global-search" class="search-form">
+            <input name="search" placeholder="<?=$key_word?>" class="search-area">
+            <input type="submit" value="搜索" class="search-submit">
+        </form>
+    </div>

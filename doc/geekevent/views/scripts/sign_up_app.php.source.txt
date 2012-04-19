@@ -1,0 +1,18 @@
+<script>
+$(function(){
+    UI.tagDynamic($('#app'), {
+        "container_class":"wrap-text-box tag_dynamic_box",
+        "button_str": "添加",
+        autocomplete_service: 'aaa',
+      /*  data_list: [
+            { value: 'aaa', label: 'aaa' },
+            { value: 'bbb', label: 'bbb' }
+        ]
+        */
+    });
+    
+    Comment.init(1)
+})
+</script>
+
+

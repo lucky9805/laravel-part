@@ -1,0 +1,173 @@
+<?php
+	class Upload extends CI_Controller
+	{
+ 
+		function __construct()
+		{
+			parent::__construct(); 
+            $this->load->add_package_path(APPPATH.'third_party/image/');
+            $this->load->library('tp_image');
+        }
+
+        function ajax_upload_avatar()
+        {
+		    $this->load->helper('file_uploader');
+            $this->load->add_package_path(APPPATH.'third_party/image/');
+            $this->load->library('tp_image');
+			$allowedExtensions 	= array('jpg','jpeg','png','gif');
+		    parse_str($_SERVER['QUERY_STRING'],$_GET);		
+			$sizeLimit 			= 2 * 1024 * 1024;
+            $tmp_folder = IMG_ABSOLUTE_PATH.UPLOAD_TEMP;
+			$uploader = new qqFileUploader($allowedExtensions, $sizeLimit);
+			$avatar = $uploader->handleUpload($tmp_folder,rand_str());
+            if(isset($avatar['success']))
+            {
+                $side = min($avatar['width'],$avatar['height']);
+                $avatar['file_ext'] = ".".$avatar['file_ext'];
+                $img_config = array(
+                    'size'  => array(
+                        array('w'=>AVATAR_SMALL,'h'=>AVATAR_SMALL),
+                        array('w'=>AVATAR_THUMB,'h'=>AVATAR_THUMB),
+                        array('w'=>AVATAR_MEDIUM,'h'=>AVATAR_MEDIUM)
+                    ),
+                    'x'     => 0,
+                    'y'     => 0,
+                    'w'     => $side,
+                    'h'     => $side
+                );
+                $user_guid = $this->global_lib->get_user_guid();
+                $unique_id = $this->dbmanager_lib->obtain_a_row_field(TABLE_USER,'unique_id',array('guid'=>$user_guid));
+                $img_data = array(
+                    'unique_id'     => $unique_id
+                );
+                $result = $this->tp_image->upload_avatar_image($avatar,$img_config,$img_data);
+            }
+            else
+            {
+                $info = array(
+                    'success'   => FALSE,
+                    'error'     => $avatar['error']
+                );
+            }
+            $json = json_encode($avatar);
+            echo $json;
+        }
+
+        function weibo_img()
+        {
+		    $this->load->helper('file_uploader');
+
+            $weibo_id = $this->input->get('weibo_id');
+			$allowedExtensions 	= array('jpg', 'jpeg', 'png', 'gif');
+		    parse_str($_SERVER['QUERY_STRING'], $_GET);	
+			$sizeLimit = 2 * 1024 * 1024;
+            $tmp_folder = IMG_ABSOLUTE_PATH.UPLOAD_TEMP;
+			$uploader = new qqFileUploader($allowedExtensions, $sizeLimit);
+			$data = $uploader->handleUpload($tmp_folder);
+
+            if(isset($data['success']))
+            {
+                if($weibo_id)
+                {
+                    //传了微博ID，如有旧图片先删除旧图片再上传新图片
+                    $where = array('id' => $weibo_id);
+                    $weibo_info = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS_WEIBO, 'orig_id,thumb_id', $where);
+                    $orig_id = $weibo_info->orig_id;
+                    $thumb_id = $weibo_info->thumb_id;
+                    if($orig_id)
+                    {
+                        $this->tp_image->delete_image($orig_id);
+                    }
+                    if($thumb_id)
+                    {
+                        $this->tp_image->delete_image($thumb_id);
+                    }
+                }
+
+                $data['image_type']     = $data['file_ext'];
+                $data['file_ext']       = ".".$data['file_ext'];
+                $data['orig_name']      = $data['org_name'];
+                $data['create_type']    = 'event_weibo';
+                $data['user_guid']      = $this->global_lib->get_user_guid();
+                $data['table_name']     = TABLE_EVENTS_WEIBO;
+                $data['table_id']       = ($weibo_id) ? $weibo_id : NULL;
+                $img_config = array(
+                    'destination'   => '/uploads/event/weibo/',
+                    'relative_path' => '/uploads/event/weibo/'
+                );
+                //原图
+                $data['table_column'] = 'orig_id';
+                $orig_img = $this->tp_image->upload_image_with_fu($data, $img_config, FALSE);
+                $weibo_imgs = $this->session_lib->userdata('weibo_imgs');
+                $weibo_imgs['orig_id'] = $orig_img['id'];
+
+                //缩略图
+                $data['table_column'] = 'thumb_id';
+                $thumb_img = $this->tp_image->upload_image_with_fu($data, $img_config);
+                $h = 95;
+                $w = $data['width']*$h/$data['height'];
+                $this->tp_image->scale_img($thumb_img['abs_path'], $thumb_img['abs_path'], $w, $h);
+                $weibo_imgs['thumb_id'] = $thumb_img['id'];
+
+                if($weibo_id)
+                {
+                    $where = array('id' => $weibo_id);
+                    $weibo_data = array('thumb_id' => $thumb_img['id'], 'orig_id' => $orig_img['id']);
+                    $this->dbmanager_lib->update_rows(TABLE_EVENTS_WEIBO, $where, $weibo_data);
+                }
+                else
+                {
+                    $this->session_lib->set_userdata('weibo_imgs', $weibo_imgs);
+                }
+                $info = array(
+                    'success'   => TRUE,
+                    'message'   => '',
+                    'info'      => array(
+                        'thumb_img' => $thumb_img['path'],
+                        'orig_img'  => $orig_img['path'],
+                        'imgs'      => $orig_img['id'].",".$thumb_img['id']
+                    )
+                );
+
+            }
+            else
+            {
+                $info = array(
+                    'success'   => FALSE,
+                    'message'   => $data['error'],
+                    'info'      => array()
+                );
+            }
+            $json = json_encode($info);
+            echo $json;
+        }
+
+        function del_weibo_img()
+        {
+            $imgs_str = $this->input->post('imgs');
+            $imgs_arr = explode(',', $imgs_str);
+            if(count($imgs_arr) == 2)
+            {
+                foreach($imgs_arr as $img_id)
+                {
+                    $this->tp_image->delete_image($img_id);
+                }
+                $info = array(
+                    'success'   => TRUE,
+                    'message'   => '',
+                    'info'      => ''
+                );
+            }
+            else
+            {
+                $info = array(
+                    'success'   => FALSE,
+                    'message'   => '上传的图片ID有误',
+                    'info'      => ''
+                );
+            }
+            $json = json_encode($info);
+            echo $json;
+        }
+    }
+?>

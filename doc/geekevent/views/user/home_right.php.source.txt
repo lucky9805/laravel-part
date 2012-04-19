@@ -1,0 +1,108 @@
+   <article class='vcard'>
+        <aside class='avatar'>
+        <span class="img-wrap">
+        <img src='<?php echo $this->img_lib->get_avatar($user_guid,'medium');?>' alt='<?php echo $this->global_lib->get_user_screen_name($user_guid);?>'>
+        </span>
+        </aside>
+		<?php
+			$user_info = $this->dbmanager_lib->obtain_a_row(TABLE_USER, 'screen_name, company, position, bio', array('guid'=>$user_guid));
+		?>
+        <div class='entry'>
+            <hgroup>
+                <h1>
+                    <?php echo $user_info->screen_name;?>
+             <?php  // if($this->load->module("user/privilege/check_group_privilege",array("admin"),TRUE) or ($user_guid==$this->global_lib->get_user_guid())){
+              if($this->tp_privilege->check_group_privilege("admin") or ($user_guid==$this->global_lib->get_user_guid())){
+             if($user_guid==$this->global_lib->get_user_guid()){
+            ?><span class="setting"><a href="/user/setting"><?php echo site_lang('user_setting_info');?></a></span>
+            <?php }else{
+            	?>
+            <span class="setting"><a href="/ctr/edit_user/<?php echo $user_guid;?>"><?php echo site_lang('user_setting_info');?></a></span>
+ 
+            <?php 
+            }
+            }?>
+                </h1>
+
+                <h2>
+                    <div><span class='company'><?php echo $user_info->company;?></span>
+                    
+                    <?php if(!empty($user_info->company) and !empty($user_info->position)){?>
+                    <span>/</span>
+                    <?php }?>
+                    <span class='title'><?php echo $user_info->position;?></span></div>
+                </h2>
+            </hgroup>
+            <div class='main'>
+			<?php 
+				$events_speaker_where = array('user_guid'=>$user_guid, 'type'=>'clip');
+				$speech_num = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_SPEAKERS, 'id', $events_speaker_where, NULL, NULL, NULL, NULL, TRUE);
+			?>
+			<?php if($speech_num > 0):?>
+                <p class='stars'>
+                    <!--
+                    <em title='' class="star star-a"></em>
+                    <em title='' class="star star-b"></em>
+                    <em title='' class="star star-c"></em>-->
+                    <em class="star star-g png_bg" title="<?php echo site_lang('user_star_msg');?>"></em>
+                </p>
+			<?php endif;?>
+                <p class="tools">
+                    <!--
+                    <a class="pm"><span>私信</span></a>
+                    <a class="relation"><span class="follow ">关注</span></a>
+                    -->
+                </p>
+            </div>
+
+        </div>
+		<?php if($user_info->bio):?>
+        <div class="about">
+            <h3><?php echo site_lang('user_right_bio');?></h3>
+			<?php $bio = $user_info->bio;?>
+            <div><?php 
+           		$content_show1="";
+            	$length = mb_strlen($bio);
+				$len = WORD_CONTENT_LIMIT+100;
+				if($length<$len){
+			       $content_show1="<div class ='comment_short'>
+							".geek_content($bio)."
+						    </div>";
+					}else{
+				    $sub_comment = cn_substr($bio, 0, $len-1); 
+					$content_show1="<div class='comment_short'>
+							".geek_content($sub_comment)."
+							<a href='javascript:void(0)' onclick=\"UI.trigger(this, 'comment_short', 'comment_full')\">查看更多</a>
+						</div>
+						<div class=\"comment_full\" style='display: none'>
+							".geek_content($bio)."
+							<a href='javascript:void(0)' onclick=\"UI.trigger(this, 'comment_full', 'comment_short')\">收起</a>
+						</div>";
+				}
+            echo $content_show1;
+            
+            ?>
+            
+            
+            </div>
+        </div>
+		<?php endif;?>
+    </article>
+    
+	<?php $products = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_MEMBER_PRODUCTS, 'product_name', array('user_guid'=>$user_guid));?>
+	<?php if($products):?>
+	<dl class='user-side-data' style="border-bottom:none">
+        <dt>
+            <h3><?php echo site_lang('user_right_product');?></h3>
+        </dt>
+        <dd>
+           <ul class="tags clearfix">
+		   <?php foreach($products as $product):?>
+		   <li><a href="javascript:void(0);"><?php echo $product->product_name;?></a></li>
+		   <?php endforeach;?>
+           </ul> 
+        </dd>
+	</dl>
+	<?php endif;?>
+    
+ 

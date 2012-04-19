@@ -1,0 +1,7 @@
+<div class='notify'>
+    <div class="info"> 
+         <?php 
+         if(isset($_info))
+         echo $_info;?>
+	</div>
+</div>

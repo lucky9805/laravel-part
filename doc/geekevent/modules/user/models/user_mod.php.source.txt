@@ -1,0 +1,104 @@
+<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
+
+class User_User_mod extends MY_Model {
+
+        function __construct()
+        {
+            parent::__construct();
+        }
+
+        function check_user_in_system($user_unique_id)
+        {
+            $result = $this->get_a_row(TABLE_USER,"*",array("username"=>$user_unique_id));
+            return $result;
+        }
+        
+        function check_user_name_censor($username)
+        {
+            $result = $this->get_rows("censor_words","keywords",NULL,array("keywords"=>$username));
+            return $result;
+        }
+        
+        function check_email_in_system($email)
+        {
+            $result = $this->get_a_row(TABLE_USER,"email",array("email"=>$email));
+            return $result;
+        }
+  
+        function get_user_by_username($username){
+            $result = $this->get_a_row(TABLE_USER,"*",array("username"=>$username),array("email"=>$username));
+            return $result;
+        }
+        
+         function get_user_by_guid($user_guid){
+            $result = $this->get_a_row(TABLE_USER,"*",array("guid"=>$user_guid));
+            return $result;
+        }
+		
+		function check_password_reset($tempass,$unique_id)
+		{
+			$this->db->select('1',FALSE);
+			$this->db->where('tempass',$tempass);
+			$this->db->where('unique_id',$unique_id);
+			return $this->db->get(TABLE_USER);
+		}
+		
+		function update_user_by_guid($data,$user_guid)
+		{
+			$this->db->where('guid',$user_guid);
+			return $this->db->update(TABLE_USER,$data);
+		}
+ 
+		
+		function update_password_by_unique_id($tempass,$unique_id)
+		{
+			$data = array('password'=>$tempass,'tempass'=>null);
+			$this->db->where('unique_id',$unique_id);
+			return $this->db->update(TABLE_USER,$data);
+		}
+		 
+		function create_new_user_to_old_system($unique_id){
+			$result = $this->get_a_row(TABLE_USER,"*",array("unique_id"=>$unique_id));
+			if($result->num_rows()>0){
+	 			$user = $result->result_array();
+	 			$data["guid"]=$user[0]["guid"];
+				$data["username"]=$user[0]["username"];
+				$data["unique_id"]=$user[0]["unique_id"];
+				$data["password"]=$user[0]["password"];
+				$data["salt"]=$user[0]["salt"];
+				$data["email"]=$user[0]["email"];
+				$data["status"]=$user[0]["status"];
+				$data["group_id"]=4;
+				$data["activation_key"]=$user[0]["activation_key"];
+				
+				
+				$this->dbs = $this->load->database('wms',TRUE);
+				$entity_data["guid"] =$user[0]["guid"];
+				$entity_data["subtype_id"] =1;
+				$entity_data["type"] ="user";
+				$entity_data["time_created"] =time();
+				$entity_data["visibility"] ='yes';
+				$table="entities";
+			 	$this->dbs->insert($table,$entity_data);
+			 	
+			 	
+			 	$core_entity_data["guid"] =$user[0]["guid"];
+			 	$core_entity_data["title"] =$user[0]["username"];
+			 	$table="core_entities";
+			 	$this->dbs->insert($table,$core_entity_data);
+			 	
+				$table="users";
+			 	$this->dbs->insert($table,$data);
+			 	
+			 	
+			 	
+			 	$profile_data["guid"] =$user[0]["guid"];
+			 	$table="user_profiles";
+			 	$this->dbs->insert($table,$profile_data);
+			 	
+			}
+			
+			
+		}
+}
+?>

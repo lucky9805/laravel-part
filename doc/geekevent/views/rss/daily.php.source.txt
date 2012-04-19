@@ -1,0 +1,51 @@
+<?php
+header('Content-type:text/xml');
+$where = array('subtype_id' => 7);
+$limit = 10;
+$news = $this->dbmanager_lib->obtain_rows(TABLE_ENTITY,'guid,time_created',$where,NULL,'guid desc',$limit,0);
+$now = date("D, d M Y H:i:s T");
+ 
+$rss_output = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>
+<rss version=\"2.0\"
+    xmlns:content=\"http://purl.org/rss/1.0/modules/content/\"
+	xmlns:wfw=\"http://wellformedweb.org/CommentAPI/\"
+	xmlns:dc=\"http://purl.org/dc/elements/1.1/\"
+	xmlns:atom=\"http://www.w3.org/2005/Atom\"
+	xmlns:sy=\"http://purl.org/rss/1.0/modules/syndication/\"
+	xmlns:slash=\"http://purl.org/rss/1.0/modules/slash/\"
+    >
+<channel>
+    <title>GeekPark ".lang('common:news:daily')."</title>
+    <link>http://event.geekpark.net/</link>
+    <description>每天最值得关注的极客资讯</description>
+    <language>en</language>
+    <pubDate>$now</pubDate>
+    <lastBuildDate>$now</lastBuildDate>
+    <docs>http://event.geekpark.net/news/daily</docs>
+    <managingEditor>admin@geekpark.net</managingEditor>
+    <webMaster>admin@geekpark.net</webMaster>
+";
+
+foreach($news as $row)
+{
+    $guid = $row->guid;
+    $title = $this->entity_engine_lib->obtain_title($guid);
+    $main = $this->entity_engine_lib->obtain_main($guid);
+    $url = $this->dbmanager_lib->obtain_a_row_field(TABLE_NEWS,'news_url',array('guid'=>$guid));
+    $pubDate = date("r",$row->time_created);
+    $creator = "SuperGeek";
+
+$rss_output .= 
+"   <item>
+        <title>".$title."</title>
+        <link>".$url."</link>
+        <pubDate>".$pubDate."</pubDate>
+        <dc:creator>".$creator."</dc:creator>
+        <description><![CDATA[";
+$rss_output .= "<p>".str_replace("\n\n", "</p>\n\n<p>", $main)."</p>";
+$rss_output .= "<br />]]></description>
+    </item>\n";
+}
+$rss_output .= "</channel></rss>";
+echo $rss_output;
+?>

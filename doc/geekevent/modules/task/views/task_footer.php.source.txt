@@ -1,0 +1,5 @@
+<div class = 'footer'>
+The footer
+</div>
+</body>
+</html>

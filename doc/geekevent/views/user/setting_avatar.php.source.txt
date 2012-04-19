@@ -1,0 +1,44 @@
+
+<?php 
+    $user_guid = $this->global_lib->get_user_guid();
+	$this->load->view("user/navigation",array("current_on"=>"avatar"));
+?>
+<form name="" action="" class="format account" style="padding:0">
+</form>
+<?php
+    $success = (isset($_GET['success']) AND $_GET['success'] == 1) ? TRUE : FALSE;
+    if($success)
+    {
+        $this->msg_lib->setmsg('上传成功',SUCCESS);
+    }
+?>
+<div class="set-avatar avatar" style="padding-bottom:300px">
+    <div class="avatar-upload-box">
+        <?php
+            $this->msg_lib->showMsg();
+        ?>
+        <div id="avatar-uploader">
+            <noscript><p><?=lang('user_avatar_no_script')?></p></noscript>
+        </div>
+        <span class="msg"></span>
+    </div>
+    <div class="avatars">
+        <table cellspacing="5" cellpadding='8'>
+            <tr>
+                <td>
+                    <img src="<?=$this->img_lib->get_avatar($user_guid,'medium')?>">
+                </td>
+                <td style='vertical-align:bottom;padding-left:30px'>
+                    <img src="<?=$this->img_lib->get_avatar($user_guid,'thumb')?>">
+                </td>
+                <td style='vertical-align:bottom;padding-left:30px'>
+                    <img src="<?=$this->img_lib->get_avatar($user_guid,'small')?>"></td>
+            </tr>
+            <tr>
+                <td>130 x 130</td>
+                <td style="padding-left:30px">30 x 30</td>
+                <td style="padding-left:30px">22 x 22</td>
+            </tr>
+        </table>
+    </div>
+</div>

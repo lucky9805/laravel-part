@@ -1,0 +1,32 @@
+<?php
+    $event_pic = $this->img_lib->event($eid, 'event_small');
+    $content = $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_ENTITY, 'desc', array('guid' => $eid));
+    $event_url = $this->web_router_lib->Get_event_details_url($eid);
+    $time_created = $this->entity_engine_lib->obtain_time_created($eid);
+?>
+<div class="search-event-item">
+    <div class="photo">
+        <img alt="<?=$title?>" src="<?=$event_pic?>">        
+	</div>
+	
+    <div class="title">
+        
+        <a href="<?=$event_url?>"><?php echo $title;?></a>
+    </div> 
+    <div class="meta">
+        <?=date('Y.m.d H:i', $time_created)?>
+	</div>
+	
+    <div class="entry">
+    <?php 
+        $length = mb_strlen($content);
+        $limit = 60;
+        if($length > $limit)
+        {
+            $content = cn_substr($content, 0, $limit-1, FALSE)."...";
+        }
+        echo $content;
+    ?>
+    </div>
+
+</div>

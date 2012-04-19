@@ -1,0 +1,52 @@
+<?php if(!defined('BASEPATH')) exit('No direct script access allowed');
+
+    class Show_tips_lib 
+    {
+        function __construct()
+        {
+			$this->ci =& get_instance();
+			$this->ci->load->model('master/user_mod','user_mod');
+        }
+        
+        function is_show_tips($tips_name=''){
+            $result=false;
+            if($tips_name=='')
+            return $result;
+            
+            $this->ci->load->helper('array');
+ 
+            $shows=$this->ci->config->item('shows');
+            $user_guid=$this->ci->global_lib->get_user_guid();
+            $current_shows=$this->ci->user_mod->get_user_zdl_by_guid($user_guid);
+            $current_shows=wm_unserialize($current_shows);
+         //   print_r( $current_shows );
+            $updated_shows=elements($shows,$current_shows,0);
+         //   echo element($tips_name,$updated_shows);
+            if(element($tips_name,$updated_shows)=="0")
+            $result=true;
+        //   var_dump($result) ;
+            return $result;
+        }
+        
+        function never_show_tips($tips_name=''){
+            $result=false;
+            if($tips_name=='')
+            return $result;
+            
+            $this->ci->load->helper('array');
+ 
+            $shows=$this->ci->config->item('shows');
+            $user_guid=$this->ci->global_lib->get_user_guid();
+            $current_shows=$this->ci->user_mod->get_user_zdl_by_guid($user_guid);
+            
+            $current_shows=wm_unserialize($current_shows);
+            $current_shows[$tips_name]=1;
+            $updated_shows=elements($shows,$current_shows,0);
+            //do save data
+            $updated_shows=wm_serialize($updated_shows);
+            $data=array("zdl_data"=>$updated_shows);
+            $this->ci->user_mod->update_user_profile($user_guid,$data);
+        }
+        
+        
+    }

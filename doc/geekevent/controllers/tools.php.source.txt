@@ -1,0 +1,325 @@
+<?php
+	
+	class Tools extends  CI_Controller 
+	{
+ 
+		function __construct()
+		{
+			parent::__construct();  
+            $this->load->library('Dbmanager_lib');
+
+		}
+		
+		function show_404()
+		{
+			$this->load->view("show_404");
+		}
+		
+		
+		function test_time($s="2011-1-1"){
+			$start_time=std_unix_time_conversion($s);
+			//$start_time="2011-11-1";
+			$posOut = mb_strpos($start_time, "-");
+				if ($posOut !== FALSE) {
+				    // do something here
+				    $start_time=std_unix_time_conversion($start_time);
+				    echo "you ".$start_time;
+				}else{
+					echo "mei ".$start_time;
+				}
+		}
+		
+		function show_real_time($real_time="1321254944"){
+			echo wmTime($real_time);
+		}
+		function say(){
+		    $this->load->add_package_path(APPPATH.'third_party/user/');
+            $this->load->library('tp_user');
+            $this->tp_user->test();
+ 
+		}
+		
+		function tongguo(){
+			$ids = $this->input->post("ids");
+			print_r($ids);
+			$submit_third_content = $this->input->post("submit_third_content");
+			echo "<br>".$submit_third_content;
+		}
+		
+		function index(){
+			/*echo "OK";*/
+			$title="用户测试";
+			$this->template->write('title',$title); 
+            $this->template->write('layout','a_l_m');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"ctr/main");
+            $this->template->write_view('sidebar','ctr/left');
+		    $this->template->render(); 	
+		    
+		}
+		function add_user(){
+			/*echo "OK";*/
+			$title="新建用户";
+			$this->template->write('title',$title); 
+            $this->template->write('layout','a_l_m');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"ctr/add_user");
+            $this->template->write_view('sidebar','ctr/left');
+		    $this->template->render(); 	
+		    
+		}
+		
+		function edit_user(){
+			/*echo "OK";*/
+			$title="修改用户";
+			$this->template->write('title',$title); 
+            $this->template->write('layout','a_l_m');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"ctr/edit_user");
+            $this->template->write_view('sidebar','ctr/left');
+		    $this->template->render(); 	
+		    
+		}
+		
+		function user_list(){
+			/*echo "OK";*/
+			$title="用户列表";
+			$this->template->write('title',$title); 
+            $this->template->write('layout','a_l_m');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"ctr/user_list");
+            $this->template->write_view('sidebar','ctr/left');
+		    $this->template->render(); 	
+		    
+		}
+		
+        function image()
+        {
+            $this->load->helpers('form');
+            $submit = $this->input->post('submit');
+            if($submit)
+            {
+            $upload_config['upload_path']   = IMG_ABSOLUTE_PATH.UPLOAD_TEMP;
+            $upload_config['allowed_types'] = 'gif|jpg|png';
+            $upload_config['max_size']	    = '100';
+            $upload_config['max_width']     = '1024';
+            $upload_config['max_height']    = '768';
+
+            $img_config['destination']      = IMG_ABSOLUTE_PATH.CLIP_PATH;
+            $img_config['userfile']         = 'clip';     
+            $img_config['relative_path']    = CLIP_PATH;
+
+            $img_data = array(
+                'entity_guid'   => '1111',
+                'create_type'   => 'clip_small',
+                'user_guid'    => ''
+            );
+            $result = $this->load->module('image/image/upload_image_to_tmp',array($upload_config,$img_config),TRUE);
+            unset($img_config);
+            $img_config = array(
+                'size'  => array(
+                    array('w'=>30,'h'=>30),
+                    array('w'=>60,'h'=>60),
+                    array('w'=>90,'h'=>90)
+                ),
+                'x'     => 0,
+                'y'     => 0,
+                'w'     => $result['data']['image_width'],
+                'h'     => $result['data']['image_height']
+            );
+            $unique_id = $this->global_lib->get_user_unique_id();
+            $img_data = array(
+                'unique_id'     => $this->global_lib->get_user_unique_id()
+            );
+            $result = $this->load->module('image/image/upload_avatar_image',array($result['data'],$img_config,$img_data));
+            }
+            $this->load->view('test');
+        }
+
+        function delete_img()
+        {
+            $image_id = 1;
+            $result = $this->load->module('image/image/delete_image',array($image_id),TRUE);
+            var_dump($result);
+        }
+
+        function mem()
+        {
+            $this->load->library('Cache_lib');
+            //$this->load->driver('cache');
+            //$this->cache->memcached->save('name','laputa7',5);
+            //$result = $this->cache->memcached->get('name');
+            //$this->cache->memcached->delete('name');
+            $data = $this->cache_lib->test();
+            $result = $data['result'];
+            echo $data['type']."<br />";
+            if($data['type'] == "cache")
+            {
+                var_dump($result);
+                //var_dump($result->result());
+                //echo "num_rows is ".$result->num_rows();
+                //var_dump($data['result']);
+                foreach($result->result_array() as $row)
+                {
+                    //echo "aaa";
+                    //var_dump($row);
+                    //echo "<br />";
+                }
+            }
+        }
+
+        function tag()
+        {
+            $data = array(2,"aaa","user","2267");
+            $result = $this->load->module('tag/tag/add_tag_relation',$data,TRUE);
+            var_dump($result);
+        }
+
+        function delete_tag()
+        {
+            $data = array(1,"aaa");
+            $result = $this->load->module("tag/tag/delete_tag_relation",$data);
+        }
+
+         
+        function test_form(){
+			$this->load->library('form_validation');
+          
+            $this->form_validation->set_rules('username', '用户名', 'required|username_check');
+ 
+            $this->form_validation->set_rules('password', '密码', 'required|username_check');
+
+            if ($this->form_validation->run() == FALSE)
+             {
+                 echo validation_errors();
+             }
+             else{
+                echo "ok";
+             }
+			$this->load->view("test");
+           
+        }
+
+        
+        function test_form1(){
+        if($this->global_lib->is_login()){ 
+ 
+				 redirect(HOME_URL);
+			}
+			
+       	$this->load->library('form_validation');
+	 	 	 	$this->load->config('form_validate');
+	 	 	 	$this->load->helper('form');
+ 	  		//	$val=$this->form_validation;
+			$is_submit = $this->input->post("submit");
+			if($is_submit){
+			
+             if ($this->form_validation->set_rules($this->config->item('check_register')) and $this->form_validation->run() == FALSE)
+             {
+          		     $this->msg_lib->setmsg(validation_errors(),ERROR);
+ 
+             }
+             else{
+                $data['father_guid']    = 0;
+				$data['type']           = 'user';
+				$data['subtype_id']     = MODULE_USER;
+				$data['second_type']    = 0;
+				$data['is_recommend']   = 0;
+				$data['visibility']     = 'yes';
+				
+				$data['title']  = $this->input->post("username");
+                $user_guid = $this->dbmanager_lib->create_an_entity($data);
+                $salt   = rand_str(6);
+			    $unique_id					= rand_str(6,'abcdefghijklmnopqrstuvwxyz1234567890').(time()+rand());
+                $user_data = array(
+                    'guid'          => $user_guid,
+                    'group_id'      => 4,
+                    'unique_id'     => $unique_id,
+                    'salt'          => $salt,
+                    'screen_name'   => $this->input->post("username"),
+                    'real_name'     => $this->input->post("username"),
+                    'username'      => $this->input->post("username"),
+                    'password'      => md5(md5($this->input->post('password')).$salt),
+                    'email'         => $this->input->post('email'),
+                    'status'        => 'active'               
+                );
+                $this->dbmanager_lib->create_a_row(TABLE_USER,$user_data);
+				$this->msg_lib->setmsg(site_lang("ok_register"),SUCCESS);
+             }	
+			}
+			$this->load->library('Captcha_engine_lib');
+			$this->captcha_engine_lib->captcha();//Create catpcha
+
+            $this->template->write('extra_scripts',$this->load->view("scripts/register",'',TRUE));	
+	 		$title=site_lang("user:register");
+			$this->template->write('title',$title); 
+            $this->template->write('layout','w_s');
+	        $this->template->write('body_class','account');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"user/register_success");
+            $this->template->write_view('sidebar','user/no_account');
+		    $this->template->render();
+        }
+
+ 		function check_user_name($username){
+ 			//$is_success = $this->load->module('user/user/check_user_in_system',array($username),TRUE);
+ 			$is_success = $this->tp_user->check_user_in_system($username);
+ 			if($is_success=="no")
+ 			{ 
+ 				return true;
+ 			}
+ 			if($is_success=="yes")
+ 			{
+ 				$this->form_validation->set_message('check_user_name',site_lang('check_user_name_yes'));
+ 				return false;
+ 			}
+ 			if($is_success=="censor")
+ 			{
+ 				$this->form_validation->set_message('check_user_name',site_lang('check_user_name_censor'));
+ 				return false;
+ 			}
+ 			
+ 		}
+ 		
+ 		
+ 		function email_exist($email){
+ 			$is_success = $this->load->module('user/user/check_email_in_system',array($email),TRUE);
+ 			if($is_success=="no")
+ 			{ 
+ 				return true;
+ 			}
+ 			if($is_success=="yes")
+ 			{
+ 				return false;
+ 			}
+ 		}
+ 
+ 
+		
+		
+		
+		
+        function username_check($str)
+       {
+         if ($str == 'test')
+        {
+            $this->form_validation->set_message('username_check', 'The %s field can not be the word "test"');
+         return FALSE;
+         }
+         else
+         {
+         return TRUE;
+         }
+     }
+        
+
+        function avatar()
+        {
+            $this->load->library('img_lib');
+            $user_guid = $this->global_lib->get_user_guid();
+            $result = $this->img_lib->get_avatar($user_guid,20,20);
+            var_dump($result);
+        }
+
+	}
+?>

@@ -1,0 +1,40 @@
+权限设置:
+<form action="/module/user/privilege/update_privilege" method="post">
+<table border=1 width="500">
+<tr>
+<td>权限名称/组名</td>
+<?php
+	$group_count=0;
+	foreach($groups->result_array()  as $group){
+		echo "<td>".$group["group_name"]."</td>";
+		$group_count++;
+	}
+?>
+</tr>
+<?php 
+   foreach($privileges->result_array()  as $privilege){
+	 	
+	 	$code=$privilege["code"];
+		echo "<tr>";
+		echo  "<td width=120>".$privilege["privilege_name"]."({$code})</td>";
+		foreach($groups->result_array()  as $group){
+	 	$checked='';
+	 	$group_id=$group["group_id"];
+	 	$current_shows=wm_unserialize($group["privilege_data"]);
+  
+	 	if(element($code,$current_shows)==1) $checked='checked';
+	 
+		echo "<td>是/否<input type='checkbox' name='".$code."_".$group_id."' {$checked} ></td>";
+		}
+		echo "</tr>";
+	}
+
+?>
+<tr>
+<td colspan="<?php echo $group_count+1;?>" style="left-margin:50px"><input type="submit" name="submit" value="更新权限"></td>
+</tr>
+</table>
+</form>
+<br>
+开发者可以使用 $this->load->module("user/privilege/check_group_privilege",array($privilege_name,$group_id),TRUE);
+的返回值来判断是否有相应的$privilege_name的权限。

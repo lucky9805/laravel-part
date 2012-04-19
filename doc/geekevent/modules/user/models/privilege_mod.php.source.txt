@@ -1,0 +1,46 @@
+<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
+
+class User_Privilege_mod extends MY_Model {
+
+        function __construct()
+        {
+            parent::__construct();
+        }
+
+        function get_privilege_groups()
+        {
+            $result = $this->get_rows(TABLE_PRIVILEGE_GROUP,"*");
+             return $result;
+        }
+   
+        function get_privileges(){
+            $result = $this->get_rows(TABLE_PRIVILEGE,"*");
+            return $result;
+        }
+        
+        function get_group_privilege($group_id){
+            $result = $this->get_rows(TABLE_PRIVILEGE_GROUP,"privilege_data",array("group_id"=>$group_id));
+             if($result->num_rows() > 0){
+             	$result = $result->result_array();
+                $result=$result[0]["privilege_data"];
+             }else{
+             	$result = null;
+             }
+
+            return $result;
+        }
+        
+        function create_privilege($data){
+            $this->insert_a_row(TABLE_PRIVILEGE,$data);
+        }
+        function delete_privilege($id){
+            $this->delete_rows(TABLE_PRIVILEGE,array("id"=>$id));
+        }
+        
+         function update_privilege_data_by_group_id($group_id,$data){
+             $this->update_rows(TABLE_PRIVILEGE_GROUP,array("group_id"=>$group_id),array("privilege_data"=>$data));
+        }
+		
+        
+}
+?>

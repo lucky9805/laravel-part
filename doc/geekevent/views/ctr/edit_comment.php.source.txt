@@ -1,0 +1,21 @@
+<div class="contentcontainer">
+            <div class="headings alt">
+                <h2><?=lang('comment_edit')?></h2>
+            </div>
+            <div class="contentbox">
+			<?php echo form_open($this->uri->uri_string());?>
+                <p>
+                    <?php
+                        echo form_label(lang('ctr:content'));
+                        $data = array('name' => 'comment', 'id' => 'comment', 'class' => 'inputbox', 'value' => $comment);
+                        echo form_textarea($data);
+                    ?> 
+                </p>
+                <p>
+                    <?php
+                        echo form_submit('edit_comment',lang('edit_update'));
+                    ?>
+                </p>
+				</form>
+			</div>
+</div>

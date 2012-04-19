@@ -1,0 +1,151 @@
+<?php
+    $clip_time = date('Y.m.d',$clip->record_time);
+    $event_url = $this->web_router_lib->Get_event_details_url($clip->event_guid);
+?>
+<article class='view'>
+    <header>
+        <h1><?=$core_entity->title?></h1>
+    </header>
+    <div class='meta'>
+        <?=lang('clip_time')?>: <time datetime="<?=$clip_time?>"><?=$clip_time?></time>
+        <span class="returnBtn">
+        <?php
+            if(count($clips_list) > 1)
+            {
+                $cc_link = $this->web_router_lib->Get_event_collection_url($clip->collection_related_id);
+            ?>
+            <a href="<?=$cc_link?>">返回专辑</a> |
+            <?php
+            }
+        ?>
+            <a href="<?=$event_url?>">返回活动</a>
+        </span>
+    </div>
+    <div id='player'>
+    <?php if(GLOBAL_PLAY_CC)
+    {
+     	$player_id="E35FA12BCC3C3182";
+
+        if($this->agent->is_mobile())
+        {
+     	?>
+     	    <script src="http://union.bokecc.com/player?vid=<?php echo $clip->api_cc;?>&siteid=99F117B348066991&autoStart=false&width=550&height=480&playerid=<?php echo $player_id;?>&playertype=1" type="text/javascript"></script>
+    <?php
+
+        }
+        else
+        {
+     ?>
+
+     <!-- <object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0" width="550" height="400" id="cc_<?php echo $clip->api_cc;?>"><param name="movie" value="http://union.bokecc.com/flash/single/99F117B348066991_<?php echo $clip->api_cc;?>_false_AB64ED27A1261F77_1/player.swf" /><param name="allowFullScreen" value="true" /><param name="allowScriptAccess" value="always" /><embed src="http://union.bokecc.com/flash/single/99F117B348066991_<?php echo $clip->api_cc;?>_false_AB64ED27A1261F77_1/player.swf" width="550" height="400" name="cc_<?php echo $clip->api_cc;?>" allowFullScreen="true" allowScriptAccess="always" pluginspage="http://www.macromedia.com/go/getflashplayer" type="application/x-shockwave-flash"/></object>
+      <script src="http://union.bokecc.com/player?vid=<?php echo $clip->api_cc;?>&siteid=99F117B348066991&autoStart=false&width=550&height=400&playerid=E35FA12BCC3C3182&playertype=1" type="text/javascript"></script>
+
+    <object width="550" height="400" id="cc_<?php echo $clip->api_cc;?>" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000">
+    <param  name="movie" value="http://union.bokecc.com/flash/single/99F117B348066991_<?php echo $clip->api_cc;?>_false_E35FA12BCC3C3182_1/player.swf" name="movie">
+    <param value="false" name="allowFullScreen">
+    <param name="wmode" value="opaque">
+    <param value="always" name="allowScriptAccess">
+    <embed wmode="opaque" width="550" height="400" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" allowscriptaccess="always" allowfullscreen="true" name="cc_<?php echo $clip->api_cc;?>" src="http://union.bokecc.com/flash/single/99F117B348066991_<?php echo $clip->api_cc;?>_false_E35FA12BCC3C3182_1/player.swf?">
+    </object>
+
+       -->
+		<object
+		classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000"
+		codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0"
+		width="550" height="480" id="cc_<?=$clip->api_cc?>">
+
+		<param name="movie" value="http://union.bokecc.com/flash/single/99F117B348066991_<?=$clip->api_cc?>_false_<?=$player_id?>_1/player.swf" />
+		<param name="allowFullScreen" value="true" />
+		<param name="wmode" value="opaque">
+		<param name="allowScriptAccess" value="always" />
+		<embed wmode="opaque" src="http://union.bokecc.com/flash/single/99F117B348066991_<?=$clip->api_cc?>_false_<?=$player_id?>_1/player.swf" width="550" height="480" name="cc_<?=$clip->api_cc?>" allowFullScreen="true" allowScriptAccess="always" pluginspage="http://www.macromedia.com/go/getflashplayer" type="application/x-shockwave-flash"/>
+		</object>
+
+      <?php
+        }
+    }
+    else
+    {
+    ?>
+  <embed src="http://player.youku.com/player.php/sid/<?=$clip->api_youku?>/v.swf" allowFullScreen="true" quality="high" width="550" height="400" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash" WindowlessVideo="1" wmode="transparent"></embed>
+    <?php
+    }
+    ?>
+    </div>
+    <div class='info'>
+        <div class="wb-share">
+            <?php
+                $share_data = array(
+                    'entity_guid'   => $clip->guid,
+                    'share_content' => $clip->highlight,
+                    'subtype_id'    => MODULE_CLIPS
+                );
+                $this->load->view('reuse/share',$share_data);
+            ?>
+        </div>
+    </div>
+    <?php if(count($clips_list) > 1):?>
+    <div >
+        <dl class="format">
+        <dt>相关视频</dt>
+        </dl>
+    </div>
+    <div class="scrollable">
+        <a class="prev"></a>
+        <div>
+            <ul class="items" >
+            <?php
+                foreach($clips_list as $row):
+                    $clip_guid  = $row['clip_guid'];
+                    $clip_title = $row['clip_title'];
+                    $clip_img   = $this->img_lib->clip($clip_guid);
+                    $clip_url   = $this->web_router_lib->Get_clip_url($clip_guid);
+                ?>
+                <li id='<?=$row['count']?>'>
+                    <a class="numId" href="<?=$clip_url?>" ><img class="" src="/public/img/icons/<?=$row['count']?>.png"></a>
+                    <a class="img-wrap" href="<?=$clip_url?>" ><img src="<?=$clip_img?>" /></a><a class="title" href="<?=$clip_url?>" title="<?=$clip_title?>"><?=$clip_title?></a>
+                </li>
+                <?php
+                endforeach;
+            ?>
+            </ul>
+        </div>
+        <a class="next"></a>
+    </div>
+    <?php endif;?>
+    <div class="sec modify-sec">
+        <dl class='format'>
+            <dt><?=lang('clip_highlight')?></dt>
+            <dd class="about-clip">
+                <?=geek_content($clip->highlight)?>
+            </dd>
+        </dl>
+    </div>
+    <div class="sec right">
+        <dl class="format">
+		<dt><?=lang('clip_speaker')?></dt>
+            <dd>
+                <ul class='format user-list'>
+				<?php foreach($speakers as $speaker):?>
+					<li>
+                        <div class="avatar">
+                            <a href="<?=$this->web_router_lib->Get_home_url($speaker->user_guid,"index")?>">
+                                <img src="<?=$this->img_lib->get_avatar($speaker->user_guid,'thumb')?>">
+                            </a>
+                        </div>
+                        <div class="main">
+						<?php
+                            $user_detail = $this->user_lib->get_user_info($speaker->user_guid,'real_name,position,company');
+						?>
+                            <h3><a href="<?=$this->web_router_lib->Get_home_url($speaker->user_guid,"index")?>"><?=$user_detail->real_name?></a></h3>
+                            <div><span class="title"><?=$user_detail->company?> <?=$user_detail->position?></span></div>
+                        </div>
+                    </li>
+				<?php endforeach;?>
+                </ul>
+            </dd>
+        </dl>
+    </div>
+<?php $this->load->view('frame/reciprocal_list', $reciprocal); ?><!-- 相关内容 -->
+<?php $this->load->view('frame/recom_list', $recom_list_title); ?><!-- 推荐文章、推荐视频 -->
+</article>

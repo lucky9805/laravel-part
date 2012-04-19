@@ -1,0 +1,9 @@
+<header>
+    <h1><?=$core_entity->title?></h1>
+</header>
+<div class="meta">
+	<span><?=lang('event_header_title').$event->term.lang('event_term_2')?></span>
+    <time pubtime datetime=''><small class='dot'>•</small> <?=date('Y.m.d H:i', $event->start_time)?></time>
+    <span class='address'><small class='dot'>•</small> <?=$venue?$venue->venue:''?></span>
+    <span class='city'><small class='dot'>•</small> <?=lang('event_beijing')?></span>
+</div>

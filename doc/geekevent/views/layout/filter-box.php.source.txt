@@ -1,0 +1,10 @@
+<div id='filter-box' class="test"> 
+    <div class="container">
+    <?=$nav?>
+    </div> 
+</div>
+ 
+<div id='castlist-box' class="clearfix"> 
+    <div class="cast-wall"></div> 
+    <div class='cast-list'></div> 
+</div> 

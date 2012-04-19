@@ -1,0 +1,87 @@
+<?php
+    $where['event_guid'] = $entity_guid;
+    $clips_collections = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS_COLLECTION, '*', $where);
+?>
+<article class='view' style="min-height:550px">
+<?php $this->load->view('event/header'); ?>
+    <div class='main'>
+<?php 
+    $this->load->view($this->web_router_lib->Get_event_navigation_url(), array('current_on' => 'review', 'entity_guid' => $entity_guid, 'event_status' => $event->status));
+?> 
+		<div>
+			<?php if($event->status <2):?>
+			<?php $this->msg_lib->setmsg(lang('event_status1'),ALERT);?>
+		
+			<?php elseif($event->status <3):?>
+			<?php $this->msg_lib->setmsg(lang('event_status2'),ALERT);?>
+		
+			<?php elseif($event->status <4):?>
+			<?php $this->msg_lib->setmsg(lang('event_status3_content'),ALERT);?>
+		</div>
+            <?php 
+                else:
+				$collection_num = count($clips_collections);
+				$check_last = 1;
+				$last_style = '';
+
+				if($collection_num === 0)
+				{
+					$this->msg_lib->setmsg(lang('event_status3_content'),ALERT);
+					$this->msg_lib->showmsg();
+				}
+			?>
+            <div class="review-list">
+				<?php foreach($clips_collections as $row):
+                    $cc_id           = $row->id;
+                    $cc_name         = $row->collection_name;
+                    $cc_first_clip   = $row->first_clip;
+                    $cc_record_time  = $row->record_time;
+                    $cc_desc         = $row->collection_desc;
+                    $cc_ppt_url      = $row->ppt_url;
+                    $cc_img1         = $row->image1;
+                    $img_path = $this->img_lib->obtain_img_by_id($cc_img1);
+                    $clips_num = $this->clip_lib->obtain_related_clips($cc_id,TRUE);
+                    if($clips_num > 1)
+                    {
+                        $cc_url = $this->web_router_lib->Get_event_collection_url($cc_id);
+                    }
+                    else
+                    {
+                        $cc_url = $this->web_router_lib->Get_clip_url($cc_first_clip);
+                    }
+                    if($check_last === $collection_num)
+                    {
+						$last_style = 'clear-border';
+                    }
+					?>
+					<article class='cast-item event-card <?php echo $last_style;?>'>					
+						<div class="photo">
+							<img src="<?=$img_path?>" alt="<?=$cc_name?>">
+							<a class='png_bg play' href="<?=$cc_url?>"><?=lang('clip_play')?></a>
+						</div>
+						<div class="entry">
+							<header>
+                                <h1><a href="<?=$cc_url?>"><?=$cc_name?></a></h1>
+							</header>
+							<div class='meta'>
+								<?=lang('clip_record_time')?><?=date('Y.m.d', $cc_record_time)?>
+							</div>
+							<div class='main'><?=$cc_desc?></div>
+                            <?php
+                                if($cc_ppt_url != ''):
+                                ?>
+                                <div class="meta"><a target="_blank" class="ppt" href="<?=$cc_ppt_url?>" title="<?=$cc_ppt_url?>"><?=lang('view_ppt')?></a></div>
+                                <?php
+                                endif;
+                            ?>
+						</div>
+					</article>
+					<?php $check_last++;?>
+				<?php endforeach;?>
+				</div>
+			</div>
+			<?php endif;?>
+			<?php $this->msg_lib->showmsg();?>
+
+    </div>
+</article>

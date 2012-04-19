@@ -1,0 +1,217 @@
+<?php
+	class Search extends CI_Controller
+	{
+ 
+		function __construct()
+		{
+			parent::__construct(); 
+            $libraries = array('user_lib', 'clip_lib', 'event_lib', 'comment_lib', 'entity_engine_lib', 'pagination', 'form_validation', 'seed_lib');
+            $this->load->library($libraries);
+			$this->load->add_package_path(APPPATH.'third_party/user/');
+            $this->load->library('tp_user');
+            $this->load->library('tp_privilege');
+        }
+
+        function autocomplete()
+        {
+            $q = $this->input->get('q');
+            $q = $this->form_validation->xss_clean($q);
+            $limit = $this->input->get('limit');
+            $offset = 0;
+            $in_key = 'subtype_id';
+            $in_value = array(MODULE_USER, MODULE_CLIPS, MODULE_EVENTS, MODULE_SEED);
+            $result = $this->entity_engine_lib->obtain_entities_by_like('guid,title,subtype_id', $q, $in_key, $in_value, $limit, $offset);
+            $info = array();
+            if(count($result) > 0)
+            {
+                foreach($result as $row)
+                {
+                    $subtype_id = $row->subtype_id;
+                    $guid       = $row->guid;
+                    $title      = $row->title;
+                    if($subtype_id == MODULE_USER)
+                    {
+                        $info[] = array(
+                            'type'      => 'user',
+                            'title'     => "<span class='user'>{$title}</span>",
+                            'href'      => $this->web_router_lib->Get_home_url($guid, 'index'),
+                            'avatar'    => $this->img_lib->get_avatar($guid, 'thumb')
+                        );
+                    }
+                    elseif($subtype_id == MODULE_SEED)
+                    {
+                        $info[] = array(
+                            'type'      => 'seed',
+                            'title'     => $title,
+                            'href'      => $this->web_router_lib->Get_seed_url($guid),
+                            'avatar'    => ''
+                        );
+                    }
+                    elseif($subtype_id == MODULE_CLIPS)
+                    {
+                        $info[] = array(
+                            'type'      => 'clip',
+                            'title'     => $title,
+                            'href'      => $this->web_router_lib->Get_clip_url($guid),
+                            'avatar'    => ''
+                        );
+                    }
+                    elseif($subtype_id == MODULE_EVENTS)
+                    {
+                        $info[] = array(
+                            'type'      => 'event',
+                            'title'     => $title,
+                            'href'      => $this->web_router_lib->Get_event_details_url($guid),
+                            'avatar'    => ''
+                        );
+                    }
+                }
+            }
+            $json = json_encode($info);
+            echo $json;
+        }
+
+        function all($key_word=NULL)
+        {
+            $p_key_word = $this->input->post('search');
+            if($p_key_word)
+            {
+                redirect('/search/all/'.$p_key_word);
+            }
+            else
+            {
+                $key_word = strip_tags($this->form_validation->xss_clean($key_word));
+                $data['type'] = 'all';
+                $data['key_word'] = $key_word;
+                if($key_word == NULL)
+                {
+                    $data['is_null'] = TRUE;
+                    redirect('/cast');
+                }
+                else
+                {
+                    $data['is_null'] = FALSE;
+                    $limit = 3;
+                    $user_limit = 4;
+                    $like = array('title' => $key_word);
+                    $data['limit'] = $limit;
+                    $data['user_limit'] = $user_limit;
+                    //用户
+                    $where = array('subtype_id' => MODULE_USER);
+                    $data['users_num']  = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, NULL, NULL, TRUE);
+                    $data['users_more'] = ($data['users_num'] > $user_limit) ? TRUE : FALSE;
+                    $data['users']      = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, $user_limit, 0);
+                    //视频
+                    $where = array('subtype_id' => MODULE_CLIPS);
+                    $data['clips_num']  = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, NULL, NULL, TRUE);
+                    $data['clips_more'] = ($data['clips_num'] > $limit) ? TRUE : FALSE;
+                    $data['clips']      = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, $limit, 0);
+                    //活动
+                    $where = array('subtype_id' => MODULE_EVENTS);
+                    $data['events_num']     = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, NULL, NULL, TRUE);
+                    $data['events_more']    = ($data['events_num'] > $limit) ? TRUE : FALSE;
+                    $data['events']         = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, $limit, 0);
+                    //极客观察
+                    $where = array('subtype_id' => MODULE_SEED);
+                    $data['seeds_num']  = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, NULL, NULL, TRUE);
+                    $data['seeds_more'] = ($data['seeds_num'] > $limit) ? TRUE : FALSE;
+                    $data['seeds']      = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, $limit, 0);
+                    $data['all_num'] = $data['users_num'] + $data['clips_num'] + $data['events_num'] + $data['seeds_num'];
+                }
+                $title = "搜索-全部-".$key_word;
+                $this->template->write('title',$title); 
+                $this->template->write('layout','w_s');
+                $this->template->write('body_class','search');
+                $this->template->write('breadcrumb',$title);
+                $this->template->write_view('main',"search/all",$data);
+                $this->template->write_view('sidebar','search/side');
+                $this->template->render();
+            }
+        }
+
+        function _part($type, $key_word, $offset)
+        {
+            $key_word = $this->form_validation->xss_clean($key_word);
+            $data['type'] = $type;
+            $data['key_word'] = $key_word;
+            if($key_word == NULL)
+            {
+                $data['is_null'] = TRUE;
+            }
+            else
+            {
+                $data['is_null'] = FALSE;
+                $limit = 10;
+                $like = array('title'=>$key_word);
+                switch($type)
+                {
+                case 'users':
+                    $subtype_id = MODULE_USER;
+                    $limit = 14;
+                    break;
+                case 'clips':
+                    $subtype_id = MODULE_CLIPS;
+                    break;
+                case 'events':
+                    $subtype_id = MODULE_EVENTS;
+                    break;
+                case 'seeds':
+                    $subtype_id = MODULE_SEED;
+                    break;
+                }
+                $where = array('subtype_id' => $subtype_id);
+                $num = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, NULL, NULL, TRUE);
+                $data[$type] = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, $limit, $offset);
+                $config['base_url']     = "/".$this->router->class."/".$this->router->method."/{$key_word}/";
+                $config['uri_segment']  = 4;
+                $config['total_rows']   = $num;
+                $config['per_page']     = $limit;
+                $this->pagination->initialize($config);
+
+                //用户
+                $where = array('subtype_id' => MODULE_USER);
+                $data['users_num']  = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, NULL, NULL, TRUE);
+                //视频
+                $where = array('subtype_id' => MODULE_CLIPS);
+                $data['clips_num']  = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, NULL, NULL, TRUE);
+                //活动
+                $where = array('subtype_id' => MODULE_EVENTS);
+                $data['events_num']     = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, NULL, NULL, TRUE);
+                //极客观察
+                $where = array('subtype_id' => MODULE_SEED);
+                $data['seeds_num']     = $this->dbmanager_lib->obtain_rows(TABLE_CORE_ENTITIES, 'guid,title', $where, $like, NULL, NULL, NULL, TRUE);
+                $data['all_num'] = $data['users_num'] + $data['clips_num'] + $data['events_num'] + $data['seeds_num'];
+
+            }
+	 		$title = "搜索-".$key_word;
+			$this->template->write('title',$title); 
+            $this->template->write('layout','w_s');
+            $this->template->write('body_class','search');
+            $this->template->write('breadcrumb',$title);
+            $this->template->write_view('main',"search/part",$data);
+            $this->template->write_view('sidebar','search/side');
+		    $this->template->render();
+
+        }
+
+        function users($key_word=NULL, $offset=0)
+        {
+            $this->_part('users', $key_word, $offset);
+        }
+
+        function clips($key_word=NULL, $offset=0)
+        {
+            $this->_part('clips', $key_word, $offset);
+        }
+
+        function events($key_word=NULL, $offset=0)
+        {
+            $this->_part('events', $key_word, $offset);
+        }
+
+        function seeds($key_word=NULL, $offset=0)
+        {
+            $this->_part('seeds', $key_word, $offset);
+        }
+    }
+?>

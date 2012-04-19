@@ -1,0 +1,34 @@
+       <header class="action_bar">
+                        <a class="close" href="javascript:;"><?php echo site_lang('notify_confirm_close');?></a>
+                    </header>
+                    <section class="main">
+                        <article class="notice-item">
+                            <div class="avatar">
+
+                                <a href="<?php echo $this->web_router_lib->Get_home_url(SUPER_ADMIN,"index");?>">
+                                    <img src="<?php echo $this->img_lib->get_avatar(SUPER_ADMIN,'small');?>" alt="">
+                                </a>
+                            </div>
+                            <div class="main">
+								<?php
+									$event_guid = $notification->object_id;
+									$event = $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_ENTITIES, 'title', array('guid'=>$event_guid));
+									$event_info = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS, '*', array('guid'=>$event_guid));
+									$venue = $this->dbmanager_lib->obtain_a_row(TABLE_VENUE, 'venue, address', array('id'=>$event_info->venue_Id));
+								?>
+								<p><a href='<?php echo $this->web_router_lib->Get_home_url(SUPER_ADMIN,"index");?>'>supergeek</a> 
+								<time datatime=""><?php echo wmTime($notification->time_created);?></time> <?php echo site_lang('notify_confirm_notify_msg');?></p>
+								
+								<p><?php echo sprintf(site_lang("notify_confirm_notify_success"),$event); ?></p>
+								
+
+                                <blockquote>									
+									<p><?php echo site_lang('notify_confirm_event_name');?><a href="<?php echo $this->web_router_lib->Get_event_details_url($event_guid)?>"><?php echo $event;?></a></p>
+									<p><?php echo site_lang('notify_confirm_event_date');?><?php echo date('Y年m月d日', $event_info->start_time);?></p>
+									<p><?php echo site_lang('notify_confirm_event_venue');?><?php echo $venue->venue;?></p>
+									<p><?php echo sprintf(site_lang('notify_confirm_event_location'), $venue->address);?></p>
+                                </blockquote>
+                            </div>
+                        </article>
+                        
+                    </section>

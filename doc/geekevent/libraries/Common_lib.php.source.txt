@@ -1,0 +1,118 @@
+<?php if(!defined('BASEPATH')) exit('No direct script access allowed');
+class Common_lib
+{
+	function __construct()
+	{
+		$this->ci =& get_instance();
+		$this->ci->load->model('common_mod');
+	}
+
+	/**
+	* 获取上一个、下一个guid
+	*/
+	function obtain_prev_n_next_id($guid = NULL, $type = NULL)
+	{
+		if ($guid != NULL && ($type == 'clips' OR $type == 'seed'))
+		{
+			if ($type == 'clips')
+			{
+				$subtype_id = 5;
+			}
+			elseif ($type == 'seed')
+			{
+				$subtype_id = 8;
+			}
+			$next_guid = $this->obtain_next_guid($guid, $subtype_id);
+			$prev_guid = $this->obtain_prev_guid($guid, $subtype_id);
+			// 查询下一篇内容为空（最新）
+			if ($next_guid === 0)
+			{
+				// 更新 next_guid = 0
+				$this->update_next_guid($guid, 0, $type);
+				// 更新上一篇文章的next_guid=当前guid
+				$this->update_next_guid($prev_guid, $guid, $type);
+			}
+			// 查询下一篇文章非空
+			else
+			{
+				// 更新 next_guid为下一篇文章guid
+				$this->update_next_guid($guid, $next_guid, $type);
+			}
+
+			// 查询上一篇文章为空（最初）
+			if ($prev_guid === 0)
+			{
+				// 更新 prev_guid=0
+				$this->update_prev_guid($guid, 0, $type);
+			}
+			// 查询上一篇文章非空
+			else
+			{
+				// 更新 prev_guid为上一篇文章guid
+				$this->update_prev_guid($guid, $prev_guid, $type);
+			}
+			return array('next_guid' => $next_guid, 'prev_guid' => $prev_guid);
+		}
+	}
+
+	/**
+	* 获取上一个guid
+	*/
+	function obtain_prev_guid($guid, $subtype_id)
+	{
+		$result = 0;
+		$query = $this->ci->common_mod->get_prev_guid($guid, $subtype_id);
+		if ($query->num_rows() == 1)
+		{
+			$result = $query->row_array();
+			$result = $result['guid'];
+		}
+		return $result;
+	}
+
+	/**
+	* 获取下一个guid
+	*/
+	function obtain_next_guid($guid, $subtype_id)
+	{
+		$result = 0;
+		$query = $this->ci->common_mod->get_next_guid($guid, $subtype_id);
+		if ($query->num_rows() == 1)
+		{
+			$result = $query->row_array();
+			$result = $result['guid'];
+		}
+		return $result;
+	}
+
+	/**
+	* 更新上一个guid
+	*/
+	function update_prev_guid($guid, $prev_guid, $type)
+	{
+		$query = $this->ci->common_mod->update_prev_guid($guid, $prev_guid, $type);
+	}
+
+	/**
+	* 更新下一个guid
+	*/
+	function update_next_guid($guid, $next_guid, $type)
+	{
+		$query = $this->ci->common_mod->update_next_guid($guid, $next_guid, $type);
+	}
+
+	/**
+	* 根据guid获取title
+	*/
+	function obtain_title_by_guid($guid)
+	{
+		$result = 0;
+		$query = $this->ci->common_mod->get_title_by_guid($guid);
+		if ($query->num_rows() == 1)
+		{
+			$result = $query->row_array();
+			$result = $result['title'];
+		}
+		return $result;
+	}
+}

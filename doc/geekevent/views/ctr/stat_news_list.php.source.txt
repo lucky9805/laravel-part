@@ -1,0 +1,38 @@
+<div class="contentcontainer">
+	<div class="headings alt">
+		<h2><?php echo site_lang('stat_news_list');?></h2>
+	</div>
+	<div class="contentbox">
+	<table width="100%">
+		<thead>
+			<tr>
+				<th>点击数</th>
+				<th>标签</th>
+			</tr>
+		</thead>
+
+		<tbody>
+<?php
+if(!$rows):
+echo site_lang('no_record');
+else:
+foreach($rows as $row):
+?>
+		<tr>
+			<td><?php echo $row['count']; ?></td>
+			<td><?php $tag = explode('-', $row['tag']); echo $tag[0].'年'.$tag[1].'月' ?></td>
+		</tr>
+<?php
+endforeach;
+?>
+		<tr>
+			<td><strong>总点击数</strong></td>
+			<td><strong><?php echo $total; ?></strong></td>
+		</tr>
+<?php
+endif;
+?>
+		</tbody>
+	</table>
+	</div>
+</div>

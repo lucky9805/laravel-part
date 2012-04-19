@@ -1,0 +1,132 @@
+<?php 
+    class Dbmanager_lib
+    {
+        var $ci;
+        function __construct()
+        {
+            $this->ci = &get_instance();
+            $this->ci->load->model('base_db_mod');
+        }
+        
+        function create_a_row($table,$data)
+        {
+            $id = $this->ci->base_db_mod->insert_a_row($table,$data);
+            return $id;
+        }
+
+        function create_an_entity($data)
+        {
+            $e_data = array();
+            $e_data['father_guid']  = $data['father_guid'];
+            $e_data['type']         = $data['type'];
+            $e_data['subtype_id']   = $data['subtype_id'];
+            $e_data['second_type']  = $data['second_type'];
+            $e_data['user_guid']    = $this->ci->global_lib->get_user_guid();
+            $e_data['time_created'] = time();
+            $e_data['time_updated'] = time();
+            $e_data['visibility']   = isset($data['visibility']) ? $data['visibility'] : "no";
+            $e_data['is_recommend'] = $data['is_recommend'];
+            $e_data['source']       = isset($data['source']) ? $data['source'] : "web";
+            $e_data['ip_address']   = $this->ci->input->ip_address();
+            $e_data['deadline']     = isset($data['deadline']) ? $data['deadline'] : 0;
+            $e_data['validate_time']= isset($data['validate_time']) ? $data['validate_time'] : 0;
+            $e_data['admin_value']  = isset($data['admin_value']) ? $data['admin_value'] : 0;
+            $e_data['user_value']   = isset($data['user_value']) ? $data['user_value'] : 0;
+            $e_data['total_value']  = isset($data['total_value']) ? $data['total_value'] : 0;
+            $guid = $this->create_a_row(TABLE_ENTITY,$e_data);
+
+            $c_data = array();
+            $c_data['guid']         = $guid;
+            $c_data['subtype_id']   = $data['subtype_id'];
+            $c_data['title']        = $data['title'];
+            $c_data['main']         = isset($data['main']) ? $data['main'] : NULL;
+            $c_data['desc']         = isset($data['desc']) ? $data['desc'] : NULL;
+            $this->create_a_row(TABLE_CORE_ENTITY,$c_data);
+
+            if($data['type'] == 'object')
+            {
+                $c_e_data['guid']       = $guid;
+                $c_e_data['vote']       = 0;
+                $c_e_data['comment']    = 0;
+                $c_e_data['view']       = 0;
+                $this->create_a_row(TABLE_CORE_EXTRA_ENTITY,$c_e_data);
+            }
+
+            unset($data,$e_data,$c_data,$c_e_data);
+
+            return $guid;
+        }
+
+        function obtain_a_row($table,$field,$where,$or_where='',$type="object")
+        {
+            $row = NULL;
+            $query = $this->ci->base_db_mod->get_a_row($table,$field,$where,$or_where);
+            if($query->num_rows() == 1)
+            {
+                if($type == "object")
+                {
+                    $row = $query->row();
+                }
+                else
+                {
+                    $row = $query->row_array();
+                }
+            }
+            return $row;
+        }
+
+        function obtain_a_row_field($table,$field,$where)
+        {
+            $result = NULL;
+            $query = $this->ci->base_db_mod->get_a_row($table,$field,$where);
+            if($query->num_rows() == 1)
+            {
+                $row_arr = $query->row_array();
+                $result = $row_arr[$field];
+            }
+            return $result;
+        }
+
+        function obtain_rows($table,$field,$where=NULL,$like=NULL,$orderby=NULL,$limit=NULL,$offset=NULL,$forcount=FALSE,$type="object")
+        {
+            $result = NULL;
+            $query = $this->ci->base_db_mod->get_rows($table,$field,$where,$like,$orderby,$limit,$offset,$forcount);
+            if($forcount)
+            {
+                $result = $query;
+            }
+            else
+            {
+                if($query->num_rows() > 0)
+                {
+                    if($type == "object")
+                    {
+                        $result = $query->result();
+                    }
+                    else
+                    {
+                        $result = $query->result_array();
+                    }
+                }
+                else
+                {
+                    $result = array();
+                }
+            }
+			if(!$forcount)
+				$query->free_result();
+            return $result;
+        }
+
+
+        function update_rows($table,$where,$data)
+        {
+            return $this->ci->base_db_mod->update_rows($table,$where,$data);
+        }
+
+        function delete_rows($table,$where)
+        {
+            return $this->ci->base_db_mod->delete_rows($table,$where);
+        }
+    }
+?>

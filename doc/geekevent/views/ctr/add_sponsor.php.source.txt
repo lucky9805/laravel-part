@@ -1,0 +1,49 @@
+<div class="contentcontainer">
+            <div class="headings alt">
+                <h2><?php echo site_lang('add_sponsor_title');?></h2>
+            </div>
+            <div class="contentbox">
+            	<?php echo form_open_multipart($this->uri->uri_string());?>
+            		<p>
+                        <?php 
+							$flag = style_choose('add_sponsor_name');
+							echo form_label(site_lang('add_sponsor_name'), 'add_sponsor_name');
+							$data = array('name' => 'add_sponsor_name', 'id' => 'add_sponsor_name', 'class' => 'inputbox'.$flag, 'value' => set_value('add_sponsor_name'));
+							echo form_input($data);
+							if($flag)
+								echo form_error('add_sponsor_name');
+						?> 
+                    </p>
+					
+					<p>
+                        <?php
+							$flag = style_choose('add_sponsor_link');
+							echo form_label(site_lang('add_sponsor_link'), 'add_sponsor_link');
+							$data = array('name' => 'add_sponsor_link', 'id' => 'add_sponsor_link', 'class' => 'inputbox'.$flag, 'value' => set_value('add_sponsor_link', 'http://'));
+							echo form_input($data);
+							if($flag)
+								echo form_error('add_sponsor_link');
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label(site_lang('add_sponsor_logo'), 'add_sponsor_logo');
+							$data = array('name' => 'add_sponsor_logo', 'id' => 'add_sponsor_logo', 'value' => 'upload');
+							echo form_upload($data);
+							if(form_error('add_sponsor_logo'))
+								echo form_error('add_sponsor_logo');
+						?>
+                    </p>
+                    
+                    <p>
+						<?php 
+							$data = array('name' => 'add_sponsor_add_sponsor', 'id' => 'add_sponsor_add_sponsor', 'value' => site_lang('add_sponsor_add_sponsor'), 'class' => 'btn');
+							echo form_submit($data);
+						?>
+					</p>
+      
+                </form>         
+				
+            </div>
+        </div>

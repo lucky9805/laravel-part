@@ -1,0 +1,7 @@
+<script>
+ $(function(){      
+    $("#footer").css("display","none");
+    $("#view-tags").css({"background":"none","padding-left":"0"});
+    NewsLoad.auto_load();     
+ })
+</script>

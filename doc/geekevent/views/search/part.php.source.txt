@@ -1,0 +1,62 @@
+<?php
+    $data = array(
+        'key_word'  => $key_word,
+        'type'      => $type
+    );
+    $this->load->view('search/header', $data);
+?>
+<div class="search-list">
+<?php
+    if($is_null)
+    {
+        //echo "搜索内容为空";
+    }
+    else
+    {
+        if(isset($users) AND (count($users) > 0))
+        {
+            foreach($users as $row)
+            {
+                $data = array(
+                    'uid'   => $row->guid
+                );
+                $this->load->view('search/user', $data);
+            }
+        }
+        elseif(isset($seeds) AND (count($seeds) > 0))
+        {
+            foreach($seeds as $row)
+            {
+                $data = array(
+                    'cid'   => $row->guid,
+                    'title' => $row->title
+                );
+                $this->load->view('search/seed', $data);
+            }
+        }
+        elseif(isset($clips) AND (count($clips) > 0))
+        {
+            foreach($clips as $row)
+            {
+                $data = array(
+                    'cid'   => $row->guid,
+                    'title' => $row->title
+                );
+                $this->load->view('search/clip', $data);
+            }
+        }
+        elseif(isset($events) AND (count($events) > 0))
+        {
+            foreach($events as $row)
+            {
+                $data = array(
+                    'eid'   => $row->guid,
+                    'title' => $row->title
+                );
+                $this->load->view('search/event', $data);
+            }
+        }
+    }
+?>
+</div>
+<div class="pagination" style="margin-top:10px;margin-bottom:50px;"><?=$this->pagination->create_links()?></div>

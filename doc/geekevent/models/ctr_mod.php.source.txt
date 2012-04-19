@@ -1,0 +1,25 @@
+<?php
+	class Ctr_mod extends MY_Model
+	{
+		function __construct()
+		{
+			parent::__construct();
+		}
+		
+		function get_results($query_string)
+		{
+			return $this->db->query($query_string);
+		}
+		
+		function get_results_by_where_in($table, $field, $where_in_field = NULL, $where_in_array = NULL,$where=null)
+		{
+			$this->db->select($field);
+			$this->db->from($table);
+			if($where_in_field)
+				$this->db->where_in($where_in_field, $where_in_array);
+			if($where)
+			$this->db->where($where);
+			return $this->db->get();
+		}
+	}
+?>

@@ -1,0 +1,39 @@
+<?php if(!defined('BASEPATH')) exit('No direct script access allowed');
+
+    class User_lib extends Dbmanager_lib
+    {
+        function __construct(){
+        	$this->ci =& get_instance();
+     		$this->ci->load->model('user_mod');
+        }
+        
+        function get_user_field($user_guid,$field)
+        {
+            return $this->obtain_a_row_field(TABLE_USER,$field,array('guid'=>$user_guid));
+        }
+
+        function get_user_info($user_guid,$field=NULL)
+        {
+            return $this->obtain_a_row(TABLE_USER,$field,array('guid'=>$user_guid));
+        }
+
+		function get_user_guid_by_username($username)
+		{
+            return $this->obtain_a_row_field(TABLE_USER,'guid',array('username'=>$username));
+		}
+
+		function get_screen_name($guid)
+		{
+            return $this->obtain_a_row_field(TABLE_USER,'screen_name',array('guid'=>$guid));
+		}
+
+        function get_username($guid)
+        {
+            return $this->obtain_a_row_field(TABLE_USER,'username',array('guid'=>$guid));
+        }
+
+        function get_real_name($guid)
+        {
+            return $this->obtain_a_row_field(TABLE_USER,'real_name',array('guid'=>$guid));
+        }
+    }

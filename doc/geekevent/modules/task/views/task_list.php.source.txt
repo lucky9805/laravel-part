@@ -1,0 +1,34 @@
+<?php //$this->load->view('task_head');?>
+<div class = 'content'>
+<?php
+	if(!$result):
+		echo '没有任务';
+?>
+
+<?php else:?>
+	<table border = '1' style="width:600px;">
+	<tbody>
+		<tr>
+			<th>ID</th>
+			<th>任务名称</th>
+			<th>接收人</th>
+			<th>状态</th>
+			<th>类型</th>
+			<th>操作</th>
+		</tr>
+		<?php foreach($result as $row):?>
+		<tr>
+			<td><?php echo $row['id'];?></td>
+			<td><?php echo $row['title'];?></td>
+			<td><?php echo $row['receive_user'];?></td>
+			<td><?php echo $row['status'];?></td>
+			<td><?php echo $row['type'];?></td>
+			<td><a href='/module/task/tasks/task_do/update/<?php echo $row['id'];?>'>修改</td>
+		</tr>
+		<?php endforeach;?>
+	</tbody>
+	</table>
+	<?php echo $this->pagination->create_links();?>
+<?php endif;?>
+</div>
+<?php //$this->load->view('task_footer');?>

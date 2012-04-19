@@ -1,0 +1,23 @@
+<?php
+//echo "当前的ID:".$entity_guid;
+?>
+<form id='comment-box' action='' method='post' class="format comment-form">
+    <h3><?=lang('comment_title')?></h3>
+    <input id="parent_id" name="parent_id" type="hidden" value="0">
+    <textarea id='content' name="content" class='text'></textarea>
+    <p class='act'>
+        <input type='submit' class='submit png_bg' value='<?=lang('comment_submit')?>'>
+    </p>
+    
+    <div class="comment-toolbar">
+    <?php if(isset($is_event)){?>
+        <a href="" class="lecture png_bg" rel="" title="<?=lang('comment_lecture')?>"><span><?=lang('comment_lecture')?></span></a>
+        <a href="" class="suggest png_bg" rel="" title="<?=lang('comment_suggest')?>"><span><?=lang('comment_suggest')?></span></a>
+        <a href="" class="question png_bg" rel="" title="<?=lang('comment_question')?>"><span><?=lang('comment_question')?></span></a>
+    <?php }else{
+    echo "<br>";	
+    }?>
+    </div>
+   
+</form>
+<div id='comments'></div>

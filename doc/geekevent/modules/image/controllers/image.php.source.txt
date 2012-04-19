@@ -1,0 +1,197 @@
+<?php  if (!defined('BASEPATH')) exit('No direct script access allowed');
+
+class Image_Image_module extends CI_Module {
+
+        /**
+        * 构造函数
+        *
+        * @return void
+        * @author
+        **/
+        function __construct()
+        {
+            parent::__construct();
+            $this->load->model("image_mod");
+        }
+
+        /*
+         * 上传图片至临时目录
+         *
+         */
+        function upload_image_to_tmp($upload_config,$img_config)
+        {
+            $this->load->library('upload', $upload_config);
+            $userfile = (isset($img_config['userfile'])) ? $img_config['userfile'] : NULL;
+            if(!$this->upload->do_upload($userfile))
+            {
+                $result = array(
+                    'error' =>$this->upload->display_errors()
+                );
+            }
+            else
+            {
+                $result = array(
+                    'error'     => '',
+                    'data'      => $this->upload->data()
+                );
+            }
+            return $result;
+        }
+
+        /*
+         * 上传单张图片
+         *
+         */
+        function upload_image($upload_config,$img_config,$img_data)
+        {
+            $result = $this->upload_image_to_tmp($upload_config,$img_config);
+            if($result['error'] == '')
+            {
+                $data = $result['data'];
+                $f = $upload_config['upload_path'].$data['file_name'];
+                $data['file_ext']= strtolower($data['file_ext']);
+                $newfilename = rand_str().$data['file_ext'];
+                $newfile = $img_config['destination'].$newfilename;
+                copy($f,$newfile);
+                @unlink($f);
+                $img_data['image_name']     = $newfilename;
+                $img_data['orig_name']      = $data['orig_name'];
+                $img_data['image_type']     = $data['image_type'];
+                $img_data['relative_path']  = $img_config['relative_path'].$newfilename;
+                $img_data['time_created']   = time();
+                $id = $this->image_mod->insert_a_row(TABLE_IMAGES,$img_data);
+                $result = array(
+                    'error' =>'',
+                    'id'    => $id    
+                );
+            }
+            return $result;
+        }
+
+        /*
+         * 获取图片路径
+         */
+        function get_image_path($image_id)
+        {
+            $path = NULL;
+            $where = array('id'=>$image_id);
+            $query = $this->image_mod->get_a_row(TABLE_IMAGES,'relative_path',$where);
+            if($query->num_rows() == 1)
+            {
+                $row = $query->row();
+                $path = $row->relative_path;
+            }
+            if($path != NULL)
+            {
+                if(IMG_ABSOLUTE_PATH != ".")
+                {
+                    $path = IMG_ABSOLUTE_PATH.$path; //组合为绝对路径,"."为开发环境用,返回可访问的相对路径
+                }
+            }
+            return $path;
+        }
+
+        /*
+         * 删除图片
+         */
+        function delete_image($image_id)
+        {
+            $img_path = $this->get_image_path($image_id);
+            if(IMG_ABSOLUTE_PATH == ".")
+            {
+                //相对路径，开发环境用
+                $img_path = ".".$img_path;
+            }
+            @unlink($img_path);
+            $img_data = array('id'=>$image_id);
+            $result = $this->image_mod->delete_rows(TABLE_IMAGES,$img_data);
+            return $result;
+        }
+
+        /*
+         * 上传头像
+         */
+        function upload_avatar_image($data,$img_config,$img_data)
+        {
+            $img_ext = strtolower($data['file_ext']);
+            $unique_id = $img_data['unique_id'];
+            create_user_folder($unique_id);
+            $userfolder = "./".get_user_folder($unique_id);
+            $file_ext = array('jpg','gif','png','jpeg');
+            foreach($file_ext as $fkey){
+                $avatar_path = $userfolder.$unique_id.".$fkey";
+                if(file_exists($avatar_path))
+                {
+                    @unlink($avatar_path);
+                    foreach($img_config['size'] as $row)
+                    {
+                        $thumb = $userfolder.$unique_id."_".$row['w']."_".$row['h'].".".$fkey;
+                        @unlink($thumb);
+                    }
+                }
+            }
+            $dst = $userfolder.$unique_id.$img_ext;
+            $tmp_avatar = ".".UPLOAD_TEMP.$data['file_name'];
+            $this->crop_img($tmp_avatar,$dst,$img_config['x'],$img_config['y'],$img_config['w'],$img_config['h']);
+            if(file_exists($dst))
+            {
+                @unlink($tmp_avatar);
+                foreach($img_config['size'] as $row)
+                {
+                    $thumb = $userfolder.$unique_id."_".$row['w']."_".$row['h'].$img_ext;
+                    $this->scale_img($dst,$thumb,$row['w'],$row['h']);
+                }
+                $result = array('error'=>'');
+            }
+            else
+            {
+                $result = array('error'=>'upload image failed');
+            }
+            return $result;
+        }
+
+        /*
+         * 裁剪图片
+         */
+        function crop_img($src,$dst,$x,$y,$w=70,$h=70)
+        {
+            ini_set('memory_limit', -1);
+            $this->load->library('image_lib'); 
+            $this->image_lib->clear();
+            $config['image_library'] 	= 'gd2';			
+            $config['source_image'] 	= $src;
+            $config['new_image'] 		= $dst; 
+            $config['x_axis'] 			= $x;
+            $config['y_axis'] 			= $y;	
+            $config['create_thumb'] 	= false;
+            $config['quality'] 			= 100; 
+            $config['maintain_ratio'] 	= false;
+            $config['width'] 			= $w;
+            $config['height'] 			= $h;
+            $this->image_lib->initialize($config); 	
+            $this->image_lib->crop(); 
+            echo $this->image_lib->display_errors();
+        }
+        
+        /*
+         * 缩放图片
+         */
+        function scale_img($src,$dst,$w,$h)
+        {
+            ini_set('memory_limit', -1);
+            $this->load->library('image_lib'); 
+            $this->image_lib->clear();
+            $config['image_library'] 	= 'gd2';
+            $config['source_image'] 	= $src;
+            $config['new_image'] 		= $dst; 
+            $config['create_thumb'] 	= FALSE;
+            $config['quality'] 			= 100; 
+            $config['maintain_ratio'] 	= false;
+            $config['width'] 			= $w;
+            $config['height'] 			= $h;  
+            $this->image_lib->initialize($config); 
+            return $this->image_lib->resize(); 
+        }
+
+}
+?>

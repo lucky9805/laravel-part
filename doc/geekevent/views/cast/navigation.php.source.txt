@@ -1,0 +1,48 @@
+        <nav id='view-mode'> 
+            <h3><?=lang('filter_box_title')?></h3> 
+            <?php
+            $show_type = $this->input->cookie('switchover');
+            if(!$show_type){
+            	$show_type="thumbs";
+            } 
+            ?>
+            <ul> 
+                <li class='thumbs <?=$show_type=="thumbs"?"on":""?>' rel='thumbs'> 
+                    <a href='/cast/?mode=thumbs'title='<?=lang('filter_box_thumb_mode')?>'><?=lang('filter_box_thumb')?></a> 
+                </li><li class='list <?=$show_type=="list"?"on":""?>' rel='list'> 
+                    <a href='/cast/?mode=list' title='<?=lang('filter_box_list_mode')?>'><?=lang('filter_box_list')?></a> 
+                </li> 
+            </ul> 
+        </nav> 
+        <div id='view-order'> 
+            <select name="clips-order" class='format' tabindex="1"> 
+                <option value='the_latested' selected='selected'><?=lang('filter_box_the_latest')?></option>
+                <option value='the_most_commented'><?=lang('filter_box_commented_most')?></option>
+                <option value='the_most_viewed'><?=lang('filter_box_viewed_most')?></option> 
+                <!--<option value='the_most_rated'>被评星最多的</option>-->
+            </select> 
+        </div> 
+
+        <ul id='view-tags' class='clearfix tags'> 
+            <li><ul id="special-tags"><li class="specialOn"><a href='javascript:;' class='button small black' rel='<?=lang('filter_box_recommend')?>'><?=lang('fb_recommend')?></a></li><li><a href='javascript:;' class='button small black' rel='<?=lang('filter_box_all')?>'><?=lang('fb_all')?></a></li></ul></li>
+        <?php
+            $tags = $this->tag_lib->obtain_clips_tags(8,0);
+            foreach($tags as $row):
+                $tags_arr[] = $this->dbmanager_lib->obtain_a_row_field(TABLE_CORE_ENTITY,'title',array('guid'=>$row->tag_id));
+            endforeach;
+            if(in_array(lang('filter_box_recommend'),$tags_arr))
+            {
+                $tmp_arr[] = lang('filter_box_recommend');
+                $tags_arr = array_diff($tags_arr,$tmp_arr);
+            }
+            else
+            {
+                array_pop($tags_arr);
+            }
+            foreach($tags_arr as $value):
+            ?>
+            <li><a href='javascript:;' class='button small black' rel="<?=$value?>"><?=$value?></a></li> 
+            <?php
+            endforeach;
+        ?>
+        </ul> 

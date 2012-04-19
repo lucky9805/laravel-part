@@ -1,0 +1,18 @@
+<?php
+
+	/**
+	 * Model Name: Login_mod
+	 * Description: Login model contains public methods used to reponse calls from Login_lib
+	 * and conduct operations to intereact with databases mainly related to tables;
+	 * Author: LJC
+	 * Date: Sep 16, 2011
+	 */
+
+	class Login_mod extends MY_Model
+	{
+		function __construct()
+		{
+			parent::__construct();
+		}
+    }
+?>

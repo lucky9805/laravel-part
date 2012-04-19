@@ -1,0 +1,143 @@
+<?php
+header('Content-type:text/xml');
+$rows = $this->entity_engine_lib->obtain_entities_by_where_in('guid,subtype_id', 'subtype_id', $types, $num, 0);
+$now = date("D, d M Y H:i:s T");
+ 
+$rss_output = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>
+<rss version=\"2.0\"
+    xmlns:content=\"http://purl.org/rss/1.0/modules/content/\"
+	xmlns:wfw=\"http://wellformedweb.org/CommentAPI/\"
+	xmlns:dc=\"http://purl.org/dc/elements/1.1/\"
+	xmlns:atom=\"http://www.w3.org/2005/Atom\"
+	xmlns:sy=\"http://purl.org/rss/1.0/modules/syndication/\"
+	xmlns:slash=\"http://purl.org/rss/1.0/modules/slash/\"
+    >
+<channel>
+    <title>极客公园-GeekPark</title>
+    <link>http://www.geekpark.net/</link>
+    <description>关注互联网热点趋势，打造最好的IT线下沙龙</description>
+    <language>en</language>
+    <pubDate>$now</pubDate>
+    <lastBuildDate>$now</lastBuildDate>
+    <docs>http://www.geekpark.net</docs>
+    <managingEditor>admin@geekpark.net</managingEditor>
+    <webMaster>admin@geekpark.net</webMaster>
+";
+
+foreach ($rows as $row)
+{
+    $subtype_id = $row->subtype_id;
+    $guid       = $row->guid;
+    $where      = array('guid' => $guid);
+    $title      = htmlspecialchars($this->entity_engine_lib->obtain_title($guid));
+    if($subtype_id == MODULE_EVENTS)
+    {
+        $link       = site_url($this->web_router_lib->Get_event_details_url($guid));
+        $e          = $this->dbmanager_lib->obtain_a_row(TABLE_ENTITY, 'time_created,user_guid', $where);
+        $creator    = $this->user_lib->get_screen_name($e->user_guid);
+        $event      = $this->dbmanager_lib->obtain_a_row(TABLE_EVENTS, 'start_time, highlight, enroll_end_time, venue_Id', array('guid' => $guid));
+        $event_time = date('Y-m-d H:i', $event->start_time).'-'.date('Y-m-d H:i', $event->enroll_end_time);
+        $venue      = $this->dbmanager_lib->obtain_a_row_field(TABLE_VENUE, 'venue', array('id' => $event->venue_Id));
+        $event_url  = $this->web_router_lib->Get_event_details_url($guid);
+        $main = "<img src='".$this->img_lib->event($guid, 'event_small')."' />\n\n";
+        $main .= "活动时间：".$event_time."\n\n";
+        $main .= "活动地点：".$venue."\n\n";
+        $main .= "活动摘要：".$event->highlight."\n\n";
+        $main .= "详情及报名请访问：<a href='".site_url($event_url)."'>".site_url($event_url)."</a>";
+        $rss_output .= 
+            "<item>
+            <title>【极客活动】".$title."</title>
+            <link>".$link."</link>
+            <pubDate>".date("r",$e->time_created)."</pubDate>
+            <dc:creator>".$creator."</dc:creator>
+            <description><![CDATA[";
+        $rss_output .= "<p>".str_replace("\n\n", "</p>\n\n<p>",  $main)."</p>";
+        $rss_output .= "]]></description></item>\n";
+    }
+    elseif ($subtype_id == MODULE_NEWS)
+    {
+        $main       = $this->entity_engine_lib->obtain_main($guid);
+        $link       = $this->dbmanager_lib->obtain_a_row_field(TABLE_NEWS, 'news_url', $where);
+        $e          = $this->dbmanager_lib->obtain_a_row(TABLE_ENTITY, 'time_created,user_guid', $where);
+        $creator    = "极客公园";
+        $rss_output .= 
+            "<item>
+            <title>【极客快闻】".$title."</title>
+            <link>".$link."</link>
+            <pubDate>".date("r",$e->time_created)."</pubDate>
+            <dc:creator>".$creator."</dc:creator>
+            <description><![CDATA[";
+        $rss_output .= "<p>".str_replace("\n\n", "</p>\n\n<p>",  $main)."</p>";
+        $rss_output .= "]]></description></item>\n";
+
+    }
+    elseif ($subtype_id == MODULE_SEED)
+    {
+        $main       = $this->entity_engine_lib->obtain_main($guid);
+        $link       = site_url($this->web_router_lib->Get_seed_url($guid));
+        $e          = $this->dbmanager_lib->obtain_a_row(TABLE_ENTITY, 'time_created,user_guid', $where);
+        $creator    = $this->user_lib->get_screen_name($e->user_guid);
+        $rss_output .= 
+            "<item>
+            <title>【极客观察】".$title."</title>
+            <link>".$link."</link>
+            <pubDate>".date("r",$e->time_created)."</pubDate>
+            <dc:creator>".$creator."</dc:creator>
+            <description><![CDATA[";
+        $rss_output .= "<p>".str_replace("\n\n", "</p>\n\n<p>",  $main)."</p>";
+        $rss_output .= "]]></description></item>\n";
+
+    }
+    elseif ($subtype_id == MODULE_FEED)
+    {
+        $event_guid = $this->dbmanager_lib->obtain_a_row_field('feed', 'event_guid', $where);
+        $main       = "<img src='".$this->img_lib->event($event_guid, 'event_small')."' />\n\n";
+        $main .= $this->entity_engine_lib->obtain_main($guid)."\n\n";
+
+        $link       = site_url($this->web_router_lib->Get_event_review_url($event_guid));
+        $e          = $this->dbmanager_lib->obtain_a_row(TABLE_ENTITY, 'time_created,user_guid', $where);
+        $creator    = $this->user_lib->get_screen_name($e->user_guid);
+
+	    $clips_collections = $this->dbmanager_lib->obtain_rows(TABLE_CLIPS_COLLECTION, '*', array('event_guid' => $event_guid));
+
+        foreach ($clips_collections as $row):
+            $cc_id           = $row->id;
+            $cc_name         = $row->collection_name;
+            $cc_first_clip   = $row->first_clip;
+            $cc_record_time  = $row->record_time;
+            $cc_desc         = $row->collection_desc;
+            $cc_img1         = $row->image1;
+            $img_path       = $this->img_lib->obtain_img_by_id($cc_img1);
+            $clip_url       = site_url($this->web_router_lib->Get_clip_url($cc_first_clip));
+            $where          = array('father_id' => $cc_first_clip, 'type' => 'clip');
+            $speakers_arr   = $this->dbmanager_lib->obtain_rows(TABLE_EVENTS_SPEAKERS, 'user_guid', $where);
+            $speakers       = array();
+
+            foreach ($speakers_arr as $speaker)
+            {
+                $speakers[] = $this->user_lib->get_screen_name($speaker->user_guid);
+            }
+
+            $speakers = implode(' ', $speakers);
+            $main .= "<a href='{$clip_url}'>$cc_name</a>\n\n";
+            $main .= "录制于".date("Y-m-d", $cc_record_time)."\n\n";
+            $main .= "演讲嘉宾：{$speakers}\n\n";
+            $main .= "<img src='".$img_path."' />\n\n";
+            $main .= $cc_desc."\n\n";
+        endforeach;
+
+        $rss_output .= 
+            "<item>
+            <title>【极客活动】".$title."</title>
+            <link>".$link."</link>
+            <pubDate>".date("r",$e->time_created)."</pubDate>
+            <dc:creator>".$creator."</dc:creator>
+            <description><![CDATA[";
+        $rss_output .= "<p>".str_replace("\n\n", "</p>\n\n<p>",  $main)."</p>";
+        $rss_output .= "]]></description></item>\n";
+
+    }
+}
+$rss_output .= "</channel></rss>";
+echo $rss_output;
+?>

@@ -1,0 +1,88 @@
+<?php
+class Interrelated_tags extends My_Controller
+{
+	function __construct()
+	{
+		parent::__construct();
+	}
+
+	function index()
+	{
+		// 清空tag_list数据表
+		$this->db->empty_table('tag_list');
+		$tmp = $tmp_n = $result = $rst = array();
+
+		// 获取所有tag_relations
+		$all_list = $this->_get_tag_relations();
+
+		// 生成tag_id为key，enity_guid为value的数组
+		foreach ($all_list as $k => $v)
+		{
+			$tmp[$v['tag_id']][] = $v['entity_guid'];
+		}
+
+		// $tmp 成员之间比较
+		foreach ($tmp as $k1 => $v1)
+		{
+			foreach ($tmp as $k2 => $v2)
+			{
+				if ($k1 != $k2)
+				{
+					// 计算交集数量
+					$result = array_intersect($v1, $v2);
+					// 交集数量大于2
+					if (count($result) > 2)
+					{
+						$tmp_n[$k1][count($result)][] = $k2;
+					}
+				}
+			}
+			// 根据count数量排序
+			if ( ! empty($tmp_n[$k1]) && is_array($tmp_n[$k1]) && (count($tmp_n[$k1]) > 1))
+			{
+				krsort($tmp_n[$k1]);
+			}
+		}
+		ksort($tmp_n);
+
+		foreach ($tmp_n as $k1 => $v1)
+		{
+			$result[$k1] = array();
+			foreach ($v1 as $k2 => $v2)
+			{
+				$result[$k1] = array_merge($result[$k1], $v2);
+			}
+		}
+
+		foreach ($result as $k1 => $v1)
+		{
+			foreach ($v1 as $k2 => $v2)
+			{
+				if ($k2 < 5)
+				{
+					$rst[$k1][] = $v2;
+				}
+			}
+			$rst[$k1] = implode(',', $rst[$k1]);
+			$this->_insert_interrelated_tag($k1, $rst[$k1]);
+		}
+	}
+
+	// 插入数据
+	private function _insert_interrelated_tag($tag_id, $tag_list)
+	{
+		$this->db->set('tag_id', $tag_id);
+		$this->db->set('tag_list', $tag_list);
+		$this->db->insert('tag_list');
+	}
+	// 获取所有tag_relations
+	private function _get_tag_relations()
+	{
+		$this->db->select('tag_id, entity_guid');
+		$this->db->from('tag_relations');
+		$this->db->order_by('tag_id', 'desc');
+		$this->db->order_by('entity_guid', 'asc');
+		$query = $this->db->get();
+		return $query->result_array();
+	}
+}

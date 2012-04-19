@@ -1,0 +1,10 @@
+<div class="contentcontainer">
+   <div class="headings alt">
+       <h2><?=lang('clips_collection_response_title')?></h2>  
+   </div>
+   <div class="contentbox">
+   <p><?=lang('clips_collection_response_title')?></p>
+   <p><a href='/ctr/clips_collection_do/add'><?=lang('clips_collection_response_continue');?></a></p>
+   <p><a href = '/ctr/clips_collection_list'><?=lang('clips_collection_response_list')?></a></p>
+   </div>
+</div>

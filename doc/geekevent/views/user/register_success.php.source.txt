@@ -1,0 +1,21 @@
+  <div class="confirm-email">
+                    <h1><?php echo site_lang('user_register_success_title');?></h1>
+        
+					<div class="result-info result-success">
+					<div class="message">
+					 <?php echo site_lang('user_register_success_msg_1_1');?><?php echo $email;?><?php echo site_lang('user_register_success_msg_1_2');?>
+					<?php echo site_lang('user_register_success_msg_1_3');?>
+					</div>
+					</div>
+                    
+                    <h2><?php echo site_lang('user_register_success_title2');?></h2>
+
+                    <section>
+                        <div><?php echo site_lang('user_register_success_msg_2_1');?></div>
+                        <div><?php echo site_lang('user_register_success_msg_2_2_1');?><?php echo $email;?><?php echo site_lang('user_register_success_msg_2_2_2');?><a href="/user/register/"><?php echo site_lang('user_register_success_msg_2_2_3');?></a><?php echo site_lang('user_register_success_msg_2_2_4');?>
+                        </div>
+                        <div><?php echo site_lang('user_register_success_msg_2_3_1');?><a href="mailto:surport@geekpark.net">surport@geekpark.net</a><?php echo site_lang('user_register_success_msg_2_3_2');?>
+                        </div>
+
+                    </section>
+  </div>

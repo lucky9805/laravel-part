@@ -1,0 +1,6 @@
+<a href="/ctr" title=""><img src="/public/admin/admin_logo.png" alt="<?php echo site_lang('admin_logo');?>" class="logo" /></a>
+    	<div id="searcharea">
+           <!-- <p class="left smltxt"><a href="#" title="">Advanced</a></p>-->
+            <input type="text" class="searchbox" value="<?php echo site_lang('admin_search');?>..." onclick="if (this.value =='<?php echo site_lang('admin_search');?>...'){this.value=''}"/>
+            <input type="submit" value="<?php echo site_lang('admin_search');?>" class="searchbtn" />
+</div>

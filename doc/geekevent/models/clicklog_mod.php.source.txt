@@ -1,0 +1,92 @@
+<?php
+class Clicklog_mod extends MY_Model
+{
+	function __construct()
+	{
+		parent::__construct();
+	}
+
+	function insert_clicklog($data)
+	{
+		return $this->db->insert('click_logs',$data);
+	}
+
+	function get_stat_seed_list()
+	{
+		/*
+			SELECT count( click_logs.id ) AS count, click_logs.tag
+			FROM `click_logs`
+			WHERE click_logs.tag_type = 'load_seeds'
+			GROUP BY click_logs.tag
+			ORDER BY count DESC
+		*/
+		$this->db->select('count( click_logs.id ) AS count, click_logs.tag, core_entities.title');
+		$this->db->join('core_entities', 'core_entities.guid=click_logs.tag', 'inner');
+		$this->db->where('click_logs.tag_type','load_seeds');
+		$this->db->group_by('click_logs.tag');
+		$this->db->order_by('count', 'DESC');
+		$this->db->limit(3);
+		return $this->db->get('click_logs');
+	}
+
+	function get_stat_cast_list()
+	{
+		/*
+			SELECT count( click_logs.id ) AS count, click_logs.tag
+			FROM `click_logs`
+			WHERE click_logs.tag_type = 'load_seeds'
+			GROUP BY click_logs.tag
+			ORDER BY count DESC
+		*/
+		$this->db->select('count( click_logs.id ) AS count, click_logs.tag');
+		$this->db->where('click_logs.tag_type','get_cast_list');
+		$this->db->group_by('click_logs.tag');
+		$this->db->order_by('count', 'DESC');
+		$this->db->limit(3);
+		return $this->db->get('click_logs');
+	}
+
+	function get_stat_news_list()
+	{
+		/*
+			SELECT count( click_logs.id ) AS count, click_logs.tag
+			FROM `click_logs`
+			WHERE click_logs.tag_type = 'load_seeds'
+			GROUP BY click_logs.tag
+			ORDER BY count DESC
+		*/
+		$this->db->select('count( click_logs.id ) AS count, click_logs.tag');
+		$this->db->where('click_logs.tag_type','get_news_month');
+		$this->db->group_by('click_logs.tag');
+		$this->db->order_by('count', 'DESC');
+		$this->db->limit(3);
+		return $this->db->get('click_logs');
+	}
+
+	function get_stat_seed_count()
+	{
+		$this->db->select('count( click_logs.id ) AS count');
+		$this->db->where('click_logs.tag_type','load_seeds');
+		$this->db->from('click_logs');
+		$result = $this->db->count_all_results();
+		return $result;
+	}
+
+	function get_stat_cast_count()
+	{
+		$this->db->select('count( click_logs.id ) AS count');
+		$this->db->where('click_logs.tag_type','get_cast_list');
+		$this->db->from('click_logs');
+		$result = $this->db->count_all_results();
+		return $result;
+	}
+
+	function get_stat_news_count()
+	{
+		$this->db->select('count( click_logs.id ) AS count');
+		$this->db->where('click_logs.tag_type','get_news_month');
+		$this->db->from('click_logs');
+		$result = $this->db->count_all_results();
+		return $result;
+	}
+}

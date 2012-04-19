@@ -1,0 +1,119 @@
+<?php 
+    class Img_lib extends Dbmanager_lib
+    {
+        var $ci;
+        var $image_server;
+        function __construct()
+        {
+            $this->ci = &get_instance();
+            $this->ci->load->model('img_mod');
+            $this->image_server = IMG_SERVER;
+        }
+
+        function get_avatar($user_guid, $type='thumb')
+        {
+            switch($type)
+            {
+                case 'thumb':
+                    $w = $h = AVATAR_THUMB;
+                    break;
+                case 'small':
+                    $w = $h = AVATAR_SMALL;
+                    break;
+                case 'medium':
+                    $w = $h = AVATAR_MEDIUM;
+                    break;
+            }
+            $unique_id = $this->ci->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'unique_id', array('guid' => $user_guid));
+            $email = $this->ci->dbmanager_lib->obtain_a_row_field(TABLE_USER, 'email', array('guid' => $user_guid));
+
+            $userfolder = get_user_folder($unique_id);
+            $flag = "user_avatar";
+            $img_file = $userfolder.$unique_id.".jpg";
+            if(!file_exists($img_file))
+            {
+                $img_file = $userfolder.$unique_id.".jpeg";
+                if(!file_exists($img_file))
+                {
+                    $img_file = $userfolder.$unique_id.".png";
+                    if(!file_exists($img_file))
+                    {
+                        $img_file = $userfolder.$unique_id.".gif";
+                        if(!file_exists($img_file))
+                        {
+                            $avatar_img = "/uploads/default/avatar/{$type}.png";
+                            $flag = "default";
+                        }
+                        else
+                        {
+                            $ext = ".gif";
+                        }
+                    }
+                    else
+                    {
+                        $ext = ".png";
+                    }
+                }
+                else
+                {
+                    $ext = ".jpeg";
+                }
+            }
+            else
+            {
+                $ext = ".jpg";
+            }
+
+            if($flag == "user_avatar")
+            {
+                $avatar_img = $userfolder.$unique_id."_".$w."_".$h.$ext;
+                if(!file_exists($avatar_img))
+                {
+                    $this->ci->load->module('image/image/scale_img', array($img_file, $avatar_img, $w, $h), TRUE);
+                }
+                $avatar_img = $this->image_server."/".$avatar_img."?".time();
+            }
+
+            if($flag == "default")
+            {
+                $avatar_img = "http://event.geekpark.net/uploads/default/avatar/{$type}.png";
+                $default = urlencode($avatar_img);
+                $url = 'http://www.gravatar.com/avatar/';
+                $url .= md5( strtolower( trim( $email ) ) );
+                $url .= "?s={$w}&d={$default}";
+                $avatar_img =$url;      
+            }
+            return $avatar_img;
+        }
+
+        private function _get_relative_path($id, $type)
+        {
+            $where = array(
+                'entity_guid'   => $id,
+                'create_type'   => $type
+            );
+            return $this->image_server.$this->obtain_a_row_field(TABLE_IMAGES, 'relative_path', $where);
+        }
+
+        function clip($cid, $type='clips_standard')
+        {
+            return $this->_get_relative_path($cid, $type);
+        }
+
+        function event($eid, $type='event_small')
+        {
+            return $this->_get_relative_path($eid, $type);
+        }
+
+        function seed($sid, $type)
+        {
+            return $this->_get_relative_path($sid, $type);
+        }
+
+        function obtain_img_by_id($id)
+        {
+            $where = array('id' => $id);
+            return $this->image_server.$this->obtain_a_row_field(TABLE_IMAGES, 'relative_path', $where);
+        }
+    }
+?>

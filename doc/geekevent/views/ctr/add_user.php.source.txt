@@ -1,0 +1,143 @@
+<?php $this->load->view("scripts/include_auto_commplete");?>
+<div class="contentcontainer">
+            <div class="headings alt">
+                <h2><?php echo $this->lang->line('add_user_title');?></h2>
+            </div>
+            <div class="contentbox">
+            	<?php echo form_open('/ctr/user_do/add');?>
+            		<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_email'), 'add_user_email');
+							$data = array('name' => 'email', 'id' => 'add_user_email', 'class' => 'inputbox', 'value' => set_value('email'));
+							echo form_input($data);
+                            echo form_error('email');
+						?> 
+                    </p>
+<!--
+					<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_name'), 'add_user_nikkyname');
+							$data = array('name' => 'username', 'id' => 'add_user_nikkyname', 'class' => 'inputbox', 'value' => set_value('username'));
+							echo form_input($data);
+                            echo form_error('username');
+						?> 
+                    </p>
+			-->	
+					<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_nikkyname'), 'add_user_nikkyname');
+							$data = array('name' => 'screen_name', 'id' => 'add_user_nikkyname', 'class' => 'inputbox', 'value' => set_value('screen_name'));
+							echo form_input($data);
+                            echo form_error('screen_name');
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_password'), 'add_user_password');
+							$data = array('type' => 'password', 'name' => 'password', 'id' => 'add_user_password', 'class' => 'inputbox', 'value' => set_value('password'));
+							echo form_input($data);
+                            echo form_error('password');
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_repassword'), 'add_user_repassword');
+							$data = array('type' => 'password', 'name' => 'password_confirm', 'id' => 'add_user_repassword', 'class' => 'inputbox', 'value' => set_value('password_confirm'));
+							echo form_input($data);
+                            echo form_error('password_confirm');
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_real_name'), 'add_user_name');
+							$data = array('name' => 'real_name', 'id' => 'add_user_name', 'class' => 'inputbox', 'value' => set_value('real_name'));
+							echo form_input($data);
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_company'), 'add_user_company');
+							$data = array('name' => 'company', 'id' => 'add_user_company', 'class' => 'inputbox', 'value' => set_value('company'));
+							echo form_input($data);
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_position'), 'add_user_position');
+							$data = array('name' => 'position', 'id' => 'add_user_position', 'class' => 'inputbox', 'value' => set_value('position'));
+							echo form_input($data);
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_phone'), 'add_user_phone');
+							$data = array('name' => 'mobilephone', 'id' => 'add_user_phone', 'class' => 'inputbox', 'value' => set_value('mobilephone'));
+							echo form_input($data);
+						?> 
+                    </p>
+					
+					<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_profile'), 'add_user_profile');
+							$data = array('name' => 'bio', 'id' => 'add_user_profile',   'cols'=>"75",'rows'=>"10",'name'=>"textfield", 'value' => set_value('bio'));
+							echo form_textarea($data);
+						?> 
+                    </p>
+					
+                
+					
+ 
+					<p>
+                        <?php 
+							echo form_label($this->lang->line('add_user_project'), 'add_user_project');
+							$data = array('name' => 'product', 'id' => 'product');
+							echo form_input($data);
+						?>
+                    </p>
+                    
+                    	<p>
+                        所属用户组
+                         <select name="group_id">
+                         <?php
+                        $groups= $this->dbmanager_lib->obtain_rows(TABLE_PRIVILEGE_GROUP, '*',NULL,NULL,"group_id desc");
+  
+                         foreach($groups as $g){
+ 
+                         	echo "<option value='{$g->group_id}'>{$g->group_name}</option>";
+                         }
+                         ?>
+                        </select>
+						 
+                    </p>
+                    
+                    <p>
+						<?php 
+							$data = array('name' => 'add_user_add_user', 'id' => 'add_user_add_user', 'value' => $this->lang->line('add_user_add_user'), 'class' => 'btn');
+							//echo form_submit('add_user', $this->lang->line('add_user_add_user'));
+							echo form_submit($data);
+						?>
+					</p>
+      
+                </form>         
+				
+            </div>
+        </div>
+<script> 
+
+	$(function(){
+		$('#product').TagDynamic({
+        	"container_class":"tag_dynamic_box",
+        	"button_str": "添加项目"
+        	//autocomplete_service: aa
+    	})
+	})
+
+ 
+</script> 
+
